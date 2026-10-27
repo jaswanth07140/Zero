@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero — Privacy Policy</title>
+<meta name="theme-color" content="#1a73e8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--acc:#1a73e8;--ink:#1c1e21;--mut:#65676b;--line:#e4e6eb;--bg:#f5f7fa}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7;padding:32px 16px;min-height:100vh;min-height:100dvh}
+.card{max-width:740px;margin:0 auto;background:#fff;border-radius:18px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.logo{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.logo .z{width:48px;height:48px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex:0 0 auto}
+h1{font-size:24px;letter-spacing:-.02em}
+p.date{color:var(--mut);font-size:14px;margin-bottom:20px}
+.lede{background:#e8f0fe;border-radius:14px;padding:16px 18px;font-size:15px;margin-bottom:8px}
+h2{font-size:17px;margin:26px 0 10px;color:var(--acc)}
+p,li{font-size:15px;margin-bottom:10px}
+ul{padding-left:22px}
+li::marker{color:var(--acc)}
+a{color:var(--acc)}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0 14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+.never{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:14px;padding:16px 18px;margin-top:8px}
+.never h2{color:#15803d;margin-top:0}
+.foot{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
+@media(max-width:560px){.card{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+/* ============ ZERO PREMIUM LAYER (2026-10-19) ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:8px}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><div class="z">0</div><h1>Zero — Privacy Policy</h1></div>
+  <p class="date">Effective: October 20, 2026</p>
+
+  <div class="lede"><b>The short version:</b> Zero doesn't track you. No analytics, no advertising, no data sales — and Zero never learns from you or its viewers. Your stuff lives in your browser first; the little our servers must hold is listed below, with automatic deletion.</div>
+
+  <h2>1. What stays on your device</h2>
+  <p>Zero is local-first. Your notes, tasks, settings, SchoolAhead school data, ZeroTube watch history and subscriptions, and your Zero Computer pairing key are stored in your own browser (<code>localStorage</code> / extension storage). They never leave your device unless you ask for something that needs a server — like asking the AI a question. Clear your browser's site data any time and it's gone.</p>
+
+  <h2>2. What Zero's servers keep</h2>
+  <p>Free hosting means tiny, capped storage. These are the <b>only</b> things Zero's servers write, each with automatic deletion:</p>
+  <table>
+    <tr><th>What</th><th>Why</th><th>Deleted</th></tr>
+    <tr><td>AI relay messages</td><td>Delivering chat answers to the Sidekick panel</td><td>Auto-deleted after 7 days</td></tr>
+    <tr><td>Computer relay commands</td><td>Passing your tasks to the Zero Computer extension</td><td>Expire after 2 hours (newest 100 kept)</td></tr>
+    <tr><td>ZeroTube accounts</td><td>Your username + password hash, if you sign in</td><td>Kept while your account exists</td></tr>
+    <tr><td>Upgrade ledger</td><td>Record of site upgrades + reverts for the owner console</td><td>Capped at 50 entries</td></tr>
+    <tr><td>Config backups</td><td>Safety copies before settings change</td><td>Last 3 kept</td></tr>
+    <tr><td>Rate-limit temp files</td><td>Blocking abuse (too many requests)</td><td>Temporary, auto-cleaned</td></tr>
+  </table>
+  <p>That's the complete list. No profiles, no history logs, no backups of your content.</p>
+
+  <h2>3. The Zero Computer extension</h2>
+  <ul>
+    <li><b>Page content:</b> while a task you started is running, the extension reads the page's title, text, links, and form fields — plus screenshots so you can watch progress.</li>
+    <li><b>Pairing key:</b> a random 32-character key stored only in your browser. It authenticates your own task requests; nobody else can drive your browser with it.</li>
+    <li><b>It never</b> reads, fills, or submits password fields; never logs in as you; never buys or pays for anything.</li>
+    <li><b>It doesn't run when you're not using it</b> — only while a task you started is in progress.</li>
+  </ul>
+
+  <div class="never">
+    <h2>4. What Zero never does</h2>
+    <ul>
+      <li>No analytics, cookies-for-tracking, or fingerprinting. Zero itself sets no tracking cookies.</li>
+      <li>No advertising and no selling or sharing data with third parties.</li>
+      <li><b>No learning from you or your viewers.</b> The feature that let Zero learn from usage was removed on October 19, 2026 at the owner's direction, and it isn't coming back.</li>
+      <li>AI providers (Groq, Cerebras, OpenRouter, Mistral, Pollinations) receive only the text of the question you ask — never your notes, tasks, or identity.</li>
+    </ul>
+  </div>
+
+  <h2>5. Questions</h2>
+  <p>Contact: use the support link on the <a href="https://zero.page.gd/zero-computer.html">Zero Computer setup page</a>.</p>
+
+  <div class="foot">Zero · zero.page.gd — free, local-first, no tracking.</div>
+</div>
+</body>
+</html>

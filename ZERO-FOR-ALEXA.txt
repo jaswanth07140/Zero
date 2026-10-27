@@ -1,0 +1,37 @@
+ZERO — BRIEFING FOR ALEXA+ (paste this as text; Alexa cannot open zip files or run code)
+
+WHAT ZERO IS
+Zero (zero.page.gd) is a free website I built: a search engine + AI answer site.
+It has a homepage with web search, an AI that answers questions, mini-apps that
+open inside the page (ZeroTube for videos, Notes, Tasks, Zero Message, ZMaps,
+Zero Student for studying, Zero Photos), and a Chrome side-panel extension
+called Zero Sidekick.
+
+HOW IT WORKS (the tech)
+- Hosted free on InfinityFree (PHP + plain HTML/CSS/JavaScript, no build step).
+- The homepage is one big file: index.html.
+- AI answers come from PHP files on the server: api-single.php (one AI model),
+  api-synth.php (several models answer and merge into one), and api-council.php
+  (the newest: models answer in parallel, a judge model scores them, the best
+  parts are merged, and facts get checked — used on the "Deep" level).
+- The AI models are free ones from providers like Groq, OpenRouter and
+  Pollinations. A health-check file (health-check.php) watches them and drops
+  any that stop working. API keys live in a private config.php that is NEVER
+  shared.
+- Instant-answer plugins (zero-plugins.js + zero-plugins-pack2.js) answer
+  things like "15% of 240" or "roman 1994" instantly without AI.
+- Zero Student (student.html) is a full study app inside Zero: AI teacher,
+  quizzes, flashcards, notebooks, homework solver.
+- Zero Photos (zerophotos.html) shows photos/videos from the user's own
+  device only — nothing is uploaded or stored on the server.
+
+MY RULES FOR ZERO
+- Everything must stay 100% free. No paid services, no sign-ups needing a card.
+- No Google search or Google tracking (user privacy).
+- Clean "ZERO" logo/wordmark, white circle with a blue 0.
+- Never store users' private data or learn from viewers.
+
+WHAT I WANT FROM YOU, ALEXA
+Answer my questions about Zero and suggest improvements: new features, better
+AI answers, UI ideas, and small code snippets I can hand back to my developer.
+You cannot run, host, or install this code — advice and snippets only.

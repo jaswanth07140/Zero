@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero AI</title>
+<style>
+:root{--blue:#0064e0;--grad:linear-gradient(135deg,#0064e0,#7b2ff7);--bg:#f0f2f5;--card:#fff;--ink:#1c1e21;--ink-soft:#65676b;--line:#dddfe2;--code:#1e1e1e;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);height:100vh;display:flex;overflow:hidden}
+.sidebar{width:64px;background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:8px;flex-shrink:0}
+.side-logo{width:40px;height:40px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;cursor:pointer;margin-bottom:8px}
+.side-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--ink-soft);border:0;background:none}
+.side-icon:hover{background:var(--bg);color:var(--ink)}
+.side-icon.active{background:#e7f0ff;color:var(--blue)}
+.chats-drawer{position:fixed;left:64px;top:0;bottom:0;width:260px;background:var(--card);border-right:1px solid var(--line);z-index:60;transform:translateX(-100%);transition:transform .3s ease;display:flex;flex-direction:column}
+.chats-drawer.open{transform:none}
+.drawer-head{padding:16px;border-bottom:1px solid var(--line);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.newchat{margin:12px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);cursor:pointer;font-weight:600;font-size:14px;text-align:center}
+.newchat:hover{border-color:var(--blue);color:var(--blue)}
+.chats{flex:1;overflow-y:auto;padding:8px}
+.chat-item{padding:10px 12px;border-radius:10px;cursor:pointer;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-item:hover{background:var(--bg)}
+.chat-item.active{background:#e7f0ff}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{padding:12px 20px;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.topbar .title{font-weight:700;font-size:16px}
+.artifact-toggle{margin-left:auto;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+.artifact-toggle:hover{border-color:var(--blue);color:var(--blue)}
+.workspace{flex:1;display:flex;min-height:0}
+.chatpane{flex:1;display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line)}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.msg{max-width:85%;padding:12px 16px;border-radius:18px;line-height:1.6;font-size:14px;animation:fadeUp .25s ease}
+.msg.user{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
+.msg.ai{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:6px;max-width:95%}
+.msg.ai pre{background:var(--code);color:#d4d4d4;border-radius:10px;padding:12px;overflow-x:auto;font-size:12.5px;margin:8px 0;font-family:Menlo,Consolas,monospace;white-space:pre-wrap}
+.msg.ai code{background:#f0f2f5;padding:2px 6px;border-radius:4px;font-size:13px;font-family:Menlo,monospace}
+.msg.ai pre code{background:none;padding:0}
+.artifact-btn{background:var(--grad);color:#fff;border:0;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;margin-top:8px;font-size:14px}
+.typing-dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:#bcc0c4;margin:0 2px;animation:blink 1.2s infinite}
+/* Live activity feed - watch AI work like screen sharing */
+.activity{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:8px 0;font-size:13px}
+.activity .act-row{display:flex;align-items:center;gap:10px;padding:6px 0;animation:fadeUp .3s ease}
+.activity .act-icon{width:28px;height:28px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.activity .act-icon.done{background:#e7f7ee}
+.activity .act-icon.working{background:#e7f0ff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.activity .act-text{color:var(--ink)}
+.activity .act-time{margin-left:auto;color:var(--ink-soft);font-size:11px}
+.typing-dots span:nth-child(2){animation-delay:.2s}.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.inputarea{padding:14px 20px;background:var(--card);border-top:1px solid var(--line)}
+.inputrow{display:flex;gap:10px;align-items:flex-end}
+.inputrow textarea{flex:1;border:1px solid var(--line);border-radius:20px;padding:12px 18px;font-size:14px;font-family:inherit;resize:none;max-height:120px;background:var(--bg)}
+.inputrow textarea:focus{outline:0;border-color:var(--blue)}
+.sendbtn{width:44px;height:44px;border-radius:50%;border:0;background:var(--grad);color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+.suggestions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.suggestions button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 14px;font-size:12.5px;cursor:pointer}
+.suggestions button:hover{border-color:var(--blue);color:var(--blue)}
+.artpane{width:0;overflow:hidden;background:var(--card);display:flex;flex-direction:column;transition:width .3s ease}
+.artpane.open{width:50%;min-width:400px;border-left:1px solid var(--line)}
+.art-head{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.art-head .t{font-weight:700;font-size:14px}
+.art-tabs{display:flex;gap:4px;margin-left:auto}
+.art-tabs button{border:0;background:none;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-soft)}
+.art-tabs button.active{background:var(--bg);color:var(--ink)}
+.art-close{border:0;background:none;font-size:20px;cursor:pointer;color:var(--ink-soft);padding:4px 8px}
+.art-body{flex:1;overflow:hidden;position:relative}
+.art-body iframe{width:100%;height:100%;border:0;display:none}
+.art-body pre{margin:0;padding:16px;height:100%;overflow:auto;background:var(--code);color:#d4d4d4;font-size:12.5px;font-family:Menlo,Consolas,monospace;white-space:pre-wrap;display:none}
+.art-body.show-preview iframe{display:block}
+.art-body.show-code pre{display:block}
+@media(max-width:768px){.sidebar{width:52px}.side-icon{width:38px;height:38px}.chats-drawer{left:52px;width:220px}.artpane.open{width:100%;min-width:0;position:fixed;inset:0;z-index:50}}
+</style>
+</head>
+<body>
+<div class="sidebar">
+<div class="side-logo" onclick="location.href='index.html'" title="Zero Home">0</div>
+<button class="side-icon active" title="Chats" onclick="toggleDrawer()">💬</button>
+<button class="side-icon" title="New chat" onclick="newChat()">✏️</button>
+<button class="side-icon" title="Browse" onclick="openBrowseTab()">🌐</button>
+<button class="side-icon" title="Edit Site" onclick="toggleEditSite()">🔧</button>
+<button class="side-icon" title="Share Screen" onclick="toggleScreenShare()">🖥️</button>
+</div>
+<div class="chats-drawer" id="chatsDrawer">
+<div class="drawer-head"><span>Chats</span><button class="side-icon" onclick="toggleDrawer()" style="width:32px;height:32px;">×</button></div>
+<div class="newchat" onclick="newChat()">+ New chat</div>
+<div class="chats" id="chatList"></div>
+</div>
+<div class="main">
+<div class="topbar"><div class="side-logo" style="width:32px;height:32px;font-size:14px;margin:0;" onclick="location.href='index.html'">0</div><div class="title">Zero</div><span style="font-size:12px;color:var(--ink-soft);background:var(--bg);padding:4px 10px;border-radius:999px;">Personal AI</span>
+<button class="artifact-toggle" id="editSiteBtn" onclick="toggleEditSite()">🔧 Edit Site</button>
+<button class="artifact-toggle" id="artToggle" onclick="toggleArtifact()" style="display:none">👁 Preview</button></div>
+<div class="workspace">
+<div class="chatpane">
+<div class="messages" id="msgs"></div>
+<div class="inputarea">
+<div class="suggestions" id="sugg">
+<button onclick="quickAsk(this)">Build me a landing page</button>
+<button onclick="quickAsk(this)">What can you do?</button>
+<button onclick="quickAsk(this)">Write a Python script</button>
+<button onclick="quickAsk(this)">Explain quantum computing</button>
+</div>
+<div class="inputrow">
+<textarea id="q" rows="1" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
+<button class="sendbtn" onclick="send()">↑</button>
+</div>
+</div>
+</div>
+<div class="artpane" id="artPane">
+<div class="art-head"><span class="t">📄 Preview</span>
+<div class="art-tabs"><button id="tabPrev" class="active" onclick="showArtTab('preview')">Preview</button><button id="tabCode" onclick="showArtTab('code')">Code</button><button id="tabBrowse" onclick="showArtTab('browse')">🌐 Browse</button><button id="tabScreen" onclick="showArtTab('aiscreen')">🖥️ AI Screen</button></div>
+<button class="artifact-toggle" onclick="takeControl()" title="Open in new tab and take control">🎮 Take Control</button>
+<button class="art-close" onclick="toggleArtifact()">×</button></div>
+<div class="browse-bar" id="browseBar" style="display:none;padding:8px 12px;border-bottom:1px solid var(--line);display:none;gap:8px;">
+<input id="browseUrl" placeholder="Enter URL or search..." style="flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;" onkeydown="if(event.key==='Enter')navigateBrowse()">
+<button onclick="navigateBrowse()" style="border:0;background:var(--grad);color:#fff;border-radius:8px;padding:8px 16px;font-weight:600;cursor:pointer;">Go</button>
+</div>
+<div class="art-body show-preview" id="artBody"><iframe id="artFrame" sandbox="allow-scripts allow-forms allow-popups"></iframe><pre id="artCode"></pre><iframe id="browseFrame" style="display:none;width:100%;height:100%;border:0;"></iframe>
+<div id="aiScreenView" style="display:none;width:100%;height:100%;flex-direction:column;background:#0d1117;color:#c9d1d9;font-family:Menlo,Consolas,monospace;overflow:hidden;">
+<div style="padding:10px 14px;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:8px;">
+<span style="width:12px;height:12px;border-radius:50%;background:#ff5f57;"></span>
+<span style="width:12px;height:12px;border-radius:50%;background:#febc2e;"></span>
+<span style="width:12px;height:12px;border-radius:50%;background:#28c840;"></span>
+<span style="margin-left:8px;font-size:12px;color:#8b949e;">Zero AI — live</span>
+<span id="aiScreenLive" style="margin-left:auto;font-size:11px;color:#28c840;">● LIVE</span>
+</div>
+<div id="aiScreenLog" style="flex:1;overflow-y:auto;padding:14px;font-size:13px;line-height:1.8;"></div>
+</div>
+<div id="screenShareView" style="display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;background:#000;">
+<video id="screenVideo" autoplay muted style="max-width:100%;max-height:calc(100% - 50px);"></video>
+<button onclick="stopScreenShare()" style="margin:10px;padding:8px 20px;border-radius:999px;border:0;background:#e53935;color:#fff;font-weight:700;cursor:pointer;">Stop Sharing</button>
+</div></div>
+</div>
+</div>
+</div>
+<script>
+var msgs=document.getElementById("msgs"),qin=document.getElementById("q"),artPane=document.getElementById("artPane");
+var chats=[],curId=null,curArtifact=null;
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function fmt(t){t=esc(t);t=t.replace(/```(\w*)\n?([\s\S]*?)```/g,function(m,l,c){return "<pre><code>"+c.replace(/^\n+|\n+$/g,"")+"</code></pre>";});t=t.replace(/`([^`]+)`/g,"<code>$1</code>");t=t.replace(/\n/g,"<br>");return t;}
+function addMsg(role,html){var d=document.createElement("div");d.className="msg "+role;d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+function extractHTML(text){var m=text.match(/```html\n?([\s\S]*?)```/i);if(m&&/<html|<!DOCTYPE/i.test(m[1]))return m[1].trim();var m2=text.match(/```\n?((?:[\s\S]*?<html[\s\S]*?)```)/i);return null;}
+function showArtifact(html){curArtifact=html;document.getElementById("artFrame").srcdoc=html;document.getElementById("artCode").textContent=html;document.getElementById("artToggle").style.display="";if(!artPane.classList.contains("open"))artPane.classList.add("open");showArtTab("preview");}
+function showArtTab(w){var b=document.getElementById("artBody");b.className="art-body show-"+w;
+document.getElementById("tabPrev").classList.toggle("active",w==="preview");
+document.getElementById("tabCode").classList.toggle("active",w==="code");
+document.getElementById("tabBrowse").classList.toggle("active",w==="browse");
+var ssv = document.getElementById("screenShareView");
+if(ssv) ssv.style.display = w==="screen" ? "flex" : "none";
+var asv = document.getElementById("aiScreenView");
+if(asv) asv.style.display = w==="aiscreen" ? "flex" : "none";
+var tsb = document.getElementById("tabScreen");
+if(tsb) tsb.classList.toggle("active", w==="aiscreen");
+document.getElementById("browseBar").style.display=w==="browse"?"flex":"none";
+document.getElementById("browseFrame").style.display=w==="browse"?"block":"none";
+document.getElementById("artFrame").style.display=w==="preview"?"block":"none";
+if(w==="browse"&&!document.getElementById("browseFrame").src)document.getElementById("browseFrame").src="https://www.google.com";}
+function navigateBrowse(){var u=document.getElementById("browseUrl").value.trim();if(!u)return;
+if(!/^https?:\/\//i.test(u)){if(u.includes(".")){u="https://"+u;}else{u="https://www.google.com/search?q="+encodeURIComponent(u);}}
+document.getElementById("browseFrame").src=u;}
+function toggleArtifact(){artPane.classList.toggle("open");}
+function toggleDrawer(){document.getElementById("chatsDrawer").classList.toggle("open");}
+function openBrowseTab(){if(!artPane.classList.contains("open"))artPane.classList.add("open");showArtTab("browse");}
+var screenStream = null;
+function toggleScreenShare(){
+  if(screenStream){ stopScreenShare(); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+    alert("Screen sharing is not supported in this browser."); return;
+  }
+  navigator.mediaDevices.getDisplayMedia({video:true}).then(function(stream){
+    screenStream = stream;
+    if(!artPane.classList.contains("open")) artPane.classList.add("open");
+    showArtTab("screen");
+    document.getElementById("screenVideo").srcObject = stream;
+    stream.getVideoTracks()[0].onended = stopScreenShare;
+  }).catch(function(e){ console.log("Screen share cancelled"); });
+}
+function stopScreenShare(){
+  if(screenStream){ screenStream.getTracks().forEach(function(t){ t.stop(); }); screenStream = null; }
+  document.getElementById("screenVideo").srcObject = null;
+  showArtTab("preview");
+}
+function takeControl(){
+  if(!curArtifact){ alert("No preview to take control of yet."); return; }
+  var w = window.open("", "_blank");
+  w.document.write(curArtifact);
+  w.document.close();
+}
+function logActivity(container, icon, text, done){
+  var row = document.createElement("div");
+  row.className = "act-row";
+  var time = new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  row.innerHTML = '<div class="act-icon '+(done?"done":"working")+'">'+icon+'</div><div class="act-text">'+text+'</div><div class="act-time">'+time+'</div>';
+  container.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  return row;
+}
+function markDone(row){ var ic=row.querySelector(".act-icon"); ic.classList.remove("working"); ic.classList.add("done"); ic.textContent="✓"; }
+function aiScreenLog(text, color){
+  var log = document.getElementById("aiScreenLog");
+  if(!log) return;
+  var time = new Date().toLocaleTimeString([], {hour12:false});
+  var div = document.createElement("div");
+  div.innerHTML = '<span style="color:#8b949e;">['+time+']</span> <span style="color:'+(color||"#c9d1d9")+';">'+text+'</span>';
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  // Auto-open AI Screen tab when AI starts working
+  if(!artPane.classList.contains("open")) artPane.classList.add("open");
+}
+function typeEffect(el,fullText,done){var i=0;el.innerHTML="";var plain=fullText.replace(/<[^>]*>/g,"");var timer=setInterval(function(){i+=3;if(i>=plain.length){clearInterval(timer);el.innerHTML=fmt(fullText);if(done)done();}else{el.innerHTML=esc(plain.substring(0,i))+"▊";}msgs.scrollTop=msgs.scrollHeight;},12);}
+function saveChats(){try{localStorage.setItem("zc-chats",JSON.stringify(chats));}catch(e){}}
+function loadChats(){try{chats=JSON.parse(localStorage.getItem("zc-chats")||"[]");}catch(e){chats=[];}renderChatList();}
+function renderChatList(){var l=document.getElementById("chatList");l.innerHTML="";chats.forEach(function(c){var d=document.createElement("div");d.className="chat-item"+(c.id===curId?" active":"");d.textContent=c.title;var id=c.id;d.onclick=function(){loadChat(id);};l.appendChild(d);});}
+function newChat(){curId=Date.now();chats.unshift({id:curId,title:"New chat",msgs:[]});saveChats();renderChatList();msgs.innerHTML="";greet();}
+function loadChat(id){var c=chats.find(function(x){return x.id===id;});if(!c)return;curId=id;renderChatList();msgs.innerHTML="";c.msgs.forEach(function(m){addMsg(m.role,fmt(m.text));});}
+function greet(){addMsg("ai","👋 Hey, I'm <b>Zero</b>. I can help with just about anything — <b>building websites</b> with live preview, writing code, answering questions, explaining things, you name it. What's on your mind?<br><br>Try: <i>\"Build me a landing page for a coffee shop\"</i>");}
+function quickAsk(b){qin.value=b.textContent;send();}
+function checkBrowseCommand(text){
+  var m=text.match(/(?:go to|open|visit|browse)\s+([\w\-\.]+(?:\.[\w]+)+)/i);
+  if(m){var url=m[1];if(!/^https?:\/\//i.test(url))url="https://"+url;
+    if(!artPane.classList.contains("open"))artPane.classList.add("open");
+    showArtTab("browse");document.getElementById("browseUrl").value=url;document.getElementById("browseFrame").src=url;
+    return true;}
+  return false;
+}
+function sendEditMode(text){
+  var actBox=document.createElement("div"); actBox.className="activity";
+  var actMsg=addMsg("ai",""); actMsg.appendChild(actBox);
+  logActivity(actBox,"🔍","Understanding your request...");
+  aiScreenLog("▶ Starting new task...", "#58a6ff");
+  aiScreenLog("🔍 Analyzing: "+esc(text).substring(0,80), "#8b949e");
+  var t=document.createElement("div"); actMsg.appendChild(t);
+  t.innerHTML='<span class="typing-dots"><span></span><span></span><span></span></span>';
+  // Check if user wants to see a file
+  var readMatch = text.match(/(?:show|read|open|view)\s+(?:me\s+)?([\w\-.]+\.\w+)/i);
+  if(readMatch){
+    var fn = readMatch[1];
+    readSiteFile(fn, function(content){
+      if(!content){ t.innerHTML="⚠️ Could not read "+esc(fn); return; }
+      t.innerHTML="<b>"+esc(fn)+"</b> ("+content.length+" chars)<pre><code>"+esc(content.substring(0,3000))+(content.length>3000?"\n... (truncated)":"")+"</code></pre>";
+    });
+    return;
+  }
+  // Otherwise, ask AI which file to edit and how
+  var fileList = siteFiles.map(function(f){return f.name;}).join(", ");
+  var sys = "You are Zero Code AI editing the user's website. Available files: "+fileList+".\n\nIf the user wants to CHANGE something, respond with ONLY a JSON object: {\"file\": \"filename\", \"change\": \"description of change\"}.\nIf you need to see a file first, respond with ONLY: {\"read\": \"filename\"}.\nOtherwise answer normally.";
+  fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-120b",temp:0.5,messages:[{role:"system",content:sys},{role:"user",content:text}]})})
+  .then(function(r){return r.json();}).then(function(j){
+    var ans=(j.answer||j.text||"").trim();
+    try{
+      var cmd=JSON.parse(ans.replace(/```json?\n?|```/g,"").trim());
+      if(cmd.read){
+        readSiteFile(cmd.read, function(content){
+          t.innerHTML="<b>"+esc(cmd.read)+"</b><pre><code>"+esc(content.substring(0,3000))+"</code></pre><br>What change should I make?";
+          curEditFile={name:cmd.read,content:content};
+        });
+        return;
+      }
+      if(cmd.file && cmd.change && curEditFile && curEditFile.name===cmd.file){
+        // AI has the file content, ask it to make the edit
+        fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-120b",temp:0.3,messages:[{role:"user",content:"You are editing "+cmd.file+". File content:"+bs+"n"+bs+"n"+curEditFile.content.substring(0,15000)+bs+"n"+bs+"nChange: "+cmd.change+bs+"n"+bs+"nOutput ONLY the complete new file content."}]})})
+        .then(function(r){return r.json();}).then(function(j2){
+          var newContent=(j2.text||j2.answer||"").replace(/```\w*\n?|```/g,"").trim();
+          writeSiteFile(cmd.file,newContent,function(ok){
+            t.innerHTML=ok?"✅ <b>"+esc(cmd.file)+"</b> updated!<br>"+esc(cmd.change):"⚠️ Failed to save.";
+            curEditFile=null;
+          });
+        });
+        return;
+      }
+      if(cmd.file && cmd.change){
+        // Need to read file first
+        readSiteFile(cmd.file, function(content){
+          curEditFile={name:cmd.file,content:content};
+          t.innerHTML="I need to see the file first. Click <b>🔧 Edit Site</b> again or say <i>'show me '+esc(cmd.file)+'</i> then tell me the change.";
+        });
+        return;
+      }
+    }catch(e){}
+    t.innerHTML=fmt(ans);
+  }).catch(function(){t.innerHTML="⚠️ Error.";});
+}
+function send(){
+  var text=qin.value.trim();if(!text)return;
+  addMsg("user",esc(text));qin.value="";
+  document.getElementById("sugg").style.display="none";
+  if(checkBrowseCommand(text)){addMsg("user",esc(text));qin.value="";addMsg("ai","🌐 Opening <b>"+esc(text)+"</b> in the browser panel. You can interact with it directly.");return;}
+  if(editMode){ sendEditMode(text); return; }
+  var isBuild=/build|create|make|design|landing|website|page|app|site|portfolio/i.test(text);
+  var t=addMsg("ai",'<span class="typing-dots"><span></span><span></span><span></span></span>');
+  var sys=isBuild?"You are Zero, a warm and intelligent personal AI assistant. Be genuinely helpful, not performatively helpful — skip "Great question!" and just help. Have opinions and a bit of personality; you're a thoughtful collaborator, not a search engine. Be resourceful: try to solve things yourself before asking. Match the user's energy — warm and a bit playful in casual chat, focused and precise when they need work done. You excel at everything: coding (clean, working code in any language, debugging, full websites), answering questions, explaining concepts, writing, math, and helping with anything. When asked to build/create/make something visual, always output a complete HTML file in a ```html block. Keep responses natural and conversational, not overly formal. When the user asks to build/create/make a website, page, or app, output ONE complete self-contained HTML file in a ```html code block (with inline <style> and <script>, no external dependencies except Google Fonts). Make it beautiful, modern, and fully functional. Use modern CSS (flexbox/grid, gradients, animations). After the code block, briefly describe what you built in 1-2 sentences.":"You are Zero, an expert coding AI as smart as Claude and Meta AI. You are helpful, thorough, and precise. Give clear answers with code in ``` blocks. Explain concepts well. Debug systematically. Always identify as Zero, never as Claude or any other AI.";
+  fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-120b",temp:0.7,messages:[{role:"system",content:sys},{role:"user",content:text}]})})
+  .then(function(r){return r.json();})
+  .then(function(j){
+    logActivity(actBox,"🤖","AI is thinking...", true);
+    logActivity(actBox,"⚡","Generating response...");
+    aiScreenLog("🤖 Thinking...", "#d2a8ff");
+    aiScreenLog("⚡ Generating response...", "#d2a8ff");
+    var ans=j.answer||j.text||"Sorry, I couldn't generate a response.";
+    var c=chats.find(function(x){return x.id===curId;});
+    if(c){c.msgs.push({role:"user",text:text});c.msgs.push({role:"ai",text:ans});if(c.title==="New chat")c.title=text.substring(0,30);saveChats();renderChatList();}
+    var rows=actBox.querySelectorAll(".act-row"); rows.forEach(markDone);
+    logActivity(actBox,"✅","Done!", true);
+    aiScreenLog("✅ Task complete", "#28c840");
+    typeEffect(t,ans,function(){
+      var html=extractHTML(ans);
+      if(html){var b=document.createElement("button");b.className="artifact-btn";b.textContent="👁 View live preview";b.onclick=function(){showArtifact(html);};t.appendChild(document.createElement("br"));t.appendChild(b);showArtifact(html);}
+      msgs.scrollTop=msgs.scrollHeight;
+    });
+  }).catch(function(){t.innerHTML="⚠️ Error. Please try again.";});
+}
+/* ---------- Edit Site Mode ---------- */
+var editMode = false, siteFiles = [], curEditFile = null;
+function toggleEditSite(){
+  editMode = !editMode;
+  var b = document.getElementById("editSiteBtn");
+  b.style.background = editMode ? "var(--grad)" : "";
+  b.style.color = editMode ? "#fff" : "";
+  if(editMode){
+    fetch("zero-code-edit.php?list=1").then(function(r){return r.json();}).then(function(j){
+      siteFiles = j.files || [];
+      var names = siteFiles.map(function(f){return f.name;}).join(", ");
+      addMsg("ai", "🔧 <b>Edit Site mode ON.</b> I can now read and edit your site files.<br><br>Files: " + esc(names) + "<br><br>Say e.g. <i>'change the homepage title'</i> or <i>'show me index.html'</i>");
+    }).catch(function(){ addMsg("ai","⚠️ Could not load file list."); });
+  } else {
+    addMsg("ai","Edit Site mode OFF.");
+  }
+}
+function readSiteFile(name, cb){
+  fetch("zero-code-edit.php?read="+encodeURIComponent(name)).then(function(r){return r.json();}).then(function(j){ cb(j.content||""); }).catch(function(){ cb(""); });
+}
+function writeSiteFile(name, content, cb){
+  fetch("zero-code-edit.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({file:name,content:content})})
+  .then(function(r){return r.json();}).then(function(j){ cb(j.ok); }).catch(function(){ cb(false); });
+}
+loadChats();
+if(!chats.length)newChat();else{curId=chats[0].id;loadChat(curId);}
+</script>
+</body>
+</html>

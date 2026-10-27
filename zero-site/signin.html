@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in — Zero</title>
+<link rel="icon" type="image/png" href="icon-192.png?v=3">
+<style>
+:root{
+  --blue:#5a5ae6; --blue-dark:#4444d6;
+  --grad:linear-gradient(135deg,#7c7cf4 0%,#5a5ae6 55%,#7c3aed 100%);
+  --bg:#f4f5fb; --card:#ffffff; --ink:#15172e; --ink-soft:#6d748e; --line:#e6e8f2;
+  --shadow-lg:0 12px 40px rgba(90,90,230,.14);
+  --ease-apple:cubic-bezier(0.32,0.72,0,1);
+}
+[data-theme="dark"]{
+  --blue:#7c7cf4; --blue-dark:#5a5ae6;
+  --bg:#0e0d18; --card:#1b1929; --ink:#f0f1fa; --ink-soft:#9aa0bd; --line:#292640;
+  --shadow-lg:0 12px 40px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:var(--bg); color:var(--ink); min-height:100vh;min-height:100dvh;
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.wrap{width:100%;max-width:400px}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--ink-soft);text-decoration:none;
+  font-size:14px;font-weight:700;margin-bottom:18px}
+.back:hover{color:var(--blue)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;
+  box-shadow:var(--shadow-lg);padding:34px 30px 28px;text-align:center}
+.mark{width:58px;height:58px;border-radius:50%;background:#fff;color:var(--blue);
+  font-size:30px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;box-shadow:0 4px 16px rgba(90,90,230,.22)}
+h1{font-size:22px;letter-spacing:-.4px;margin-bottom:6px}
+.sub{color:var(--ink-soft);font-size:13.5px;margin-bottom:20px;line-height:1.55}
+.tabs{display:flex;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:20px}
+.tab{flex:1;border:0;background:none;color:var(--ink-soft);font:inherit;font-size:13.5px;font-weight:700;
+  padding:10px;border-radius:10px;cursor:pointer;transition:all .25s var(--ease-apple)}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.field{text-align:left;margin-bottom:14px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--ink-soft);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.field input{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--bg);
+  color:var(--ink);font:inherit;font-size:16px;padding:12px 14px;outline:none;
+  transition:border-color .2s, box-shadow .2s}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(90,90,230,.15)}
+.btn{width:100%;border:0;border-radius:14px;background:var(--grad);color:#fff;
+  font:inherit;font-size:15px;font-weight:800;padding:13px;cursor:pointer;margin-top:6px;
+  transition:transform .2s var(--ease-apple),opacity .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.55;cursor:default;transform:none}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);margin-top:10px}
+.err{display:none;background:#fdecec;border:1px solid #f5c2c2;color:#b3261e;
+  font-size:13px;border-radius:12px;padding:10px 14px;margin-bottom:14px;text-align:left;line-height:1.5}
+[data-theme="dark"] .err{background:#3a1d1d;border-color:#6b2d2d;color:#ff9d94}
+.okmsg{display:none;background:#e9f7ef;border:1px solid #bfe6cd;color:#1d7a3a;
+  font-size:13px;border-radius:12px;padding:10px 14px;margin-bottom:14px;line-height:1.5}
+.privacy{margin-top:20px;font-size:12px;color:var(--ink-soft);line-height:1.6}
+.privacy b{color:var(--ink)}
+.authed-user{display:flex;align-items:center;gap:12px;background:var(--bg);
+  border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:6px;text-align:left}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--grad);color:#fff;
+  font-size:19px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+.authed-user .nm{font-weight:800;font-size:15px}
+.authed-user .st{font-size:12px;color:var(--ink-soft)}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to Zero</a>
+  <div class="card">
+    <div class="mark">0</div>
+    <h1 id="title">Welcome back</h1>
+    <p class="sub" id="sub">Sign in to Zero with your username.</p>
+
+    <div class="tabs" id="tabs">
+      <button class="tab on" id="tabIn" type="button">Sign in</button>
+      <button class="tab" id="tabUp" type="button">Create account</button>
+    </div>
+
+    <div class="err" id="err"></div>
+    <div class="okmsg" id="okmsg"></div>
+
+    <form id="formIn" autocomplete="on">
+      <div class="field"><label for="inUser">Username</label>
+        <input id="inUser" name="username" autocomplete="username" maxlength="20" required></div>
+      <div class="field"><label for="inPass">Password</label>
+        <input id="inPass" type="password" name="password" autocomplete="current-password" required></div>
+      <button class="btn" id="btnIn" type="submit">Sign in</button>
+    </form>
+
+    <form id="formUp" autocomplete="on" hidden>
+      <div class="field"><label for="upUser">Username</label>
+        <input id="upUser" name="username" autocomplete="username" maxlength="20"
+          placeholder="3–20 letters, numbers, _" required></div>
+      <div class="field"><label for="upPass">Password</label>
+        <input id="upPass" type="password" name="new-password" autocomplete="new-password"
+          placeholder="At least 6 characters" required></div>
+      <div class="field"><label for="upPass2">Confirm password</label>
+        <input id="upPass2" type="password" name="new-password" autocomplete="new-password" required></div>
+      <button class="btn" id="btnUp" type="submit">Create account</button>
+    </form>
+
+    <div id="authed" hidden>
+      <div class="authed-user">
+        <div class="avatar" id="avatar">?</div>
+        <div><div class="nm" id="who"></div><div class="st">Signed in to Zero</div></div>
+      </div>
+      <button class="btn" id="btnGo" type="button">Continue to Zero</button>
+      <button class="btn ghost" id="btnOut" type="button">Sign out</button>
+    </div>
+
+    <p class="privacy" id="privNote">Signing in is <b>optional</b> — Zero works fine without it.
+      Your searches and activity stay in this browser; an account just gives you a name across Zero.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  try{
+    var t=localStorage.getItem("zero-theme");
+    if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);
+  }catch(e){}
+
+  function $(id){return document.getElementById(id);}
+  var err=$("err"),okmsg=$("okmsg");
+
+  // Where to go after auth. Only allow relative Zero pages (no open redirects).
+  var next="index.html";
+  try{
+    var q=new URLSearchParams(location.search).get("next");
+    if(q&&/^\/(?!\/)[A-Za-z0-9._\-?=&%]*$/.test(q))next=q.replace(/^\//,"");
+    else if(q&&/^[A-Za-z0-9._\-]+\.html(\?[A-Za-z0-9._\-?=&%]*)?$/.test(q))next=q;
+  }catch(e){}
+
+  function showErr(m){err.textContent=m;err.style.display="block";okmsg.style.display="none";}
+  function showOk(m){okmsg.textContent=m;okmsg.style.display="block";err.style.display="none";}
+  function clearMsg(){err.style.display="none";okmsg.style.display="none";}
+
+  function api(action,data){
+    return fetch("zero-auth.php"+(action==="me"?"?action=me":""),{
+      method:action==="me"?"GET":"POST",
+      headers:{"Content-Type":"application/json"},
+      credentials:"include",
+      body:action==="me"?undefined:JSON.stringify(Object.assign({action:action},data||{}))
+    }).then(function(r){return r.json();});
+  }
+
+  function setMode(mode){
+    var isIn=mode==="in";
+    $("tabIn").classList.toggle("on",isIn);
+    $("tabUp").classList.toggle("on",!isIn);
+    $("formIn").hidden=!isIn;
+    $("formUp").hidden=isIn;
+    $("title").textContent=isIn?"Welcome back":"Create your account";
+    $("sub").textContent=isIn?"Sign in to Zero with your username.":"Pick a username — you're up and running in seconds.";
+    clearMsg();
+  }
+  $("tabIn").onclick=function(){setMode("in");};
+  $("tabUp").onclick=function(){setMode("up");};
+
+  function showAuthed(username){
+    $("tabs").style.display="none";
+    $("formIn").hidden=true;$("formUp").hidden=true;
+    $("privNote").style.display="none";
+    $("authed").hidden=false;
+    $("title").textContent="You're signed in";
+    $("sub").textContent="Welcome to Zero.";
+    $("who").textContent=username;
+    $("avatar").textContent=username.charAt(0).toUpperCase();
+    clearMsg();
+  }
+  function showForms(){
+    $("tabs").style.display="";
+    $("authed").hidden=true;
+    $("privNote").style.display="";
+    setMode("in");
+  }
+
+  $("btnGo").onclick=function(){location.href=next;};
+  $("btnOut").onclick=function(){
+    $("btnOut").disabled=true;
+    api("logout",{}).then(function(){showForms();}).catch(function(){showForms();})
+      .then(function(){$("btnOut").disabled=false;});
+  };
+
+  $("formIn").onsubmit=function(e){
+    e.preventDefault();clearMsg();
+    var u=$("inUser").value.trim(),p=$("inPass").value;
+    if(!u||!p){showErr("Enter your username and password.");return;}
+    $("btnIn").disabled=true;$("btnIn").textContent="Signing in…";
+    api("login",{username:u,password:p}).then(function(d){
+      if(d&&d.ok){showOk("Signed in — taking you to Zero…");setTimeout(function(){location.href=next;},700);}
+      else showErr((d&&d.error)||"Couldn't sign in. Try again.");
+    }).catch(function(){showErr("Couldn't reach Zero. Check your connection and try again.");
+    }).then(function(){$("btnIn").disabled=false;$("btnIn").textContent="Sign in";});
+  };
+
+  $("formUp").onsubmit=function(e){
+    e.preventDefault();clearMsg();
+    var u=$("upUser").value.trim(),p=$("upPass").value,p2=$("upPass2").value;
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(u)){showErr("Username must be 3–20 characters: letters, numbers, underscores.");return;}
+    if(p.length<6){showErr("Password must be at least 6 characters.");return;}
+    if(p!==p2){showErr("The passwords don't match.");return;}
+    $("btnUp").disabled=true;$("btnUp").textContent="Creating…";
+    api("register",{username:u,password:p}).then(function(d){
+      if(d&&d.ok){showOk("Account created — welcome! Taking you to Zero…");setTimeout(function(){location.href=next;},700);}
+      else showErr((d&&d.error)||"Couldn't create the account. Try again.");
+    }).catch(function(){showErr("Couldn't reach Zero. Check your connection and try again.");
+    }).then(function(){$("btnUp").disabled=false;$("btnUp").textContent="Create account";});
+  };
+
+  // Session check on load
+  api("me",{}).then(function(d){
+    if(d&&d.logged_in&&d.username)showAuthed(d.username);
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>

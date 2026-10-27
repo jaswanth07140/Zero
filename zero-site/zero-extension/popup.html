@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{width:320px;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px;color:#1a1a1a}
+  .head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .logo{width:36px;height:36px;border-radius:50%;background:#1a73e8;color:#fff;font-weight:700;font-size:20px;display:flex;align-items:center;justify-content:center}
+  h1{font-size:16px}
+  .sub{font-size:12px;color:#5f6368}
+  .keybox{background:#f1f3f4;border-radius:10px;padding:10px 12px;margin:12px 0;font-family:Menlo,monospace;font-size:12px;word-break:break-all;cursor:pointer}
+  .keybox:hover{background:#e8eaed}
+  .step{font-size:13px;margin:8px 0;line-height:1.5}
+  .step b{color:#1a73e8}
+  .status{font-size:12px;color:#5f6368;margin-top:10px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9aa0a6;margin-right:6px}
+  .dot.ok{background:#28c840}
+  button{width:100%;padding:10px;border:0;border-radius:10px;background:#1a73e8;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="head">
+    <div class="logo">0</div>
+    <div><h1>Zero Computer</h1><div class="sub">Zero AI drives this browser. You watch.</div></div>
+  </div>
+  <div class="step"><b>1.</b> Click your pairing key to copy it.</div>
+  <div class="keybox" id="key" title="Click to copy">(loading…)</div>
+  <div class="step"><b>2.</b> On zero.page.gd → Zero AI → Settings, paste it into <b>Computer key</b> and save.</div>
+  <div class="step"><b>3.</b> Ask Zero AI to do a browser task, e.g. <i>"computer: find the cheapest NYC to London flight on Skyscanner"</i>. Keep this Chrome open — the AI drives, you watch.</div>
+  <div class="step" style="color:#5f6368">Extension ID (optional, for instant response):<div class="keybox" id="extid" title="Click to copy" style="margin-top:6px;">(loading…)</div></div>
+  <div class="status"><span class="dot" id="dot"></span><span id="status">checking…</span></div>
+  <button id="copy">Copy pairing key</button>
+<script src="popup.js"></script>
+</body>
+</html>

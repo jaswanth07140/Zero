@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero Photos</title>
+<meta name="theme-color" content="#f6f4ef">
+<meta name="description" content="Zero Photos — view your photos, videos and screenshots right in Zero. Your media never leaves your device; Zero stores nothing.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23ffffff'/><text x='50' y='70' font-size='58' text-anchor='middle' fill='%231a73e8' font-family='Arial' font-weight='bold'>0</text></svg>">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f6f4ef; --card:#fbfaf7; --ink:#1d1c19; --ink-soft:#6b6a63; --line:#e5e2d9;
+  --blue:#1a73e8; --blue-grad:linear-gradient(135deg,#3a5fd9,#00C6FF); --gold:#a8894e;
+  --danger:#dc2626; --ease:cubic-bezier(.34,1.4,.64,1);
+}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+button{font-family:inherit;transition:transform .18s var(--ease),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:0;z-index:30;background:rgba(251,250,247,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.backlink{flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 13px;font-size:14px;font-weight:600;text-decoration:none;min-height:40px}
+.backlink:active{transform:scale(.95)}
+.brand{display:flex;align-items:center;gap:10px;flex:0 0 auto;text-decoration:none;color:var(--ink)}
+.logo{width:38px;height:38px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;color:var(--blue);box-shadow:0 2px 8px rgba(26,115,232,.18)}
+.name{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.name span{color:var(--blue)}
+.search{flex:1 1 180px;display:flex;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:0 12px;max-width:360px;margin-left:auto}
+.search svg{flex:0 0 auto;opacity:.45}
+.search input{flex:1;min-width:0;border:0;background:transparent;padding:10px 8px;font-size:16px;outline:none;font-family:inherit;color:var(--ink)}
+
+/* ---------- toolbar ---------- */
+.toolbar{max-width:1180px;width:100%;margin:0 auto;padding:16px 16px 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:11px 16px;font-size:14px;font-weight:700;cursor:pointer;min-height:44px}
+.btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(26,115,232,.3)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff;box-shadow:0 2px 10px rgba(168,137,78,.3)}
+.btn[hidden]{display:none}
+.sortwrap{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft);font-weight:600}
+.sortwrap select{font-family:inherit;font-size:14px;font-weight:600;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-height:40px;cursor:pointer}
+.infoline{max-width:1180px;width:100%;margin:0 auto;padding:8px 16px 2px;font-size:13px;color:var(--ink-soft);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.infoline .lock{flex:0 0 auto}
+.countline{font-weight:700;color:var(--ink)}
+
+/* ---------- empty state ---------- */
+.empty{max-width:560px;margin:6vh auto 40px;padding:40px 28px;text-align:center;background:var(--card);border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 30px rgba(29,28,25,.07);animation:zpIn .4s ease}
+.empty[hidden]{display:none}
+.empty .big{width:84px;height:84px;margin:0 auto 16px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.empty h2{margin:0 0 8px;font-size:24px;letter-spacing:-.02em}
+.empty p{margin:0 0 22px;color:var(--ink-soft);font-size:15px;line-height:1.55}
+.empty .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.empty .note{margin-top:18px;font-size:12.5px;color:var(--ink-soft);line-height:1.5}
+
+/* ---------- gallery grid ---------- */
+.gridwrap{max-width:1180px;width:100%;margin:0 auto;padding:14px 16px 60px;flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.grid[hidden]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 1px 3px rgba(29,28,25,.05);transition:transform .2s var(--ease),box-shadow .2s;text-align:left;padding:0;font-family:inherit;width:100%}
+.card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(29,28,25,.12)}
+.thumb{position:relative;aspect-ratio:4/3;background:#eceae2;overflow:hidden}
+.thumb img,.thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.badge{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;letter-spacing:.07em;padding:4px 8px;border-radius:999px;color:#fff;background:rgba(29,28,25,.72);backdrop-filter:blur(4px)}
+.badge.photo{background:rgba(26,115,232,.88)}
+.badge.video{background:rgba(109,66,193,.88)}
+.badge.screenshot{background:rgba(168,137,78,.92)}
+.playmark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.playmark span{width:46px;height:46px;border-radius:50%;background:rgba(29,28,25,.55);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.meta{padding:9px 11px 11px}
+.fname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.fsub{font-size:11.5px;color:var(--ink-soft);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nomatch{text-align:center;color:var(--ink-soft);font-size:15px;padding:44px 20px}
+.nomatch[hidden]{display:none}
+
+/* ---------- lightbox ---------- */
+.lightbox{position:fixed;inset:0;z-index:60;background:rgba(18,17,15,.94);display:none;flex-direction:column}
+.lightbox.open{display:flex}
+.lb-top{display:flex;align-items:center;gap:10px;padding:12px 16px;color:#f3f1ea}
+.lb-name{flex:1;min-width:0;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-btn{flex:0 0 auto;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;border-radius:11px;padding:10px 15px;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.lb-btn.danger{background:rgba(220,38,38,.16);border-color:rgba(220,38,38,.5);color:#ffb4b4}
+.lb-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;position:relative;padding:6px 58px}
+.lb-stage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;box-shadow:0 12px 44px rgba(0,0,0,.5)}
+.lb-stage video{max-width:100%;max-height:100%;border-radius:8px;box-shadow:0 12px 44px rgba(0,0,0,.5);background:#000}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.lb-nav.prev{left:10px}.lb-nav.next{right:10px}
+.lb-nav[hidden]{display:none}
+.lb-cap{padding:10px 16px 16px;text-align:center;color:#c9c6bc;font-size:13px}
+
+/* ---------- modal (in-page, never native confirm) ---------- */
+.scrim{position:fixed;inset:0;background:rgba(28,25,23,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:80}
+.scrim.open{display:flex}
+.modal{background:var(--card);border-radius:18px;padding:24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:zpIn .25s ease}
+.modal h3{margin:0 0 8px;font-size:18px}
+.modal p{margin:0 0 20px;color:var(--ink-soft);font-size:14px;line-height:1.55}
+.modal .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.mbtn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;min-height:44px;color:var(--ink)}
+.mbtn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);background:#1d1c19;color:#f6f4ef;font-size:14px;font-weight:600;padding:12px 20px;border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.32);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:90;max-width:calc(100vw - 40px);text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.dragging .gridwrap{outline:2px dashed var(--blue);outline-offset:-8px;border-radius:18px}
+
+@media(max-width:640px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+  .search{margin-left:0;max-width:none;flex:1 1 100%;order:3}
+  .lb-stage{padding:6px 8px}
+  .lb-nav.prev{left:6px}.lb-nav.next{right:6px}
+  .lb-top{flex-wrap:wrap}
+  .sortwrap{margin-left:0}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <a class="backlink" href="index.html" aria-label="Back to Zero home">&#8249; Zero</a>
+  <a class="brand" href="index.html" aria-label="Zero home">
+    <span class="logo">0</span>
+    <span class="name">ZERO <span>Photos</span></span>
+  </a>
+  <label class="search" aria-label="Search by file name">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="#78716c" stroke-width="2"/><path d="M11 11l3 3" stroke="#78716c" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="q" type="search" placeholder="Search by name" autocomplete="off" aria-label="Search by file name">
+  </label>
+</header>
+
+<div class="toolbar" role="toolbar" aria-label="Library actions">
+  <button class="btn primary" id="openFilesBtn">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+    Open photos &amp; videos
+  </button>
+  <button class="btn" id="openFolderBtn">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    Open a folder
+  </button>
+  <button class="btn gold" id="shotBtn">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    Take screenshot
+  </button>
+  <button class="btn" id="reopenBtn" hidden>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    <span id="reopenLbl">Reopen my folder</span>
+  </button>
+  <div class="sortwrap">
+    <label for="sortSel">Sort</label>
+    <select id="sortSel" aria-label="Sort library">
+      <option value="name-asc">Name A-Z</option>
+      <option value="name-desc">Name Z-A</option>
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+    </select>
+  </div>
+</div>
+
+<p class="infoline">
+  <span class="lock" aria-hidden="true">&#128274;</span>
+  <span>Your photos and videos never leave your device. Zero stores nothing &mdash; your library is your own files, shown here. No uploads, no copies on any server.</span>
+  <span class="countline" id="countLine"></span>
+</p>
+<p class="infoline" id="shotNote">
+  <span>Screenshots: your browser will ask which screen, window or tab to capture &mdash; a web page cannot silently screenshot other tabs. The capture is added here so you can download it as a PNG.</span>
+</p>
+
+<main class="gridwrap">
+  <section class="empty" id="emptyState" aria-label="No media open yet">
+    <div class="big" aria-hidden="true">
+      <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
+    </div>
+    <h2>Your photos, videos &amp; screenshots</h2>
+    <p>Open files or a whole folder from your device and browse them here. Everything stays exactly where it already lives &mdash; Zero keeps no copy, so Zero-side storage stays zero and nothing is ever deleted by Zero.</p>
+    <div class="row">
+      <button class="btn primary" id="emptyOpenFiles">Open photos &amp; videos</button>
+      <button class="btn" id="emptyOpenFolder">Open a folder</button>
+    </div>
+    <p class="note">You can also drag &amp; drop files anywhere on this page.</p>
+  </section>
+
+  <div class="nomatch" id="noMatch" hidden>No files match your search.</div>
+  <div class="grid" id="grid" hidden role="list" aria-label="Media library"></div>
+</main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer" hidden>
+  <div class="lb-top">
+    <span class="lb-name" id="lbName"></span>
+    <a class="lb-btn" id="lbDownload" href="#" download>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+      Download
+    </a>
+    <button class="lb-btn danger" id="lbRemove">Remove from view</button>
+    <button class="lb-btn" id="lbClose" aria-label="Close viewer">&#10005;</button>
+  </div>
+  <div class="lb-stage" id="lbStage">
+    <button class="lb-nav prev" id="lbPrev" aria-label="Previous item">&#8249;</button>
+    <button class="lb-nav next" id="lbNext" aria-label="Next item">&#8250;</button>
+  </div>
+  <div class="lb-cap" id="lbCap"></div>
+</div>
+
+<!-- In-page confirmation modal (never a native confirm dialog) -->
+<div class="scrim" id="scrim">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalBody">
+    <h3 id="modalTitle">Remove from view?</h3>
+    <p id="modalBody"></p>
+    <div class="row">
+      <button class="mbtn" id="modalCancel">Cancel</button>
+      <button class="mbtn danger" id="modalOk">Remove from view</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<input type="file" id="fileInput" accept="image/*,video/*" multiple hidden>
+<input type="file" id="dirInput" webkitdirectory hidden>
+
+<script>
+"use strict";
+/* ============================================================
+   Zero Photos — a gallery for media that lives on YOUR device.
+   Nothing is uploaded, nothing is sent anywhere, and no media
+   data is ever written to storage. Only two kinds of tiny
+   metadata persist: the folder handle (IndexedDB, so you can
+   reopen the same folder) and the sort preference (localStorage,
+   a single short string). Object URLs live in memory only and
+   are revoked as soon as an item leaves the view.
+   ============================================================ */
+var $ = function(s){ return document.querySelector(s); };
+
+var items = [];        // {id, name, kind, file, url, date, size}
+var uid = 1;
+var currentList = [];  // items after search filter + sort
+var lbIndex = -1;      // index into currentList while lightbox open
+var pendingRemove = null;
+var savedFolderHandle = null;
+
+var KIND_LABEL = { photo:"PHOTO", video:"VIDEO", screenshot:"SCREENSHOT" };
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, function(c){
+    return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+  });
+}
+function fmtSize(n){
+  if(n == null || isNaN(n)) return "";
+  if(n < 1024) return n + " B";
+  if(n < 1024*1024) return (n/1024).toFixed(1).replace(/\.0$/,"") + " KB";
+  if(n < 1024*1024*1024) return (n/(1024*1024)).toFixed(1).replace(/\.0$/,"") + " MB";
+  return (n/(1024*1024*1024)).toFixed(2) + " GB";
+}
+function fmtDate(t){
+  if(!t) return "";
+  try { return new Date(t).toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" }); }
+  catch(e){ return ""; }
+}
+var toastTimer = null;
+function toast(msg){
+  var t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 3400);
+}
+
+/* ---------- view preferences: one tiny string, never media ---------- */
+function loadSortPref(){
+  var v = null;
+  try { v = localStorage.getItem("zero-photos-sort"); } catch(e){}
+  if(v && $("#sortSel").querySelector('option[value="' + v + '"]')) $("#sortSel").value = v;
+}
+function saveSortPref(){
+  try { localStorage.setItem("zero-photos-sort", $("#sortSel").value); } catch(e){}
+}
+
+/* ---------- IndexedDB: folder handle only (no file data) ---------- */
+function idbOpen(){
+  return new Promise(function(res, rej){
+    if(!("indexedDB" in window)){ rej(new Error("no idb")); return; }
+    var rq = indexedDB.open("zero-photos", 1);
+    rq.onupgradeneeded = function(){ rq.result.createObjectStore("meta"); };
+    rq.onsuccess = function(){ res(rq.result); };
+    rq.onerror = function(){ rej(rq.error); };
+  });
+}
+function idbSet(key, val){
+  return idbOpen().then(function(db){
+    return new Promise(function(res, rej){
+      var tx = db.transaction("meta", "readwrite");
+      tx.objectStore("meta").put(val, key);
+      tx.oncomplete = function(){ res(); };
+      tx.onerror = function(){ rej(tx.error); };
+    });
+  });
+}
+function idbGet(key){
+  return idbOpen().then(function(db){
+    return new Promise(function(res, rej){
+      var rq = db.transaction("meta").objectStore("meta").get(key);
+      rq.onsuccess = function(){ res(rq.result); };
+      rq.onerror = function(){ rej(rq.error); };
+    });
+  });
+}
+
+/* ---------- library ---------- */
+function itemKey(f){ return f.name + "|" + f.size + "|" + (f.lastModified || 0); }
+
+function addBlob(blob, name, kind, date){
+  var it = {
+    id: uid++,
+    name: name,
+    kind: kind,
+    file: blob,
+    url: URL.createObjectURL(blob),
+    date: date || Date.now(),
+    size: blob.size
+  };
+  items.push(it);
+  return it;
+}
+
+function addFiles(fileList){
+  var seen = {};
+  items.forEach(function(it){ if(it.file && it.file.name) seen[itemKey(it.file)] = true; });
+  var added = 0, skipped = 0;
+  Array.prototype.forEach.call(fileList, function(f){
+    var kind = null;
+    if(f.type && f.type.indexOf("image/") === 0) kind = "photo";
+    else if(f.type && f.type.indexOf("video/") === 0) kind = "video";
+    if(!kind){ skipped++; return; }
+    var key = itemKey(f);
+    if(seen[key]){ skipped++; return; }
+    seen[key] = true;
+    addBlob(f, f.name, kind, f.lastModified || Date.now());
+    added++;
+  });
+  render();
+  if(added) toast(added + (added === 1 ? " item" : " items") + " added — still only on your device");
+  else if(skipped) toast("Nothing new to add (only photos and videos are shown)");
+  return added;
+}
+
+/* Remove from view: drops the item from this gallery ONLY.
+   The real file on the device is never touched or deleted. */
+function removeFromView(it){
+  if(it.url){ try { URL.revokeObjectURL(it.url); } catch(e){} }
+  items = items.filter(function(x){ return x.id !== it.id; });
+  render();
+}
+
+/* ---------- rendering ---------- */
+function getVisible(){
+  var q = $("#q").value.trim().toLowerCase();
+  var list = items.filter(function(it){ return !q || it.name.toLowerCase().indexOf(q) !== -1; });
+  var mode = $("#sortSel").value;
+  list.sort(function(a, b){
+    if(mode === "name-asc") return a.name.localeCompare(b.name);
+    if(mode === "name-desc") return b.name.localeCompare(a.name);
+    if(mode === "date-asc") return (a.date || 0) - (b.date || 0);
+    return (b.date || 0) - (a.date || 0); // date-desc
+  });
+  return list;
+}
+
+function cardHTML(it){
+  var media, badgeCls = it.kind;
+  if(it.kind === "video"){
+    media = '<video src="' + it.url + '" preload="metadata" muted playsinline aria-hidden="true"></video>' +
+            '<span class="playmark"><span><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span></span>';
+  } else {
+    media = '<img src="' + it.url + '" alt="" loading="lazy" decoding="async">';
+  }
+  var sub = [fmtSize(it.size), fmtDate(it.date)].filter(Boolean).join(" · ");
+  return '<button type="button" class="card" role="listitem" data-id="' + it.id + '" aria-label="' + esc(it.name) + '">' +
+    '<span class="thumb">' + media + '<span class="badge ' + badgeCls + '">' + KIND_LABEL[it.kind] + '</span></span>' +
+    '<span class="meta"><span class="fname">' + esc(it.name) + '</span>' +
+    (sub ? '<span class="fsub">' + esc(sub) + '</span>' : '') + '</span></button>';
+}
+
+function render(){
+  currentList = getVisible();
+  var has = items.length > 0;
+  $("#emptyState").hidden = has;
+  $("#grid").hidden = !has;
+  $("#noMatch").hidden = !(has && currentList.length === 0);
+  $("#grid").innerHTML = currentList.map(cardHTML).join("");
+  if(!has) $("#countLine").textContent = "";
+  else {
+    var photos = items.filter(function(i){ return i.kind === "photo"; }).length;
+    var videos = items.filter(function(i){ return i.kind === "video"; }).length;
+    var shots  = items.filter(function(i){ return i.kind === "screenshot"; }).length;
+    var parts = [];
+    if(photos) parts.push(photos + (photos === 1 ? " photo" : " photos"));
+    if(videos) parts.push(videos + (videos === 1 ? " video" : " videos"));
+    if(shots)  parts.push(shots  + (shots  === 1 ? " screenshot" : " screenshots"));
+    $("#countLine").textContent = "Showing " + currentList.length + " of " + items.length + " — " + parts.join(", ") + ".";
+  }
+  if(lbIndex >= 0){
+    if(!currentList.length) closeLightbox();
+    else { if(lbIndex >= currentList.length) lbIndex = currentList.length - 1; showLbItem(); }
+  }
+}
+
+/* ---------- lightbox ---------- */
+function openLightbox(id){
+  for(var i = 0; i < currentList.length; i++){
+    if(currentList[i].id === id){ lbIndex = i; break; }
+  }
+  if(lbIndex < 0) return;
+  $("#lightbox").hidden = false;
+  $("#lightbox").classList.add("open");
+  document.body.style.overflow = "hidden";
+  showLbItem();
+}
+function showLbItem(){
+  var it = currentList[lbIndex];
+  if(!it) return;
+  var stage = $("#lbStage");
+  var old = stage.querySelector("img,video");
+  if(old){ if(old.tagName === "VIDEO"){ try { old.pause(); } catch(e){} } old.remove(); }
+  var el;
+  if(it.kind === "video"){
+    el = document.createElement("video");
+    el.controls = true; el.autoplay = true; el.playsInline = true;
+    el.src = it.url;
+  } else {
+    el = document.createElement("img");
+    el.src = it.url; el.alt = it.name;
+  }
+  stage.insertBefore(el, stage.querySelector(".lb-nav.next"));
+  $("#lbName").textContent = it.name;
+  var dl = $("#lbDownload");
+  dl.href = it.url; dl.setAttribute("download", it.name);
+  var cap = [KIND_LABEL[it.kind], fmtSize(it.size), fmtDate(it.date), (lbIndex + 1) + " of " + currentList.length].filter(Boolean).join(" · ");
+  $("#lbCap").textContent = cap;
+  $("#lbPrev").hidden = currentList.length < 2;
+  $("#lbNext").hidden = currentList.length < 2;
+}
+function lbNav(dir){
+  if(currentList.length < 2) return;
+  lbIndex = (lbIndex + dir + currentList.length) % currentList.length;
+  showLbItem();
+}
+function closeLightbox(){
+  var stage = $("#lbStage");
+  var old = stage.querySelector("img,video");
+  if(old){ if(old.tagName === "VIDEO"){ try { old.pause(); } catch(e){} } old.remove(); }
+  $("#lightbox").classList.remove("open");
+  $("#lightbox").hidden = true;
+  document.body.style.overflow = "";
+  lbIndex = -1;
+}
+
+/* ---------- in-page modal ---------- */
+function openModal(it){
+  pendingRemove = it;
+  $("#modalBody").textContent = "\u201C" + it.name + "\u201D will be removed from this gallery view. " +
+    "Your actual file stays exactly where it is on your device — Zero Photos never deletes your files.";
+  $("#scrim").classList.add("open");
+}
+function closeModal(){
+  pendingRemove = null;
+  $("#scrim").classList.remove("open");
+}
+
+/* ---------- opening media ---------- */
+function openFilesPicker(){ $("#fileInput").click(); }
+function openFolder(){
+  if(window.showDirectoryPicker){
+    pickFolderFS();
+  } else {
+    $("#dirInput").click();
+  }
+}
+function pickFolderFS(){
+  window.showDirectoryPicker().then(function(handle){
+    savedFolderHandle = handle;
+    idbSet("folder", handle).catch(function(){});
+    updateReopenBtn();
+    return readFolderHandle(handle);
+  }).catch(function(err){
+    if(err && err.name === "AbortError") return; // user closed the picker
+    $("#dirInput").click(); // fallback: directory input
+  });
+}
+function readFolderHandle(handle){
+  var files = [];
+  function walk(dirHandle, depth){
+    var iter = dirHandle.values();
+    function next(){
+      return iter.next().then(function(r){
+        if(r.done) return null;
+        var entry = r.value;
+        if(entry.kind === "file"){
+          return entry.getFile().then(function(f){ files.push(f); return next(); }, function(){ return next(); });
+        }
+        if(entry.kind === "directory" && depth < 6 && files.length < 5000){
+          return walk(entry, depth + 1).then(function(){ return next(); });
+        }
+        return next();
+      });
+    }
+    return next();
+  }
+  return walk(handle, 0).then(function(){
+    if(files.length) addFiles(files);
+    else toast("No photos or videos found in that folder");
+  }).catch(function(){ toast("Could not read that folder"); });
+}
+function updateReopenBtn(){
+  var btn = $("#reopenBtn");
+  if(savedFolderHandle){
+    btn.hidden = false;
+    $("#reopenLbl").textContent = "Reopen \u201C" + (savedFolderHandle.name || "my folder") + "\u201D";
+  } else {
+    btn.hidden = true;
+  }
+}
+function reopenFolder(){
+  if(!savedFolderHandle) return;
+  var handle = savedFolderHandle;
+  var opts = { mode: "read" };
+  function go(){ readFolderHandle(handle); }
+  if(handle.queryPermission){
+    handle.queryPermission(opts).then(function(p){
+      if(p === "granted") go();
+      else if(handle.requestPermission) handle.requestPermission(opts).then(function(p2){ if(p2 === "granted") go(); else toast("Permission needed to reopen that folder"); });
+      else toast("Permission needed to reopen that folder");
+    }).catch(function(){ toast("Could not reopen that folder"); });
+  } else go();
+}
+
+/* ---------- screenshots ----------
+   A web page cannot silently capture the screen. The browser's
+   own share picker asks the user which screen, window or tab to
+   capture; we grab a single frame and stop the stream at once. */
+function takeScreenshot(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+    toast("Screenshots are not supported in this browser");
+    return;
+  }
+  var stream = null;
+  navigator.mediaDevices.getDisplayMedia({ video: true, audio: false }).then(function(s){
+    stream = s;
+    var track = s.getVideoTracks()[0];
+    var video = document.createElement("video");
+    video.srcObject = s; video.muted = true; video.playsInline = true;
+    return video.play().then(function(){
+      return new Promise(function(res){ setTimeout(res, 150); }).then(function(){
+        var w = video.videoWidth || track.getSettings().width || 1280;
+        var h = video.videoHeight || track.getSettings().height || 720;
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(video, 0, 0, w, h);
+        s.getTracks().forEach(function(t){ t.stop(); });
+        video.srcObject = null;
+        return new Promise(function(res2){ canvas.toBlob(res2, "image/png"); });
+      });
+    });
+  }).then(function(blob){
+    if(!blob){ toast("Could not capture that screenshot"); return; }
+    var stamp = new Date().toISOString().replace(/[:.]/g, "-").replace("T", " ").slice(0, 19);
+    var it = addBlob(blob, "Screenshot " + stamp + ".png", "screenshot", Date.now());
+    render();
+    toast("Screenshot added — open it and tap Download to save the PNG");
+    openLightbox(it.id);
+  }).catch(function(err){
+    if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); }
+    if(err && (err.name === "NotAllowedError" || err.name === "AbortError")) return; // user cancelled the picker
+    toast("Could not take a screenshot in this browser");
+  });
+}
+
+/* ---------- wiring ---------- */
+$("#openFilesBtn").addEventListener("click", openFilesPicker);
+$("#emptyOpenFiles").addEventListener("click", openFilesPicker);
+$("#openFolderBtn").addEventListener("click", openFolder);
+$("#emptyOpenFolder").addEventListener("click", openFolder);
+$("#shotBtn").addEventListener("click", takeScreenshot);
+$("#reopenBtn").addEventListener("click", reopenFolder);
+$("#fileInput").addEventListener("change", function(){ addFiles(this.files); this.value = ""; });
+$("#dirInput").addEventListener("change", function(){ addFiles(this.files); this.value = ""; });
+$("#q").addEventListener("input", render);
+$("#sortSel").addEventListener("change", function(){ saveSortPref(); render(); });
+$("#grid").addEventListener("click", function(e){
+  var card = e.target.closest ? e.target.closest(".card") : null;
+  if(card) openLightbox(Number(card.getAttribute("data-id")));
+});
+$("#lbClose").addEventListener("click", closeLightbox);
+$("#lbPrev").addEventListener("click", function(){ lbNav(-1); });
+$("#lbNext").addEventListener("click", function(){ lbNav(1); });
+$("#lbRemove").addEventListener("click", function(){
+  var it = currentList[lbIndex];
+  if(it) openModal(it);
+});
+$("#modalCancel").addEventListener("click", closeModal);
+$("#scrim").addEventListener("click", function(e){ if(e.target === this) closeModal(); });
+$("#modalOk").addEventListener("click", function(){
+  var it = pendingRemove;
+  closeModal();
+  if(it){ closeLightbox(); removeFromView(it); toast("Removed from view — your file was not deleted"); }
+});
+$("#lightbox").addEventListener("click", function(e){ if(e.target === this) closeLightbox(); });
+document.addEventListener("keydown", function(e){
+  if($("#scrim").classList.contains("open")){
+    if(e.key === "Escape") closeModal();
+    return;
+  }
+  if(lbIndex >= 0){
+    if(e.key === "Escape") closeLightbox();
+    else if(e.key === "ArrowLeft") lbNav(-1);
+    else if(e.key === "ArrowRight") lbNav(1);
+  }
+});
+/* drag & drop — files are read in place, never uploaded */
+document.addEventListener("dragover", function(e){ e.preventDefault(); document.body.classList.add("dragging"); });
+document.addEventListener("dragleave", function(e){ if(!e.relatedTarget) document.body.classList.remove("dragging"); });
+document.addEventListener("drop", function(e){
+  e.preventDefault();
+  document.body.classList.remove("dragging");
+  if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+});
+window.addEventListener("pagehide", function(){
+  items.forEach(function(it){ if(it.url){ try { URL.revokeObjectURL(it.url); } catch(e){} } });
+});
+
+/* ---------- init ---------- */
+loadSortPref();
+render();
+idbGet("folder").then(function(h){
+  if(h){ savedFolderHandle = h; updateReopenBtn(); }
+}).catch(function(){});
+</script>
+</body>
+</html>

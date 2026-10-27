@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customize Zero</title>
+<style>
+:root{
+  --blue:#5a5ae6; --blue-dark:#4444d6; --blue-light:#eef0ff;
+  --grad:linear-gradient(135deg,#7c7cf4 0%,#5a5ae6 55%,#7c3aed 100%);
+  --bg:#f4f5fb; --card:#ffffff; --ink:#15172e; --ink-soft:#6d748e; --line:#e6e8f2;
+  --shadow:0 4px 16px rgba(21,23,46,.07); --radius:20px;
+  --ease-apple:cubic-bezier(0.32,0.72,0,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;min-height:100dvh;-webkit-text-size-adjust:100%}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(244,245,251,.85);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:760px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:14px}
+.back{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.back:active{transform:scale(.94)}
+.ttl h1{font-size:21px;letter-spacing:-.5px}
+.ttl p{font-size:13px;color:var(--ink-soft);margin-top:2px}
+.wrap{max-width:760px;margin:0 auto;padding:22px 20px 60px}
+.tabs{display:flex;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px;margin-bottom:22px;box-shadow:var(--shadow)}
+.tab{flex:1;border:0;background:transparent;padding:12px 10px;border-radius:999px;font-size:15px;font-weight:700;color:var(--ink-soft);cursor:pointer;transition:all .25s var(--ease-apple);min-height:44px}
+.tab.active{background:var(--grad);color:#fff;box-shadow:0 4px 14px rgba(90,90,230,.35)}
+.tabpane{display:none}
+.tabpane.active{display:block;animation:fadeUp .35s var(--ease-apple)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.seclabel{font-size:12.5px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.6px;margin:4px 4px 8px}
+/* iOS-style grouped list */
+.group{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:12px}
+.row{display:flex;gap:14px;align-items:center;padding:14px 16px;min-height:64px}
+.row+.row{border-top:1px solid var(--line)}
+.r-ico{width:44px;height:44px;border-radius:14px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.r-body{flex:1;min-width:0}
+.r-name{font-size:16px;font-weight:700;letter-spacing:-.3px}
+.r-desc{font-size:13px;color:var(--ink-soft);margin-top:2px;line-height:1.5}
+.r-meta{font-size:12.5px;color:var(--ink-soft);margin-top:4px}
+/* premium toggle, >=34px touch target */
+.tgl{position:relative;width:54px;height:34px;flex-shrink:0;cursor:pointer;margin:0;display:inline-block}
+.tgl input{position:absolute;opacity:0;inset:-6px;cursor:pointer;z-index:2;margin:0}
+.tgl .tr{position:absolute;inset:0;background:#d7dae8;border-radius:999px;transition:background .25s}
+.tgl .th{position:absolute;top:3px;left:3px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:left .25s var(--ease-apple)}
+.tgl input:checked ~ .tr{background:var(--blue)}
+.tgl input:checked ~ .th{left:23px}
+.tgl input:focus-visible ~ .tr{outline:2px solid var(--blue);outline-offset:2px}
+.note{font-size:13px;color:var(--ink-soft);line-height:1.65;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-top:16px}
+.sch-del{border:1px solid var(--line);background:transparent;color:var(--ink-soft);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;min-height:36px}
+.sch-del:hover{color:#e11d48;border-color:#e11d48}
+.newbtn{width:100%;padding:16px;border-radius:var(--radius);border:2px dashed var(--line);background:transparent;color:var(--blue);font-size:15px;font-weight:800;cursor:pointer;margin-top:6px;min-height:56px}
+.newbtn:hover{border-color:var(--blue)}
+.form{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);margin-bottom:14px;animation:fadeUp .3s var(--ease-apple)}
+.form h3{font-size:16px;margin-bottom:16px;letter-spacing:-.3px}
+.f-label{font-size:12.5px;font-weight:700;color:var(--ink-soft);margin:14px 0 7px;text-transform:uppercase;letter-spacing:.5px}
+.f-label:first-of-type{margin-top:0}
+.kindrow{display:flex;gap:8px;flex-wrap:wrap}
+.kind{flex:1;min-width:130px;border:1.5px solid var(--line);border-radius:14px;padding:13px 10px;text-align:center;cursor:pointer;font-size:13.5px;font-weight:700;color:var(--ink-soft);transition:all .2s;min-height:48px;display:flex;align-items:center;justify-content:center}
+.kind.sel{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.kind:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.kinddesc{font-size:12.5px;color:var(--ink-soft);margin-top:8px}
+.f-input{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;background:var(--bg);color:var(--ink);outline:none;min-height:48px}
+.f-input:focus{border-color:var(--blue)}
+.f-actions{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer;border:0;min-height:48px}
+.btn.primary{background:var(--grad);color:#fff}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--ink)}
+.btn:active{transform:scale(.98)}
+.empty{text-align:center;padding:44px 20px;color:var(--ink-soft)}
+.empty .e-ico{width:60px;height:60px;border-radius:20px;background:var(--blue-light);color:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.empty p{font-size:14px;line-height:1.6;max-width:380px;margin:0 auto}
+/* confirm modal */
+.movl{position:fixed;inset:0;background:rgba(10,10,25,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s}
+.movl[hidden]{display:none}
+.mcard{background:var(--card);border-radius:20px;padding:26px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.25);text-align:center}
+.mcard h3{font-size:17px;margin-bottom:8px}
+.mcard p{font-size:14px;color:var(--ink-soft);line-height:1.6;margin-bottom:20px}
+.mrow{display:flex;gap:10px}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:#15172e;color:#fff;padding:13px 22px;border-radius:999px;font-size:14px;font-weight:600;opacity:0;transition:all .3s;z-index:300;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <button class="back" id="backBtn" aria-label="Back to Zero AI">&#8592;</button>
+  <div class="ttl"><h1>Customize Zero</h1><p>Skills and scheduled tasks — stored only in this browser.</p></div>
+</div></div>
+<div class="wrap">
+  <div class="tabs" role="tablist" aria-label="Customize sections">
+    <button class="tab active" role="tab" aria-selected="true" data-tab="skills">Skills</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="scheduled">Scheduled</button>
+  </div>
+
+  <div class="tabpane active" id="pane-skills" role="tabpanel">
+    <div class="seclabel">Skills</div>
+    <div class="group" id="skillList"></div>
+    <div class="note">Turning a skill off hides it everywhere in Zero AI — the feature's button and prompts disappear. Nothing is deleted; flip it back on any time. Your choices never leave this browser.</div>
+  </div>
+
+  <div class="tabpane" id="pane-scheduled" role="tabpanel">
+    <div class="seclabel">Scheduled</div>
+    <div class="group" id="schedList"></div>
+    <div id="schedForm" style="display:none"></div>
+    <button class="newbtn" id="newSchedBtn">+ New schedule</button>
+    <div class="note">Schedules run when you open Zero AI — your briefing, digest or quiz is waiting for you as a card in chat. Zero generates each one fresh with its AI. Nothing is sent anywhere except the AI request itself.</div>
+  </div>
+</div>
+
+<div class="movl" id="mOvl" hidden><div class="mcard" role="alertdialog" aria-modal="true" aria-labelledby="mTitle" aria-describedby="mText">
+  <h3 id="mTitle">Delete schedule?</h3><p id="mText"></p>
+  <div class="mrow"><button class="btn ghost" id="mCancel">Keep it</button><button class="btn primary" id="mOk">Delete</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="zero-prefs.js"></script>
+<script>
+(function(){
+"use strict";
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show");},2600);}
+document.getElementById("backBtn").onclick=function(){location.href="zerocode.html";};
+
+/* ---------- tabs ---------- */
+var tabs=document.querySelectorAll(".tab");
+tabs.forEach(function(b){b.onclick=function(){
+  tabs.forEach(function(x){x.classList.remove("active");x.setAttribute("aria-selected","false");});
+  b.classList.add("active");b.setAttribute("aria-selected","true");
+  document.querySelectorAll(".tabpane").forEach(function(p){p.classList.remove("active");});
+  document.getElementById("pane-"+b.getAttribute("data-tab")).classList.add("active");
+};});
+
+/* ---------- skills ---------- */
+var SKILLS=[
+ {k:"websearch", n:"Web search", d:"Zero checks the live web for current facts before answering in Zero AI.",
+  svg:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.9 5.7 3.9 9S14.5 18.4 12 21c-2.5-2.6-3.9-5.7-3.9-9S9.5 5.6 12 3z"/>'},
+ {k:"computer", n:"Zero Computer", d:"Let Zero drive your browser with \u201ccomputer:\u201d commands.",
+  svg:'<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>'},
+ {k:"notebooks", n:"Study notebooks", d:"Persistent notebooks with lessons, flashcards and quizzes in Zero AI.",
+  svg:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'},
+ {k:"mail", n:"Zero Mail", d:"Send-only email: Zero sends a message only when you explicitly ask.",
+  svg:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 6L2 7"/>'},
+ {k:"camera", n:"Camera / scan", d:"Scan QR codes and ask Zero about photos from the homepage.",
+  svg:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'},
+ {k:"aisuggest", n:"AI suggestions", d:"Smart search suggestions as you type on the homepage.",
+  svg:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>'}
+];
+function renderSkills(){
+  var cur=window.ZeroPrefs?window.ZeroPrefs.getSkills():{};
+  var h=SKILLS.map(function(s){
+    var on=cur[s.k]!==false;
+    return '<div class="row"><div class="r-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+s.svg+'</svg></div>'
+      +'<div class="r-body"><div class="r-name">'+esc(s.n)+'</div><div class="r-desc">'+esc(s.d)+'</div></div>'
+      +'<label class="tgl"><input type="checkbox" data-skill="'+s.k+'" aria-label="'+esc(s.n)+'"'+(on?" checked":"")+'><span class="tr" aria-hidden="true"></span><span class="th" aria-hidden="true"></span></label></div>';
+  }).join("");
+  document.getElementById("skillList").innerHTML=h;
+  document.querySelectorAll("[data-skill]").forEach(function(inp){
+    inp.addEventListener("change",function(){
+      if(window.ZeroPrefs)window.ZeroPrefs.setSkill(inp.getAttribute("data-skill"),inp.checked);
+      toast(inp.checked?"Skill on":"Skill off");
+    });
+  });
+}
+
+/* ---------- schedules ---------- */
+var KINDS={
+  briefing:{n:"Morning briefing", d:"Top headlines, a quick look at the day, one productivity tip.", needsSubject:false},
+  news:{n:"News digest", d:"The day's top stories on a topic you choose.", needsSubject:true},
+  quiz:{n:"Study quiz", d:"A fresh 5-question quiz on a subject you're learning.", needsSubject:true}
+};
+function kindLabel(k){return KINDS[k]?KINDS[k].n:k;}
+function fmtTime(hm){
+  if(!hm)return"";
+  var p=hm.split(":"),h=+p[0],m=p[1]||"00",ap=h>=12?"PM":"AM";h=h%12;if(h===0)h=12;
+  return h+":"+m+" "+ap;
+}
+function renderSchedules(){
+  var list=window.ZeroPrefs?window.ZeroPrefs.getSchedules():[];
+  var box=document.getElementById("schedList");
+  if(!list.length){
+    box.innerHTML='<div class="empty"><div class="e-ico"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div><p>No schedules yet. Create one and Zero AI will have it waiting for you when you open it — a briefing, a news digest, or a study quiz.</p></div>';
+    return;
+  }
+  box.innerHTML=list.map(function(s){
+    var meta=esc(kindLabel(s.kind))+" \u00b7 "+esc(fmtTime(s.timeHHMM))+(s.subject?" \u00b7 "+esc(s.subject):"");
+    return '<div class="row" data-id="'+esc(s.id)+'"><div class="r-body"><div class="r-name">'+esc(s.title)+'</div><div class="r-meta">'+meta+'</div></div>'
+      +'<label class="tgl"><input type="checkbox" data-en="'+esc(s.id)+'" aria-label="Enable '+(s.title?esc(s.title):"schedule")+'"'+(s.enabled!==false?" checked":"")+'> <span class="tr" aria-hidden="true"></span><span class="th" aria-hidden="true"></span></label>'
+      +'<button class="sch-del" data-del="'+esc(s.id)+'">Delete</button></div>';
+  }).join("");
+  box.querySelectorAll("[data-en]").forEach(function(inp){
+    inp.addEventListener("change",function(){
+      var id=inp.getAttribute("data-en"),l=window.ZeroPrefs.getSchedules();
+      l.forEach(function(s){if(s.id===id)s.enabled=inp.checked;});
+      window.ZeroPrefs.saveSchedules(l);
+      toast(inp.checked?"Schedule on":"Schedule off");
+    });
+  });
+  box.querySelectorAll("[data-del]").forEach(function(b){
+    b.onclick=function(){askDelete(b.getAttribute("data-del"));};
+  });
+}
+var _delId=null;
+function askDelete(id){
+  _delId=id;
+  var l=window.ZeroPrefs.getSchedules(),s=null;
+  l.forEach(function(x){if(x.id===id)s=x;});
+  document.getElementById("mText").textContent=s?("\u201c"+s.title+"\u201d will no longer run."):"";
+  document.getElementById("mOvl").hidden=false;
+  document.getElementById("mCancel").focus();
+}
+function closeModal(){
+  document.getElementById("mOvl").hidden=true;_delId=null;
+}
+document.getElementById("mCancel").onclick=closeModal;
+document.getElementById("mOvl").addEventListener("click",function(e){if(e.target===this)closeModal();});
+document.getElementById("mOk").onclick=function(){
+  if(_delId&&window.ZeroPrefs){
+    var l=window.ZeroPrefs.getSchedules().filter(function(s){return s.id!==_delId;});
+    window.ZeroPrefs.saveSchedules(l);renderSchedules();toast("Schedule deleted");
+  }
+  closeModal();
+};
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"&&!document.getElementById("mOvl").hidden)closeModal();
+});
+
+/* ---------- new schedule form ---------- */
+var _kind="briefing";
+document.getElementById("newSchedBtn").onclick=function(){
+  _kind="briefing";
+  var f=document.getElementById("schedForm");
+  f.style.display="block";
+  f.innerHTML='<div class="form"><h3>New schedule</h3>'
+    +'<div class="f-label">Kind</div><div class="kindrow" role="radiogroup" aria-label="Schedule kind">'
+    +Object.keys(KINDS).map(function(k){return '<div class="kind'+(k===_kind?" sel":"")+'" role="radio" aria-checked="'+(k===_kind)+'" tabindex="0" data-kind="'+k+'">'+esc(KINDS[k].n)+'</div>';}).join("")
+    +'</div><div class="kinddesc" id="kindDesc">'+esc(KINDS[_kind].d)+'</div>'
+    +'<div class="f-label">Time</div><input type="time" class="f-input" id="fTime" value="08:00" aria-label="Time">'
+    +'<div id="subjWrap"><div class="f-label">Subject</div><input class="f-input" id="fSubject" placeholder="e.g. AI, Biology, World news" maxlength="60" aria-label="Subject"></div>'
+    +'<div class="f-actions"><button class="btn ghost" id="fCancel">Cancel</button><button class="btn primary" id="fSave">Create schedule</button></div></div>';
+  document.getElementById("newSchedBtn").style.display="none";
+  f.scrollIntoView({behavior:"smooth",block:"nearest"});
+  function syncSubj(){document.getElementById("subjWrap").style.display=KINDS[_kind].needsSubject?"":"none";}
+  syncSubj();
+  f.querySelectorAll("[data-kind]").forEach(function(k){
+    function pick(){
+      _kind=k.getAttribute("data-kind");
+      f.querySelectorAll("[data-kind]").forEach(function(x){x.classList.remove("sel");x.setAttribute("aria-checked","false");});
+      k.classList.add("sel");k.setAttribute("aria-checked","true");
+      document.getElementById("kindDesc").textContent=KINDS[_kind].d;
+      syncSubj();
+    }
+    k.onclick=pick;
+    k.addEventListener("keydown",function(e){
+      if(e.key==="Enter"||e.key===" "){e.preventDefault();pick();}
+    });
+  });
+  document.getElementById("fCancel").onclick=hideForm;
+  document.getElementById("fSave").onclick=function(){
+    var t=document.getElementById("fTime").value||"08:00";
+    var subj=(document.getElementById("fSubject").value||"").trim().slice(0,60);
+    if(KINDS[_kind].needsSubject&&!subj){toast("Add a subject first");document.getElementById("fSubject").focus();return;}
+    var title=KINDS[_kind].n+(subj?": "+subj:"");
+    var l=window.ZeroPrefs?window.ZeroPrefs.getSchedules():[];
+    l.push({id:window.ZeroPrefs.uid(),kind:_kind,title:title,timeHHMM:t,subject:subj,enabled:true,lastRun:""});
+    window.ZeroPrefs.saveSchedules(l);
+    hideForm();renderSchedules();toast("Schedule created");
+  };
+};
+function hideForm(){
+  document.getElementById("schedForm").style.display="none";
+  document.getElementById("newSchedBtn").style.display="";
+}
+
+renderSkills();
+renderSchedules();
+})();
+</script>
+</body>
+</html>

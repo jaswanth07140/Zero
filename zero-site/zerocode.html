@@ -1,0 +1,2772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero AI</title><!-- v20261010-preview-fix -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+:root{
+  /* ATELIER EDITION — ivory & ink, champagne hairlines, indigo interactive */
+  --gold:#a8894e; --gold-soft:rgba(168,137,78,.12);
+  --bg:#f6f4ef; --sidebar:#f0ede4; --bubble-ai:#f0ede4; --bubble-user:#e9ecf8;
+  --ink:#1d1c19; --ink-soft:#6b6a63; --accent:#3a5fd9; --radius:18px;
+  --card:#fbfaf7; --line:#e5e2d9; --sub:#6b6a63; --blue:#3a5fd9; --field:#efece4}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;margin:0}
+/* Main area */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+/* Top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px}
+@media(max-width:640px){.topbar{justify-content:flex-start;gap:8px;overflow-x:auto;padding:12px 12px;scrollbar-width:none}.topbar::-webkit-scrollbar{display:none}.topbar .chats-pill,.topbar .invite-pill{flex-shrink:0;white-space:nowrap}}
+.chats-pill{display:flex;align-items:center;gap:8px;background:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:15px;font-weight:500;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12);transition:box-shadow .2s,transform .2s}
+.chats-pill:hover{box-shadow:0 3px 12px rgba(0,0,0,.16);transform:translateY(-1px)}
+.chats-pill:active{transform:scale(.97)}
+.invite-pill{display:flex;align-items:center;gap:6px;background:#fff;border:0;border-radius:999px;padding:10px 20px;font-size:14px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+/* Chat area */
+.chat-wrap{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;align-items:center}
+/* Scheduled for you (Zero AI digests) */
+#digestSec{width:100%;display:flex;flex-direction:column;gap:12px}
+#digestSec[hidden]{display:none}
+.zd-card{background:#fff;border:1px solid #e8eaed;border-radius:18px;box-shadow:0 4px 18px rgba(0,0,0,.07);padding:18px 20px}
+.zd-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.zd-time{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#2c49b4;background:#e8f0fe;border-radius:999px;padding:4px 11px;white-space:nowrap}
+.zd-title{font-size:15.5px;font-weight:700;flex:1}
+.zd-manage{font-size:12.5px;font-weight:700;color:var(--accent);text-decoration:none;white-space:nowrap}
+.zd-x{border:0;background:transparent;color:var(--ink-soft);font-size:19px;cursor:pointer;line-height:1;padding:4px}
+.zd-x:hover{color:var(--ink)}
+.zd-body{font-size:14.5px;line-height:1.65;color:var(--ink)}
+.zd-body p{margin:8px 0}
+.zd-body ul,.zd-body ol{margin:8px 0 8px 20px}
+.zd-err{font-size:14px;color:var(--ink-soft);line-height:1.6}
+.zd-retry{margin-top:10px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);border-radius:10px;padding:9px 18px;font-size:13.5px;font-weight:800;cursor:pointer}
+.zd-loading{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:14px}
+.zd-loading .dots span{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:5px;animation:zdblink 1.2s infinite}
+.zd-loading .dots span:nth-child(2){animation-delay:.2s}
+.zd-loading .dots span:nth-child(3){animation-delay:.4s}
+@keyframes zdblink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.chat-inner{width:100%;max-width:760px;display:flex;flex-direction:column;gap:16px}
+.msg{max-width:80%;padding:12px 16px;border-radius:18px;font-size:15px;line-height:1.55;word-wrap:break-word}
+.msg.ai{background:#f1f3f4;align-self:flex-start;border-bottom-left-radius:4px;color:#1a1a1a}
+.msg.ai a.task-link{display:inline-block;margin:2px 6px 2px 0;padding:7px 16px;border-radius:999px;background:#3a5fd9;color:#fff!important;text-decoration:none;font-weight:600;font-size:13px;cursor:pointer}
+.msg.ai a.task-link:hover{background:#2c49b4}
+/* Zero AI browser card ("Open browser" UI) */
+.browser-card{background:#f1f3f4;border-radius:20px;padding:14px;max-width:360px}
+.browser-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.browser-card-ico{width:42px;height:42px;border-radius:12px;background:#e8f0fe;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.browser-card-title{font-weight:700;font-size:15px;color:#1a1a1a}
+.browser-card-status{font-size:13px;color:#5f6368}
+.browser-card-preview{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:10px;min-height:104px}
+.browser-mock-bar{display:flex;align-items:center;gap:6px;background:#f1f3f4;border-radius:8px;padding:6px 10px;font-size:11px;color:#5f6368;margin-bottom:8px}
+.browser-mock-line{height:8px;border-radius:4px;background:#e8eaed;margin:7px 2px}
+.browser-card-open{width:100%;padding:13px;border:0;border-radius:14px;background:#fff;font-size:15px;font-weight:600;color:#1a1a1a;cursor:pointer}
+.browser-card-open:hover{background:#f8f9fa}
+.msg.user{background:#e8f0fe;align-self:flex-end;border-bottom-right-radius:4px;color:#1a1a1a}
+.msg.ai b{color:var(--ink)}
+.msg pre{background:#fff;border:1px solid #e8eaed;border-radius:12px;padding:12px;overflow-x:auto;font-size:13px;margin:8px 0}
+.msg code{font-family:Menlo,Consolas,monospace}
+/* Typing indicator */
+.typing{align-self:flex-start;background:var(--bubble-ai);border-radius:var(--radius);border-bottom-left-radius:6px;padding:16px 20px;display:flex;gap:6px}
+.typing span{width:8px;height:8px;border-radius:50%;background:#bdc1c6;animation:blink 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+/* Typing indicator used for AI response placeholders (typing-dots) */
+.typing-dots{display:inline-flex;gap:6px;padding:10px 4px;align-items:center}
+.typing-dots span{width:8px;height:8px;border-radius:50%;background:#bdc1c6;animation:blink 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+/* Activity rows (model steps: consulting, searching, synthesizing) */
+.act-row{display:flex;align-items:center;gap:10px;padding:6px 2px;animation:zcMsgIn .3s cubic-bezier(0.32,0.72,0,1)}
+.act-icon{width:26px;height:26px;border-radius:50%;background:#e8f0fe;color:#3a5fd9;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700}
+.act-icon.done{background:#e6f4ea;color:#188038}
+.act-text{flex:1;min-width:0;font-size:13.5px;line-height:1.5;color:var(--ink-soft,#5f6368)}
+.act-time{font-size:11px;color:#9aa0a6;flex-shrink:0}
+/* Artifact panel (side-by-side, chat goes half) */
+.main-wrap{display:flex;flex:1;min-height:0;width:100%}
+.chat-half{flex:1;min-width:0;display:flex;flex-direction:column;transition:flex .3s ease}
+.artifact{width:0;min-width:0;background:rgba(255,255,255,.85);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);border-left:1px solid rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden;transition:width .45s cubic-bezier(.32,.72,0,1);flex-shrink:0;box-shadow:-8px 0 32px rgba(0,0,0,.08)}
+.artifact.open{width:min(620px,50vw)}
+.artifact.open.browse-wide{width:50vw}
+.main-wrap.user-driving .chat-half{display:none}
+.main-wrap.user-driving .artifact.open{width:100%}
+#takeControlBtn{flex-shrink:0;padding:8px 14px;border:0;border-radius:10px;background:#3a5fd9;color:#fff;font-size:13px;font-weight:600;cursor:pointer;margin-left:8px}
+#takeControlBtn:hover{background:#2c49b4}
+:focus-visible{outline:2px solid #3a5fd9;outline-offset:2px;border-radius:6px;}
+.art-head{background:rgba(255,255,255,.6);backdrop-filter:blur(10px);border-bottom:1px solid rgba(0,0,0,.06)}
+.art-close{width:32px;height:32px;border-radius:50%;border:0;background:rgba(0,0,0,.06);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.art-close:hover{background:rgba(0,0,0,.12);transform:scale(1.1)}
+.art-tabs button{transition:all .2s}
+.art-tabs button.active{background:linear-gradient(135deg,#e8f0fe,#d2e3fc);box-shadow:0 2px 8px rgba(66,133,244,.2)}
+.art-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid #e8eaed;gap:8px}
+.art-tabs{display:flex;gap:4px;flex:1}
+.art-tabs button{padding:8px 16px;border:0;background:transparent;border-radius:10px;font-size:14px;cursor:pointer;color:var(--ink-soft)}
+.art-tabs button.active{background:#e8f0fe;color:var(--accent);font-weight:600}
+.art-close{width:36px;height:36px;border-radius:50%;border:0;background:#f1f3f4;cursor:pointer;font-size:16px}
+.art-body{flex:1;overflow:hidden;position:relative}
+.art-body iframe{width:100%;height:100%;border:0;display:none}
+.art-body.show-preview #artFrame{display:block}
+.art-body.show-code #artCode{display:block}
+.art-body.show-browse #browseWrap{display:block}
+#artCode{display:none;width:100%;height:100%;overflow:auto;padding:16px;font-family:Menlo,Consolas,monospace;font-size:12px;background:#f8f9fa;white-space:pre-wrap}
+/* Input area */
+.input-wrap{padding:16px 20px 20px;display:flex;justify-content:center}
+.input-inner{width:100%;max-width:760px;background:#fff;border-radius:28px;display:flex;flex-direction:column;padding:12px 12px 12px 14px;gap:10px;box-shadow:0 2px 18px rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.05);transition:border-color .25s cubic-bezier(0.32,0.72,0,1),box-shadow .25s cubic-bezier(0.32,0.72,0,1)}
+.input-inner:focus-within{border-color:#3a5fd9;box-shadow:0 0 0 4px rgba(26,115,232,.12),0 6px 24px rgba(0,0,0,.10)}
+.input-row{display:flex;align-items:center;gap:2px;width:100%}
+#msgInput{flex:1;border:0;background:transparent;outline:none;font-size:16px;color:var(--ink);min-width:0;padding:10px 4px}
+#msgInput::placeholder{color:#9aa0a6}
+.attach-row{display:none;width:100%}
+.attach-row.has{display:block}
+.attach-chip{position:relative;display:inline-block}
+.attach-chip img{display:block;width:76px;height:76px;border-radius:18px;object-fit:cover;box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.attach-x{position:absolute;top:-9px;right:-9px;width:26px;height:26px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 5px rgba(0,0,0,.2);font-size:15px;line-height:1;color:#333;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.input-plus{width:40px;height:40px;border-radius:50%;border:0;background:transparent;font-size:24px;font-weight:300;cursor:pointer;color:#5f6368;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.input-plus:hover{background:#e8eaed}
+#msgInput{flex:1;border:0;background:transparent;outline:none;font-size:16px;padding:12px 4px;color:var(--ink)}
+#msgInput::placeholder{color:#9aa0a6}
+.input-mic{width:40px;height:40px;border-radius:50%;border:0;background:transparent;cursor:pointer;color:#5f6368;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.input-send{width:40px;height:40px;border-radius:50%;border:0;background:#c2e0ff;color:#1a1a1a;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:transform .12s,background .12s}
+.input-send:active{transform:scale(.92)}
+.input-send:disabled{opacity:.45;cursor:default}
+.input-send:hover{background:#aad6fb}
+/* Suggestion chips */
+.suggest{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 20px 12px}
+.suggest button{background:#fff;border:1px solid #dadce0;border-radius:20px;padding:9px 16px;font-size:14px;cursor:pointer;color:#1a1a1a;transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s,border-color .18s}
+.suggest button:hover{background:#f8f9fa;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.08);border-color:#3a5fd9}
+.suggest button:active{transform:scale(.96)}
+/* History drawer */
+.drawer{position:fixed;top:0;left:64px;bottom:0;width:280px;background:#fff;border-right:1px solid #e8eaed;box-shadow:4px 0 20px rgba(0,0,0,.08);transform:translateX(-110%);transition:transform .3s ease,visibility .3s;z-index:99;display:flex;flex-direction:column;visibility:hidden}
+.drawer.open{transform:translateX(0);visibility:visible}
+.drawer-head{padding:16px;font-weight:600;font-size:16px;border-bottom:1px solid #e8eaed;display:flex;justify-content:space-between;align-items:center}
+.drawer-list{flex:1;overflow-y:auto;padding:8px}
+.chat-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;font-size:14px;margin-bottom:4px}
+.chat-item:hover{background:#f1f3f4}
+.chat-item.active{background:#e8f0fe;font-weight:600}
+.chat-item img{width:30px;height:30px;border-radius:9px;object-fit:cover;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.chat-item span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-item{padding:12px;border-radius:12px;cursor:pointer;font-size:14px;margin-bottom:4px}
+.hist-item:hover{background:#f1f3f4}
+/* macOS-style menu bar */
+.macbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;height:30px;padding:0 12px;background:rgba(250,250,252,.72);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);border-bottom:1px solid rgba(0,0,0,.08);font-size:13px;color:#1d1d1f;-webkit-user-select:none;user-select:none}
+.macbar-left{display:flex;align-items:center;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}
+.traffic{display:flex;align-items:center;gap:8px;margin-right:8px;flex-shrink:0}
+.tl{position:relative;width:15px;height:15px;border-radius:50%;cursor:pointer;padding:0;font-size:0;line-height:1;border:1px solid rgba(0,0,0,.12)}
+.tl-close{background:#ff5f57;border-color:#e0443e}
+.tl-min{background:#febc2e;border-color:#dea123}
+.tl-max{background:#28c840;border-color:#1aab29}
+.tl::before{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:rgba(0,0,0,.55);opacity:0;transition:opacity .15s}
+.traffic:hover .tl::before{opacity:1}
+.tl-close::before{content:"\00d7"}
+.tl-min::before{content:"\2212"}
+.tl-max::before{content:"\002b"}
+.tl:active{transform:scale(.92)}
+.macbar-left::-webkit-scrollbar{display:none}
+.macbar-apple{width:18px;height:18px;border-radius:5px;margin-right:6px;flex-shrink:0;object-fit:cover}
+.macbar-appname{font-weight:700;margin-right:8px;flex-shrink:0}
+.macmenu-btn{background:none;border:none;font:inherit;font-size:13px;color:inherit;padding:4px 8px;border-radius:5px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.macmenu-btn:hover,.macmenu-btn.open{background:rgba(0,0,0,.08)}
+.macprofile{display:flex;align-items:center;gap:6px;background:none;border:1px solid rgba(0,0,0,.14);border-radius:14px;padding:3px 10px;font-size:12px;color:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.macprofile:hover{background:rgba(0,0,0,.06)}
+.macmenu{position:fixed;top:34px;min-width:215px;max-width:300px;max-height:70vh;overflow-y:auto;background:rgba(250,250,252,.94);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);border:1px solid rgba(0,0,0,.1);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.18);padding:5px;z-index:400;font-size:13px;color:#1d1d1f}
+.macmenu[hidden]{display:none}
+.macmenu button{display:flex;width:100%;align-items:center;background:none;border:none;text-align:left;font-size:13px;color:inherit;padding:7px 10px;border-radius:6px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.macmenu button:hover{background:#3a5fd9;color:#fff}
+.macsep{height:1px;background:rgba(0,0,0,.1);margin:5px 8px}
+.macmenu .mactitle{padding:7px 10px;font-size:12px;opacity:.55}
+
+/* ============ PHONE FRIENDLY ============ */
+@media (max-width:768px){
+  .main{margin-left:0 !important;padding:12px}
+  .composer{padding:10px}
+  .chat{max-width:100%}
+  /* artifact panel becomes a full-screen sheet on phones */
+  .artifact{position:fixed;top:0;left:0;right:0;bottom:0;z-index:150}
+  .artifact.open{width:100%}
+}
+
+/* ============ PHONE FIX 2: long words, code blocks ============ */
+@media (max-width:768px){
+  .msg{overflow-wrap:break-word;word-break:break-word;max-width:100%}
+  .codeblock{max-width:100%}
+  .codeblock pre{max-width:100%}
+  .chat-inner,.input-inner{padding-left:12px;padding-right:12px;box-sizing:border-box}
+}
+
+.md-table{border-collapse:collapse;margin:12px 0;width:100%;font-size:14px}
+.md-table th,.md-table td{border:1px solid var(--line,#ddd);padding:8px 12px;text-align:left}
+.md-check{accent-color:#3a5fd9;width:15px;height:15px;vertical-align:-2px;margin-right:7px;pointer-events:none}
+.md-table th{background:var(--bg-soft,#f5f5f7);font-weight:600}
+.md-table tr:nth-child(even) td{background:rgba(0,0,0,.02)}
+@media(max-width:640px){.md-table{font-size:12px}.md-table th,.md-table td{padding:6px 7px}.md-table td{word-break:break-word}.msg.ai a.task-link{padding:6px 12px;font-size:12px}}
+
+/* ============ Zero Study Notebooks ============ */
+.nb-overlay{position:fixed;inset:0;background:#fff;z-index:300;display:none;flex-direction:column}
+.nb-overlay.open{display:flex}
+.nb-head{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid #e8eaed}
+.nb-head h2{font-size:19px;font-weight:700;letter-spacing:-.3px;flex:1}
+.nb-x{border:0;background:#f1f3f4;width:36px;height:36px;border-radius:50%;font-size:18px;cursor:pointer;color:#5f6368;line-height:1}
+.nb-x:hover{background:#e8eaed}
+.nb-body{flex:1;overflow-y:auto;padding:26px 22px 60px}
+.nb-wrap{max-width:780px;margin:0 auto}
+.nb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.nb-card{background:#fff;border:1px solid #e8eaed;border-radius:18px;padding:18px;cursor:pointer;transition:box-shadow .18s ease,transform .18s ease;position:relative}
+.nb-card:hover{box-shadow:0 10px 28px rgba(0,0,0,.09);transform:translateY(-2px)}
+.nb-card h3{font-size:16px;margin-bottom:4px;letter-spacing:-.2px}
+.nb-card .subj{font-size:12.5px;color:#3a5fd9;font-weight:600;margin-bottom:6px}
+.nb-card .goal{font-size:13px;color:#5f6368;line-height:1.5;margin-bottom:10px}
+.nb-card .meta{font-size:12px;color:#9aa0a6}
+.nb-del{position:absolute;top:10px;right:10px;border:0;background:transparent;color:#bdc1c6;cursor:pointer;padding:6px;border-radius:8px}
+.nb-del:hover{color:#d93025;background:#fce8e6}
+.nb-new{border:2px dashed #dadce0;background:transparent;color:#5f6368;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:150px;font-size:14px;font-weight:600;cursor:pointer;border-radius:18px}
+.nb-new:hover{border-color:#3a5fd9;color:#3a5fd9}
+.nb-btn{background:#3a5fd9;color:#fff;border:0;border-radius:12px;padding:11px 20px;font-size:14.5px;font-weight:700;cursor:pointer}
+.nb-btn:hover{background:#1765cc}
+.nb-btn:disabled{opacity:.55;cursor:wait}
+.nb-btn-ghost{background:#f1f3f4;color:#202124;border:0;border-radius:12px;padding:11px 18px;font-size:14px;font-weight:600;cursor:pointer}
+.nb-btn-ghost:hover{background:#e8eaed}
+.nb-tabs{display:flex;gap:6px;border-bottom:1px solid #e8eaed;margin:18px 0 20px;flex-wrap:wrap}
+.nb-tab{border:0;background:none;padding:10px 16px;font-size:14.5px;font-weight:600;color:#5f6368;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px}
+.nb-tab.on{color:#3a5fd9;border-bottom-color:#3a5fd9}
+.nb-row{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.nb-input{flex:1;min-width:200px;padding:11px 14px;border:1px solid #dadce0;border-radius:12px;font-size:16px;outline:none}
+.nb-input:focus{border-color:#3a5fd9}
+.nb-lesson{border:1px solid #e8eaed;border-radius:16px;margin-bottom:12px;overflow:hidden}
+.nb-lesson-head{padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.nb-lesson-head h4{font-size:15px;flex:1}
+.nb-lesson-body{padding:0 18px 18px;font-size:14px;line-height:1.7;color:#202124;display:none}
+.nb-lesson.open .nb-lesson-body{display:block}
+.nb-lesson .md{font-size:14px;line-height:1.7}
+.nb-check{font-size:12px;color:#5f6368;display:flex;align-items:center;gap:6px;margin-top:8px}
+.nb-check input{width:16px;height:16px;accent-color:#3a5fd9}
+.nb-spin{display:inline-block;width:16px;height:16px;border:2.5px solid #dadce0;border-top-color:#3a5fd9;border-radius:50%;animation:nbrot .7s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes nbrot{to{transform:rotate(360deg)}}
+.nb-err{background:#fce8e6;color:#b3261e;border-radius:12px;padding:12px 16px;font-size:13.5px;margin-bottom:14px}
+/* flashcards */
+.nb-fc-stage{perspective:1200px;margin:10px 0 16px}
+.nb-fc{position:relative;width:100%;min-height:220px;cursor:pointer;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.3,.7,.3,1)}
+.nb-fc.flip{transform:rotateY(180deg)}
+.nb-fc-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#f8f9fa;border:1px solid #e8eaed;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:30px;font-size:19px;line-height:1.6;text-align:center}
+.nb-fc-back{transform:rotateY(180deg);background:#e8f0fe;border-color:#c2dbff;font-size:16.5px}
+.nb-fc-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:8px}
+.nb-fc-count{font-size:13px;color:#5f6368;min-width:70px;text-align:center}
+/* quiz */
+.nb-q{border:1px solid #e8eaed;border-radius:16px;padding:20px;margin-bottom:14px}
+.nb-q h4{font-size:16px;margin-bottom:14px;line-height:1.5}
+.nb-opt{display:block;width:100%;text-align:left;border:1px solid #dadce0;background:#fff;border-radius:12px;padding:12px 15px;font-size:14px;margin-bottom:9px;cursor:pointer;line-height:1.5}
+.nb-opt:hover:not(:disabled){border-color:#3a5fd9;background:#f8fbff}
+.nb-opt:disabled{cursor:default}
+.nb-opt.right{border-color:#188038;background:#e6f4ea}
+.nb-opt.wrong{border-color:#d93025;background:#fce8e6}
+.nb-why{background:#f8f9fa;border-radius:12px;padding:13px 16px;font-size:13.5px;line-height:1.6;margin:12px 0;color:#3c4043}
+.nb-why b{color:#3a5fd9}
+.nb-score{text-align:center;padding:30px 10px}
+.nb-score .big{font-size:52px;font-weight:800;letter-spacing:-2px;color:#3a5fd9}
+.nb-score p{color:#5f6368;margin:8px 0 18px}
+/* progress */
+.nb-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.nb-stat{background:#f8f9fa;border:1px solid #e8eaed;border-radius:14px;padding:16px;text-align:center}
+.nb-stat .v{font-size:26px;font-weight:800;color:#3a5fd9}
+.nb-stat .l{font-size:12px;color:#5f6368;margin-top:4px}
+.nb-attempt{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid #f1f3f4;font-size:13.5px}
+.nb-attempt .dt{color:#9aa0a6;font-size:12px;margin-left:auto}
+.nb-master{background:linear-gradient(135deg,#e8f0fe,#f3e8fd);border-radius:16px;padding:18px;margin-bottom:18px;font-size:14px;line-height:1.6}
+/* modal */
+.nb-mbg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:400;display:none;align-items:center;justify-content:center;padding:16px}
+.nb-mbg.open{display:flex}
+.nb-modal{background:#fff;border-radius:20px;padding:26px;width:100%;max-width:440px;box-shadow:0 16px 50px rgba(0,0,0,.22)}
+.nb-modal h3{font-size:18px;margin-bottom:14px}
+.nb-modal label{font-size:13px;font-weight:600;color:#3c4043;display:block;margin:12px 0 5px}
+.nb-modal .nb-input{width:100%}
+.nb-modal .mrow{display:flex;gap:10px;margin-top:20px}
+.nb-danger{background:#d93025;color:#fff;border:0;border-radius:12px;padding:11px 20px;font-size:14.5px;font-weight:700;cursor:pointer;flex:1}
+@media(max-width:640px){.nb-body{padding:18px 14px 50px}.nb-head{padding:12px 14px}}
+/* ============ ATELIER POLISH LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(700px 480px at 15% -2%,rgba(168,137,78,.05),transparent 70%),radial-gradient(800px 520px at 92% 108%,rgba(58,95,217,.04),transparent 70%),var(--bg);background-attachment:fixed}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);border:2px solid transparent;background-clip:padding-box}
+.macbar{background:rgba(246,244,239,.74);color:var(--ink);border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(168,137,78,.12)}
+.macbar::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(168,137,78,.4),transparent);opacity:.5}
+.chats-pill,.invite-pill{background:var(--card);box-shadow:0 1px 4px rgba(29,28,25,.06);border:1px solid var(--line)}
+.chats-pill:hover{box-shadow:0 4px 14px rgba(29,28,25,.09);transform:translateY(-1px)}
+.zd-card{background:var(--card);border-color:var(--line);box-shadow:0 4px 18px rgba(29,28,25,.06)}
+.zd-time{color:#7a5f2e;background:var(--gold-soft)}
+.zd-manage{color:var(--accent)}
+.msg.ai{background:var(--card);border:1px solid var(--line);box-shadow:0 4px 18px rgba(29,28,25,.05)}
+.msg.user{background:var(--bubble-user);color:var(--ink)}
+.msg.ai a.task-link{background:var(--accent)}
+.msg.ai a.task-link:hover{background:var(--blue)}
+.msg pre{background:var(--sidebar);border-color:var(--line)}
+.act-icon{background:#e9ecf8;color:var(--accent)}
+.act-icon.done{background:#e6f0e4;color:#3f6f3a}
+.act-text{color:var(--ink-soft)}
+.suggest button{background:var(--card);border-color:var(--line);color:var(--ink)}
+.suggest button:hover{background:var(--sidebar);border-color:var(--accent);box-shadow:0 4px 12px rgba(29,28,25,.08)}
+.input-inner{background:var(--card);border-color:var(--line);box-shadow:0 2px 18px rgba(29,28,25,.07),0 0 0 1px rgba(168,137,78,.10)}
+.input-inner:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(58,95,217,.11),0 6px 24px rgba(29,28,25,.09)}
+.input-plus:hover,.input-mic:hover{background:var(--field)}
+.input-send{background:var(--accent);color:#fff}
+.input-send:hover{background:var(--blue)}
+.input-send:disabled{background:#c9c6bc;opacity:.6}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+try{localStorage.removeItem("zero-profile-v1");}catch(e){} /* privacy: wipe any previously stored learning data */
+function copyCode(id, btn){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var t=el.textContent;
+  var done=function(){
+    if(btn){ var o=btn.textContent; btn.textContent='Copied!'; btn.classList.add('copied');
+      setTimeout(function(){ btn.textContent=o; btn.classList.remove('copied'); },1500); }
+  };
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(done);
+  else { var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} ta.remove(); done(); }
+}
+function dlCode(id, lang){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var ext={javascript:'js',js:'js',python:'py',py:'py',html:'html',css:'css',java:'java',cpp:'cpp',c:'c',csharp:'cs',go:'go',rust:'rs',ruby:'rb',php:'php',json:'json',bash:'sh',sh:'sh',typescript:'ts',ts:'ts',sql:'sql',xml:'xml',yaml:'yml',swift:'swift',kotlin:'kt'}[String(lang).toLowerCase()]||'txt';
+  var blob=new Blob([el.textContent],{type:'text/plain'});
+  var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='zero-code.'+ext; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function runCode(id, lang){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var code=el.textContent;
+  var l=String(lang).toLowerCase();
+  if(l==='html'){
+    /* HTML renders in the sandboxed artifact iframe (sandbox="allow-scripts"
+       + srcdoc, opaque origin: no page DOM, no storage, no window.opener) —
+       never in a full-privilege new tab. */
+    showArtifact(code);
+    return;
+  }
+  if(l!=='javascript'&&l!=='js'){
+    zcDialog({title:'Cannot run '+l+' here',body:'Running '+l+' is not supported in the browser. Download the file to run it.',info:true});
+    return;
+  }
+  /* JavaScript runs inside a fully sandboxed iframe (opaque origin: no page
+     DOM, no storage, no network identity), so AI-generated code can never
+     touch this page, your chats, or your session. Output comes back via
+     postMessage only. */
+  var fr=document.createElement("iframe");
+  fr.setAttribute("sandbox","allow-scripts");
+  fr.style.display="none";
+  var finished=false;
+  function cleanup(){ window.removeEventListener("message",onMsg); if(fr.parentNode) fr.remove(); }
+  function onMsg(e){
+    if(e.source!==fr.contentWindow||finished) return;
+    finished=true;
+    var d=e.data||{};
+    var msg='Output:\n'+((d.logs||[]).join('\n'));
+    if(d.err){ msg='Error: '+d.err; }
+    else if(!d.undef){ msg+='\nReturn: '+d.res; }
+    cleanup();
+    zcDialog({title:'Code output',body:msg||'Code ran with no output',info:true});
+  }
+  window.addEventListener("message",onMsg);
+  document.body.appendChild(fr);
+  var safeCode=String(code).replace(/<\/script/gi,'<\\/script');
+  var runner='(function(){var logs=[],err=null,res,undef=true;'
+    +'console.log=function(){logs.push(Array.prototype.slice.call(arguments).join(" "));};'
+    +'try{res=(0,eval)(window.__zc_code);undef=(res===undefined);}catch(e){err=String((e&&e.message)||e);}'
+    +'var resStr="";try{resStr=String(res);}catch(x){resStr="[unprintable]";}'
+    +'parent.postMessage({logs:logs,res:resStr,undef:undef,err:err},"*");})();';
+  fr.srcdoc='<!doctype html><html><body><script>window.__zc_code='+JSON.stringify(safeCode)+';'+runner+'<\/script></body></html>';
+  setTimeout(function(){
+    if(!finished){ finished=true; cleanup(); zcDialog({title:'Code stopped',body:'Code took too long — stopped.',info:true}); }
+  },8000);
+}
+</script>
+<style>
+.codeblock{margin:12px 0;border:1px solid #e5e5ea;border-radius:12px;overflow:hidden;background:#1e1e1e}
+.cb-head{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#2d2d2d;border-bottom:1px solid #3e3e3e}
+.cb-lang{font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:.5px;flex:1}
+.cb-btn{background:#3a5fd9;color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer}
+.cb-btn:hover{background:#2c49b4}
+.msg .codeblock pre,.codeblock pre{margin:0;padding:16px;overflow-x:auto;background:#1e1e1e !important;border:none !important;border-radius:0 !important}
+.codeblock pre code{font-family:'SF Mono',Menlo,Consolas,monospace;font-size:13px;line-height:1.6;color:#d4d4d4;background:none;padding:0}
+.msg strong.h2{display:block;font-size:17px;margin:14px 0 6px}
+.msg strong.h3{display:block;font-size:15px;margin:12px 0 6px}
+.msg ol,.msg ul{margin:8px 0;padding-left:22px}
+.msg li{margin:5px 0;line-height:1.5}
+.msg code{background:rgba(0,0,0,.06);padding:2px 6px;border-radius:6px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:12.5px}
+.cb-btn.copied{background:#30d158 !important}
+
+/* ============ ZERO AI PREMIUM LAYER (2026-10-19) — additive only ============ */
+@keyframes zcMsgIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+@keyframes zcShimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes zcPulse{0%,100%{opacity:1}50%{opacity:.45}}
+.msg{animation:zcMsgIn .38s cubic-bezier(0.32,0.72,0,1)}
+.msg.ai{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 4px 18px rgba(21,23,46,.06)}
+.act-row{animation:zcMsgIn .3s cubic-bezier(0.32,0.72,0,1)}
+.act-icon.working{animation:zcPulse 1.4s ease-in-out infinite}
+.act-icon svg{width:15px;height:15px;display:block}
+/* Typing shimmer for in-progress AI text */
+.typing-shimmer{background:linear-gradient(90deg,var(--ink) 30%,var(--sub) 50%,var(--ink) 70%);background-size:400px 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:zcShimmer 1.6s linear infinite}
+/* Frosted artifact panel */
+.artifact{background:rgba(255,255,255,.78);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);border:1px solid var(--line);box-shadow:0 16px 48px rgba(21,23,46,.12)}
+[data-theme="dark"] .artifact{background:rgba(24,22,38,.82)}
+.art-tabs button{transition:all .2s cubic-bezier(0.32,0.72,0,1);display:inline-flex;align-items:center;gap:6px}
+.art-tabs button.active{box-shadow:0 4px 12px rgba(58,95,217,.2)}
+/* Premium buttons */
+.input-send,.cb-btn,.artifact-btn{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s}
+.input-send:hover{box-shadow:0 6px 18px rgba(58,95,217,.28);transform:translateY(-1px)}
+.input-send:active,.cb-btn:active,.artifact-btn:active{transform:scale(.93)}
+.cb-btn:hover{border-color:var(--blue,#3a5fd9)}
+/* Code blocks: depth */
+.codeblock{box-shadow:0 8px 28px rgba(0,0,0,.10);border-radius:14px;overflow:hidden}
+.cb-head{background:linear-gradient(180deg,rgba(255,255,255,.06),transparent)}
+/* Custom scrollbars */
+#msgs::-webkit-scrollbar,.chat-list::-webkit-scrollbar{width:9px}
+#msgs::-webkit-scrollbar-thumb,.chat-list::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+:focus-visible{outline:2px solid var(--blue,#3a5fd9);outline-offset:2px;border-radius:8px}
+/* File/preview cards: lift */
+.browser-card{transition:transform .25s cubic-bezier(0.32,0.72,0,1),box-shadow .25s}
+.browser-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(21,23,46,.12)}
+/* Chat list items */
+.chat-item{transition:background .18s,transform .18s}
+.chat-item:hover{background:var(--field)}
+.chat-item.active{box-shadow:inset 3px 0 0 var(--blue,#3a5fd9)}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+/* ============ ATELIER POLISH LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(700px 480px at 15% -2%,rgba(168,137,78,.05),transparent 70%),radial-gradient(800px 520px at 92% 108%,rgba(58,95,217,.04),transparent 70%),var(--bg);background-attachment:fixed}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);border:2px solid transparent;background-clip:padding-box}
+.macbar{background:rgba(246,244,239,.74);color:var(--ink);border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(168,137,78,.12)}
+.macbar::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(168,137,78,.4),transparent);opacity:.5}
+.chats-pill,.invite-pill{background:var(--card);box-shadow:0 1px 4px rgba(29,28,25,.06);border:1px solid var(--line)}
+.chats-pill:hover{box-shadow:0 4px 14px rgba(29,28,25,.09);transform:translateY(-1px)}
+.zd-card{background:var(--card);border-color:var(--line);box-shadow:0 4px 18px rgba(29,28,25,.06)}
+.zd-time{color:#7a5f2e;background:var(--gold-soft)}
+.zd-manage{color:var(--accent)}
+.msg.ai{background:var(--card);border:1px solid var(--line);box-shadow:0 4px 18px rgba(29,28,25,.05)}
+.msg.user{background:var(--bubble-user);color:var(--ink)}
+.msg.ai a.task-link{background:var(--accent)}
+.msg.ai a.task-link:hover{background:var(--blue)}
+.msg pre{background:var(--sidebar);border-color:var(--line)}
+.act-icon{background:#e9ecf8;color:var(--accent)}
+.act-icon.done{background:#e6f0e4;color:#3f6f3a}
+.act-text{color:var(--ink-soft)}
+.suggest button{background:var(--card);border-color:var(--line);color:var(--ink)}
+.suggest button:hover{background:var(--sidebar);border-color:var(--accent);box-shadow:0 4px 12px rgba(29,28,25,.08)}
+.input-inner{background:var(--card);border-color:var(--line);box-shadow:0 2px 18px rgba(29,28,25,.07),0 0 0 1px rgba(168,137,78,.10)}
+.input-inner:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(58,95,217,.11),0 6px 24px rgba(29,28,25,.09)}
+.input-plus:hover,.input-mic:hover{background:var(--field)}
+.input-send{background:var(--accent);color:#fff}
+.input-send:hover{background:var(--blue)}
+.input-send:disabled{background:#c9c6bc;opacity:.6}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+
+<style>
+.tk-k{color:#569cd6;font-weight:600}
+.tk-s{color:#ce9178}
+.tk-c{color:#6a9955;font-style:italic}
+.tk-n{color:#b5cea8}
+/* ============ ATELIER POLISH LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(700px 480px at 15% -2%,rgba(168,137,78,.05),transparent 70%),radial-gradient(800px 520px at 92% 108%,rgba(58,95,217,.04),transparent 70%),var(--bg);background-attachment:fixed}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);border:2px solid transparent;background-clip:padding-box}
+.macbar{background:rgba(246,244,239,.74);color:var(--ink);border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(168,137,78,.12)}
+.macbar::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(168,137,78,.4),transparent);opacity:.5}
+.chats-pill,.invite-pill{background:var(--card);box-shadow:0 1px 4px rgba(29,28,25,.06);border:1px solid var(--line)}
+.chats-pill:hover{box-shadow:0 4px 14px rgba(29,28,25,.09);transform:translateY(-1px)}
+.zd-card{background:var(--card);border-color:var(--line);box-shadow:0 4px 18px rgba(29,28,25,.06)}
+.zd-time{color:#7a5f2e;background:var(--gold-soft)}
+.zd-manage{color:var(--accent)}
+.msg.ai{background:var(--card);border:1px solid var(--line);box-shadow:0 4px 18px rgba(29,28,25,.05)}
+.msg.user{background:var(--bubble-user);color:var(--ink)}
+.msg.ai a.task-link{background:var(--accent)}
+.msg.ai a.task-link:hover{background:var(--blue)}
+.msg pre{background:var(--sidebar);border-color:var(--line)}
+.act-icon{background:#e9ecf8;color:var(--accent)}
+.act-icon.done{background:#e6f0e4;color:#3f6f3a}
+.act-text{color:var(--ink-soft)}
+.suggest button{background:var(--card);border-color:var(--line);color:var(--ink)}
+.suggest button:hover{background:var(--sidebar);border-color:var(--accent);box-shadow:0 4px 12px rgba(29,28,25,.08)}
+.input-inner{background:var(--card);border-color:var(--line);box-shadow:0 2px 18px rgba(29,28,25,.07),0 0 0 1px rgba(168,137,78,.10)}
+.input-inner:focus-within{border-color:var(--accent);box-shadow:0 0 0 4px rgba(58,95,217,.11),0 6px 24px rgba(29,28,25,.09)}
+.input-plus:hover,.input-mic:hover{background:var(--field)}
+.input-send{background:var(--accent);color:#fff}
+.input-send:hover{background:var(--blue)}
+.input-send:disabled{background:#c9c6bc;opacity:.6}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+
+</head>
+<body>
+<h1 class="sr-only">Zero AI</h1>
+<!-- ============ macOS-STYLE MENU BAR ============ -->
+<nav class="macbar" id="macbar" aria-label="Zero AI menu">
+  <div class="macbar-left">
+    <div class="traffic" role="group" aria-label="Window controls">
+      <button class="tl tl-close" id="aiClose" aria-label="Close" title="Close"></button>
+      <button class="tl tl-min" id="aiMin" aria-label="Minimize" title="Minimize"></button>
+      <button class="tl tl-max" id="aiMax" aria-label="Maximize" title="Maximize"></button>
+    </div>
+    <img class="macbar-apple" src="icon-192.png?v=3" alt="Zero"><span class="macbar-appname">Zero AI</span>
+    <button class="macmenu-btn" data-macmenu="mFile">File</button>
+    <button class="macmenu-btn" data-macmenu="mEdit">Edit</button>
+    <button class="macmenu-btn" data-macmenu="mView">View</button>
+    <button class="macmenu-btn" data-macmenu="mHist">History</button>
+    <button class="macmenu-btn" data-macmenu="mBook">Bookmarks</button>
+  </div>
+  <div></div>
+</nav>
+<div class="macmenu" id="mFile" hidden>
+  <button data-act="newchat">New Chat</button>
+  <button data-act="download">Download Chat</button>
+  <div class="macsep"></div>
+  <button data-act="print">Print Page</button>
+  <button data-act="share">Share Zero AI</button>
+</div>
+<div class="macmenu" id="mEdit" hidden>
+  <button data-act="undo">Undo</button>
+  <div class="macsep"></div>
+  <button data-act="cut">Cut</button>
+  <button data-act="copy">Copy</button>
+  <button data-act="paste">Paste</button>
+  <button data-act="selectall">Select All</button>
+</div>
+<div class="macmenu" id="mView" hidden>
+  <button data-act="zoomin">Zoom In</button>
+  <button data-act="zoomout">Zoom Out</button>
+  <button data-act="zoomreset">Reset Zoom</button>
+  <div class="macsep"></div>
+  <button data-act="fullscreen">Toggle Fullscreen</button>
+</div>
+<div class="macmenu" id="mHist" hidden><div class="mactitle">Recent chats</div><div id="macHistItems"></div><div class="macsep"></div><button data-act="clearhist">Clear Chats</button></div>
+<div class="macmenu" id="mBook" hidden><button data-act="addbook">Bookmark This Chat</button><div class="macsep"></div><div id="macBookItems"><div class="mactitle">No bookmarks yet</div></div></div>
+<div class="macmenu" id="mProfile" hidden>
+  <button data-act="home">Back to Zero</button>
+  <button data-act="about">About Zero AI</button>
+</div>
+<!-- History drawer -->
+<div id="chatsDrawer" style="display:contents"><div class="drawer" id="drawer">
+<div class="drawer-head">Chats <button onclick="toggleDrawer()" aria-label="Close chats" style="border:0;background:none;font-size:18px;cursor:pointer;">×</button></div>
+<div class="drawer-list" id="histList"><div id="chatList"></div></div><div style="display:none"></div>
+</div>
+</div>
+
+<!-- Main + Panel side by side -->
+<div class="main-wrap">
+<div class="main chat-half">
+<div class="topbar">
+<button class="chats-pill" onclick="toggleDrawer()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>Chats</button>
+<button class="chats-pill" id="compPillBtn" onclick="openComputerSettings()" title="Computer settings" style="padding:10px 14px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><button class="chats-pill" id="nbPillBtn" onclick="ZNB.open()" title="Study notebooks"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Notebooks</button><button class="chats-pill" id="custPillBtn" onclick="location.href='customize.html'" title="Customize Zero — skills and scheduled tasks"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-3px;margin-right:6px"><line x1="4" y1="8" x2="20" y2="8"/><circle cx="9" cy="8" r="2.4" fill="#fff"/><line x1="4" y1="16" x2="20" y2="16"/><circle cx="15" cy="16" r="2.4" fill="#fff"/></svg>Customize</button>
+
+</div>
+<div id="compSettings" role="dialog" aria-modal="true" aria-label="Computer settings" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:18px;padding:22px;width:100%;max-width:430px;box-shadow:0 12px 40px rgba(0,0,0,.2);">
+    <h3 style="font-size:18px;margin-bottom:4px;">Computer settings</h3>
+    <p style="font-size:13px;color:#5f6368;margin-bottom:14px;line-height:1.5;">Pair Zero AI with the <b>Zero Computer</b> extension on your computer. The AI drives your Chrome by itself — you just watch.<br><span style="color:#b06000;">Needs a computer with Chrome — phones can't run extensions.</span></p>
+    <label for="compKey" style="font-size:13px;font-weight:600;">Computer key</label>
+    <input id="compKey" type="text" placeholder="Paste the pairing key from the extension popup" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #e8eaed;border-radius:10px;font-size:14px;margin:6px 0 12px;">
+    <label for="compExtId" style="font-size:13px;font-weight:600;">Extension ID <span style="font-weight:400;color:#5f6368;">(optional — makes it respond instantly)</span></label>
+    <input id="compExtId" type="text" placeholder="e.g. abcdefghijklmnop…" autocomplete="off" style="width:100%;padding:10px 12px;border:1px solid #e8eaed;border-radius:10px;font-size:14px;margin:6px 0 12px;">
+    <a href="zero-computer-extension.zip" download style="font-size:13px;color:#3a5fd9;">Download the Zero Computer extension (.zip)</a><br>
+    <a href="zero-computer.html" target="_blank" style="font-size:13px;color:#3a5fd9;">Step-by-step setup guide</a>
+    <hr style="border:0;border-top:1px solid #e8eaed;margin:16px 0;">
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button onclick="saveComputerSettings()" style="flex:1;padding:11px;border:0;border-radius:10px;background:#3a5fd9;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">Save</button>
+      <button onclick="closeComputerSettings()" style="padding:11px 18px;border:1px solid #e8eaed;border-radius:10px;background:#fff;font-size:15px;cursor:pointer;">Cancel</button>
+    </div>
+  </div>
+</div>
+<div class="chat-wrap" id="chatWrap"><div class="chat-inner" id="chatInner"><div id="digestSec" hidden></div><div id="msgs" style="display:flex;flex-direction:column;gap:16px;width:100%;"></div></div></div>
+<div class="suggest" id="suggest"><div id="sugg" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;"></div>
+<button onclick="quickAsk(this)">Build me a landing page</button>
+<button onclick="quickAsk(this)">What can you do?</button>
+<button onclick="quickAsk(this)">Write a Python script</button>
+<button onclick="quickAsk(this)">Explain quantum computing</button>
+<button onclick="quickAsk(this)">Find me the cheapest flights from NYC to London</button>
+</div>
+<div class="input-wrap"><div class="input-inner">
+<div class="attach-row" id="attachRow"><div class="attach-chip"><img id="attachThumb" alt="Attached image"><button class="attach-x" id="attachX" aria-label="Remove image">×</button></div></div>
+<div class="input-row">
+<button class="input-plus" id="plusBtn" aria-label="Attach image">+</button>
+<input type="file" id="imgPick" accept="image/*" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1" aria-hidden="true">
+<input id="msgInput" placeholder="Message" aria-label="Message" autocomplete="off" onkeydown="if(event.key==='Enter')sendMsg()"><input id="q" style="display:none">
+<button class="input-share" id="shareBtn" aria-label="Share screen" title="Share screen with AI" style="background:none;border:0;cursor:pointer;padding:8px;color:var(--sub);display:inline-flex;align-items:center" onclick="toggleShare()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><line x1="9" y1="20.5" x2="15" y2="20.5"/><line x1="12" y1="16.5" x2="12" y2="20.5"/></svg></button>
+<button class="input-mic" onclick="toggleMic()" aria-label="Voice input"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/></svg></button>
+<button class="input-send" id="sendBtn" onclick="sendMsg()" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></button>
+</div>
+</div></div>
+</div>
+
+<!-- Artifact panel -->
+<div class="artifact" id="artPane">
+<div class="art-head">
+<div class="art-tabs">
+<button id="tabPrev" class="active" onclick="showArtTab('preview')">Preview</button>
+<button id="tabCode" onclick="showArtTab('code')">Code</button>
+<button id="tabBrowse" onclick="showArtTab('browse')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:-2px"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/></svg> Browse</button>
+
+</div>
+<button class="art-close" onclick="closeArtifact()" aria-label="Close panel">×</button>
+</div>
+<div class="art-body show-preview" id="artBody">
+<iframe id="artFrame" sandbox="allow-scripts allow-forms allow-popups"></iframe>
+<pre id="artCode"></pre>
+<div id="browseBar" style="display:none;padding:8px;border-bottom:1px solid #e8eaed;gap:8px;align-items:center;"><input id="browseUrl" placeholder="Enter URL..." aria-label="Enter URL to browse" onkeydown="if(event.key==='Enter')navigateBrowse()" style="flex:1;min-width:0;padding:8px 12px;border:1px solid #e8eaed;border-radius:8px;font-size:14px;"><button onclick="navigateBrowse()" style="padding:8px 14px;border:0;border-radius:8px;background:#3a5fd9;color:#fff;font-size:14px;font-weight:600;cursor:pointer;">Go</button><button title="Open in new tab" onclick="openBrowseExternal()" style="padding:8px 12px;border:1px solid #e8eaed;border-radius:8px;background:#fff;font-size:14px;cursor:pointer;">&#8599;</button><button title="Search Google in a new tab" onclick="searchGoogleExternal()" style="flex-shrink:0;padding:8px 10px;border:1px solid #e8eaed;border-radius:8px;background:#fff;font-size:13px;font-weight:600;color:#3a5fd9;cursor:pointer;white-space:nowrap;">Search Google</button><button id="takeControlBtn" title="Expand the browser" onclick="toggleBrowserControl()">Expand</button></div><div id="browseWrap" style="display:none;width:100%;height:calc(100% - 50px);position:relative;"><iframe id="browseFrame" style="width:100%;height:100%;border:0;display:block;"></iframe><div id="browseBlocked" style="display:none;position:absolute;inset:0;background:#f8f9fa;align-items:center;justify-content:center;padding:24px;"><div style="text-align:center;max-width:320px;"><div style="width:56px;height:56px;border-radius:50%;background:#3a5fd9;color:#fff;font-size:28px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">0</div><div style="font-size:17px;font-weight:600;margin-bottom:6px;"><span class="bb-host"></span> doesn&#8217;t allow embedding</div><div style="font-size:13px;color:#5f6368;margin-bottom:16px;">This site blocks being shown inside Zero. Open it in a new tab instead &#8212; one tap.</div><button class="bb-open" style="padding:10px 22px;border:0;border-radius:999px;background:#3a5fd9;color:#fff;font-size:15px;font-weight:600;cursor:pointer;">Open in new tab</button></div></div></div>
+<div id="aiScreenView" style="display:none;width:100%;height:100%;flex-direction:column;background:#0d1117;color:#c9d1d9;font-family:Menlo,Consolas,monospace;overflow:hidden;">
+<div style="padding:10px 14px;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:8px;">
+<span style="width:12px;height:12px;border-radius:50%;background:#ff5f57;"></span>
+<span style="width:12px;height:12px;border-radius:50%;background:#febc2e;"></span>
+<span style="width:12px;height:12px;border-radius:50%;background:#28c840;"></span>
+<span style="margin-left:8px;font-size:12px;color:#8b949e;">Zero AI — live</span>
+<span style="margin-left:auto;font-size:11px;color:#28c840;">● LIVE</span>
+</div>
+<div id="aiScreenLog" style="flex:1;overflow-y:auto;padding:14px;font-size:13px;line-height:1.8;"></div>
+</div>
+</div>
+<div id="screenShareView" style="display:none;width:100%;height:100%;flex-direction:column;align-items:center;justify-content:center;background:#000;">
+<video id="screenVideo" autoplay muted style="max-width:100%;max-height:calc(100% - 50px);"></video>
+<button onclick="stopScreenShare()" style="margin:10px;padding:8px 20px;border-radius:999px;border:0;background:#e53935;color:#fff;font-weight:700;cursor:pointer;">Stop Sharing</button>
+</div>
+</div>
+</div>
+
+<script>
+
+var msgs=document.getElementById("msgs"),qin=document.getElementById("q"),artPane=document.getElementById("artPane");
+var chats=[],curId=null,curArtifact=null;
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hl(code,lang){
+  // Lightweight syntax highlighter (input already HTML-escaped)
+  var e=code;
+  lang=(lang||"").toLowerCase();
+  // strings
+  e=e.replace(/(&quot;.*?&quot;|&#39;.*?&#39;)/g,'<span class="tk-s">$1</span>');
+  // comments
+  if(/python|javascript|js|java|cpp|c|typescript|ts|go|rust/.test(lang)){
+    e=e.replace(/(\/\/.*$|#.*$)/gm,'<span class="tk-c">$1</span>');
+  }
+  // keywords
+  var kw="function|return|if|else|for|while|const|let|var|class|import|from|def|print|new|try|catch|async|await|throw|switch|case|break|continue|do|typeof|instanceof|in|of|this|true|false|null|undefined|None|True|False|and|or|not|lambda|with|as|pass|raise|yield|extends|super|static|public|private|int|float|string|bool|void";
+  e=e.replace(new RegExp("\\b("+kw+")\\b","g"),'<span class="tk-k">$1</span>');
+  // numbers
+  e=e.replace(/\b(\d+\.?\d*)\b/g,'<span class="tk-n">$1</span>');
+  return e;
+}
+function fmt(t){
+  // Strip LaTeX delimiters - user wants clean readable text, no slashes/parens artifacts
+  t=t.replace(/\\\(/g,"").replace(/\\\)/g,"");
+  t=t.replace(/\\\[/g,"").replace(/\\\]/g,"");
+  t=t.replace(/\$\$/g,"");
+  t=esc(t);
+  // markdown links -> placeholders (restored after code blocks are handled, so links in code stay literal)
+  // handles [text](url) markdown and <url> autolinks
+  var _links=[];
+  // normalize protocol-less markdown links: [text](example.com/path) -> [text](https://example.com/path)
+  t=t.replace(/\[([^\]]+)\]\(((?:www\.)?[a-z0-9][a-z0-9\-\.]*\.(?:com|net|org|io|co|uk|us|de|fr|info|biz|travel|flights|ai|app|dev|me)(?:\/[^)\s]*)?)\)/gi,
+    function(m,tx,u){return "["+tx+"](https://"+u+")";});
+  t=t.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|&lt;(https?:\/\/[^&\s]+?)&gt;/g,function(m,tx,ur1,ur2){
+    var url=(ur1||ur2||"").replace(/[…]+$|\.+$/,"");var txt=tx||url;
+    _links.push([txt,url]);return "ZZLINK"+(_links.length-1)+"ZZ";});
+  // bare URLs -> placeholders too, but never inside code fences
+  t=t.replace(/```[\s\S]*?```|https?:\/\/[^\s<)]+/g,function(m){
+    if(m.indexOf("```")===0) return m;
+    var url=m.replace(/[…]+$|\.+$/,"");_links.push([url,url]);return "ZZLINK"+(_links.length-1)+"ZZ";});
+  // bare protocol-less URLs (www.foo.com or foo.com/path) -> placeholders, never inside code fences
+  t=t.replace(/```[\s\S]*?```|(^|[\s(>])(www\.[^\s<)\]]+|[a-z0-9][a-z0-9\-\.]*\.(?:com|net|org|io|co|uk|us|de|fr|info|biz|travel|flights|ai|app|dev|me)(?:\/[^\s<)\]]*)?)/gi,
+  function(m,pre,url){
+    if(m.indexOf("```")===0||!url) return m;
+    var u=url.replace(/[…]+$|[\.,;:!?\)\]]+$/,"");
+    _links.push([u,"https://"+u]);return (pre||"")+"ZZLINK"+(_links.length-1)+"ZZ";});
+  var _cb=0;t=t.replace(/```(\w*)\n?([\s\S]*?)```/g,function(m,l,c){_cb++;var id="zcb"+Date.now()+_cb;var lb=l||"code";var cc=c.replace(/^\n+|\n+$/g,"");return '<div class="codeblock"><div class="cb-head"><span class="cb-lang">'+esc(lb)+'</span><button class="cb-btn" onclick="copyCode(\''+id+'\',this)">Copy</button><button class="cb-btn dl" onclick="dlCode(\''+id+'\',\''+esc(lb)+'\')" title="Download as file">'+ZC_SVG_DOWN+' Download File</button><button class="cb-btn" onclick="runCode(\''+id+'\',\''+esc(lb)+'\')">Run</button></div><pre id="'+id+'" data-lang="'+esc(lb)+'"><code>'+hl(cc,lb)+'</code></pre></div>';});
+  // headings (skip lines that already contain rendered HTML, e.g. an inline code block)
+  t=t.replace(/^### (.*)$/gm,function(m,tx){return tx.indexOf("<")!==-1?tx:'<strong class="h3">'+tx+'</strong>';});
+  t=t.replace(/^## (.*)$/gm,function(m,tx){return tx.indexOf("<")!==-1?tx:'<strong class="h2">'+tx+'</strong>';});
+  // horizontal rules: --- or *** on its own line -> <hr>
+  t=t.replace(/^\s*(---|\*\*\*|___)\s*$/gm,"<hr>");
+  // markdown tables - robust parsing
+  t=t.replace(/(\|[^\n]*\|\n\|[\s:|\-]*\|\n(?:\|[^\n]*\|\n?)*)/g,function(m){
+    var lines=m.trim().split("\n");
+    if(lines.length<2) return m;
+    var h='<table class="md-table"><thead><tr>';
+    var headers=lines[0].split("|");
+    for(var hi=0;hi<headers.length;hi++){
+      var hc=headers[hi].trim();
+      if(hc) h+="<th>"+hc+"</th>";
+    }
+    h+="</tr></thead><tbody>";
+    for(var i=2;i<lines.length;i++){
+      if(!lines[i].trim()) continue;
+      h+="<tr>";
+      var cells=lines[i].split("|");
+      for(var ci=0;ci<cells.length;ci++){
+        var cc=cells[ci].trim();
+        // Skip empty first/last from leading/trailing |
+        if(ci===0&&cc===""&&cells.length>1) continue;
+        if(ci===cells.length-1&&cc==="") continue;
+        h+="<td>"+cc+"</td>";
+      }
+      h+="</tr>";
+    }
+    return h+"</tbody></table>";
+  });
+  // bold
+  t=t.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  // italics: *word* -> <em> (single asterisks only; skips list markers like "* item")
+  t=t.replace(/\*([^*\s][^*]*)\*/g,"<em>$1</em>");
+  t=t.replace(/`([^`]+)`/g,"<code>$1</code>");
+  // Fix literal <br> tags from AI output (escaped as &lt;br&gt;)
+  t=t.replace(/&lt;br\s*\/?&gt;/gi,"<br>");
+  t=t.replace(/&lt;\/?(?:div|p|span|io)&gt;/gi,"");
+  t=t.replace(/ZZLINK(\d+)ZZ/g,function(m,i){var L=_links[+i];return '<a href="'+L[1]+'" target="_blank" rel="noopener">'+L[0]+'</a>';});
+  // 【n†url】 citation markers -> numbered links
+  t=t.replace(/【(\d+)†([^】]+)】/g,'<a href="$2" target="_blank" rel="noopener">[$1]</a>');
+  // ordered + unordered lists -> <ol>/<ul> (plain-text lines only; skip lines starting with HTML)
+  var _lines=t.split("\n"),_out=[],_lt=null,_li,_ln,_lm;
+  function _closeList(){if(_lt){_out.push(_lt==="ol"?"</ol>":"</ul>");_lt=null;}}
+  for(_li=0;_li<_lines.length;_li++){_ln=_lines[_li];
+    if(!/^\s*</.test(_ln)&&(_lm=_ln.match(/^\s*\d+[.)]\s+(.*)$/))){
+      if(_lt!=="ol"){_closeList();_out.push("<ol>");_lt="ol";}
+      _out.push("<li>"+_lm[1]+"</li>");continue;}
+    if(!/^\s*</.test(_ln)&&(_lm=_ln.match(/^\s*[-*]\s+(.*)$/))){
+      if(_lt!=="ul"){_closeList();_out.push("<ul>");_lt="ul";}
+      // task-list checkboxes: "- [ ]" / "- []" / "- [x]" -> real checkboxes
+      var _it=_lm[1].replace(/^\[\s*([xX]?)\s*\]\s*/,function(mk,ck){
+        return '<input type="checkbox" class="md-check" disabled'+(ck&&ck.toLowerCase()==="x"?" checked":"")+'> ';});
+      _out.push("<li>"+_it+"</li>");continue;}
+    _closeList();_out.push(_ln);}
+  _closeList();t=_out.join("\n");
+  t=t.replace(/\n/g,"<br>");return t;}
+function addMsg(role,html){var d=document.createElement("div");d.className="msg "+role;d.innerHTML=html;msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;return d;}
+function extractHTML(text){
+  // Try code fence with html tag
+  var m=text.match(/```html\n?([\s\S]*?)```/i);
+  if(m&&m[1].length>200) return m[1].trim();
+  // Try any code fence containing HTML
+  var m2=text.match(/```\n?([\s\S]{200,}?)```/);
+  if(m2&&/<(!DOCTYPE|html|head|body|div|style)/i.test(m2[1])) return m2[1].trim();
+  // Try raw HTML without fences (DOCTYPE or html tag)
+  var m3=text.match(/((?:<!DOCTYPE[\s\S]{0,200}?<html[\s\S]*?<\/html>))/i);
+  if(m3&&m3[1].length>500) return m3[1].trim();
+  return null;
+}
+function showArtifact(html){curArtifact=html;document.getElementById("artFrame").srcdoc=html;document.getElementById("artCode").textContent=html;var at=document.getElementById("artToggle");if(at)at.style.display="";if(!artPane.classList.contains("open"))artPane.classList.add("open");showArtTab("preview");}
+function showArtTab(w){var b=document.getElementById("artBody");b.className="art-body show-"+w;
+artPane.classList.toggle("browse-wide",w==="browse");
+document.getElementById("tabPrev").classList.toggle("active",w==="preview");
+document.getElementById("tabCode").classList.toggle("active",w==="code");
+document.getElementById("tabBrowse").classList.toggle("active",w==="browse");
+var ssv = document.getElementById("screenShareView");
+if(ssv) ssv.style.display = w==="screen" ? "flex" : "none";
+var asv = document.getElementById("aiScreenView");
+if(asv) asv.style.display = w==="aiscreen" ? "flex" : "none";
+var tsb = document.getElementById("tabScreen");
+if(tsb) tsb.classList.toggle("active", w==="aiscreen");
+document.getElementById("browseBar").style.display=w==="browse"?"flex":"none";
+document.getElementById("browseWrap").style.display=w==="browse"?"block":"none";
+document.getElementById("artFrame").style.display=w==="preview"?"block":"none";
+if(w==="browse"&&!document.getElementById("browseFrame").src)document.getElementById("browseFrame").src="zbrowse.html";}
+function navigateBrowse(){var u=document.getElementById("browseUrl").value.trim();if(!u)return;
+if(!/^https?:\/\//i.test(u)){if(u.includes(".")){u="https://"+u;}else{u="https://www.google.com/search?q="+encodeURIComponent(u);}}
+loadBrowseUrl(u);}
+// Load a URL in the browser panel. Sites that block embedding (X-Frame-Options/CSP)
+// get a clean "Open in new tab" card instead of a broken page.
+function loadBrowseUrl(u){
+  document.getElementById("browseUrl").value=u;
+  var fr=document.getElementById("browseFrame");var bb=document.getElementById("browseBlocked");
+  if(bb)bb.style.display="none";
+  var same=false;try{same=new URL(u).origin===location.origin;}catch(e){}
+  if(same){if(fr)fr.src=u;return;}
+  fetch("zero-frame-check.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:u})})
+    .then(function(r){return r.json();}).then(function(j){
+      if(j&&j.embeddable===false){showBrowseBlocked(u);}else if(fr){fr.src=u;}
+    }).catch(function(){if(fr)fr.src=u;});
+}
+function showBrowseBlocked(u){
+  var fr=document.getElementById("browseFrame");if(fr)fr.removeAttribute("src");
+  var bb=document.getElementById("browseBlocked");
+  if(!bb){window.open(u,"_blank","noopener");return;}
+  var host=u;try{host=new URL(u).hostname.replace(/^www\./,"");}catch(e){}
+  bb.querySelector(".bb-host").textContent=host;
+  bb.querySelector(".bb-open").onclick=function(){window.open(u,"_blank","noopener");};
+  bb.style.display="flex";
+}
+function openBrowseExternal(){var u=document.getElementById("browseUrl").value.trim();if(u)window.open(u,"_blank","noopener");}
+function searchGoogleExternal(){var q=document.getElementById("browseUrl").value.trim();window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank","noopener");}
+function toggleArtifact(){artPane.classList.toggle("open");}
+function closeArtifact(){artPane.classList.remove("open");artPane.classList.remove("browse-wide");var w=document.querySelector(".main-wrap");if(w)w.classList.remove("user-driving");var b=document.getElementById("takeControlBtn");if(b)b.textContent="Expand";}
+function toggleBrowserControl(){var w=document.querySelector(".main-wrap");if(!w)return;var on=w.classList.toggle("user-driving");var b=document.getElementById("takeControlBtn");if(b)b.textContent=on?"Split view":"Expand";}
+function toggleDrawer(){document.getElementById("drawer").classList.toggle("open");}
+function openBrowseTab(){if(!artPane.classList.contains("open"))artPane.classList.add("open");showArtTab("browse");}
+var screenStream = null;
+function toggleScreenShare(){
+  if(screenStream){ stopScreenShare(); return; }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia){
+    zcDialog({title:'Not supported',body:"Screen sharing is not supported in this browser.",info:true}); return;
+  }
+  navigator.mediaDevices.getDisplayMedia({video:true}).then(function(stream){
+    screenStream = stream;
+    if(!artPane.classList.contains("open")) artPane.classList.add("open");
+    showArtTab("screen");
+    document.getElementById("screenVideo").srcObject = stream;
+    stream.getVideoTracks()[0].onended = stopScreenShare;
+  }).catch(function(e){ /* screen share cancelled */ });
+}
+function stopScreenShare(){
+  if(screenStream){ screenStream.getTracks().forEach(function(t){ t.stop(); }); screenStream = null; }
+  document.getElementById("screenVideo").srcObject = null;
+  showArtTab("preview");
+}
+/* Premium inline SVG icons (no emoji) — used by activity rows, file cards, share UI */
+var ZC_SVG_GLOBE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/></svg>';
+var ZC_SVG_MONITOR='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="2.5" y="4" width="19" height="12.5" rx="2"/><line x1="9" y1="20.5" x2="15" y2="20.5"/><line x1="12" y1="16.5" x2="12" y2="20.5"/></svg>';
+var ZC_SVG_BOLT='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>';
+var ZC_SVG_EYE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var ZC_SVG_BOT='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1" fill="currentColor" stroke="none"/></svg>';
+var ZC_SVG_WARN='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+var ZC_SVG_DOC='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+var ZC_SVG_SEARCH='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>';
+var ZC_SVG_CHECK='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+var ZC_SVG_WRENCH='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>';
+var ZC_SVG_DOWN='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>';
+var ZC_SVG_IMG='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+var ZC_SVG_CODE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
+var ZC_SVG_PALETTE='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="1" fill="currentColor" stroke="none"/><circle cx="17.5" cy="10.5" r="1" fill="currentColor" stroke="none"/><circle cx="8.5" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="6.5" cy="12.5" r="1" fill="currentColor" stroke="none"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.93 0 1.65-.75 1.65-1.69 0-.44-.18-.84-.44-1.13-.26-.29-.43-.68-.43-1.12A1.68 1.68 0 0 1 14.46 16h2.08C19.7 16 22 13.5 22 10.5 22 5.84 17.5 2 12 2z"/></svg>';
+var ZC_SVG_THOUGHT='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7c.6.46.93 1.2.93 1.97V19a1 1 0 0 0 1 1h4.14a1 1 0 0 0 1-1v-1.33c0-.77.33-1.51.93-1.97A7 7 0 0 0 12 3z"/><path d="M9 22h6"/></svg>';
+var ZC_SVG_STOP='<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
+function logActivity(container, icon, text, done){
+  // Thinking mode: show reasoning steps, then clear them before the answer
+  var row = document.createElement("div");
+  row.className = "act-row act-thinking";
+  var time = new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  row.innerHTML = '<div class="act-icon '+(done?"done":"working")+'">'+icon+'</div><div class="act-text" style="color:var(--sub,#666);font-size:13px;font-style:italic;display:flex;align-items:center;gap:6px">'+ZC_SVG_THOUGHT+' '+text+'</div><div class="act-time">'+time+'</div>';
+  row.style.opacity="0.85";
+  row.style.background="rgba(0,0,0,0.02)";
+  row.style.borderRadius="8px";
+  row.style.margin="4px 0";
+  container.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  return row;
+}
+function clearThinking(container){
+  var rows=container.querySelectorAll(".act-thinking");
+  for(var i=0;i<rows.length;i++){ rows[i].style.display="none"; }
+}
+function markDone(row){ var ic=row.querySelector(".act-icon"); ic.classList.remove("working"); ic.classList.add("done"); ic.textContent="✓"; }
+function aiShareScreen(force){
+  // AI Screen removed - no longer opens panel
+}
+function aiScreenLog(text, color){
+  var log = document.getElementById("aiScreenLog");
+  if(!log) return;
+  var time = new Date().toLocaleTimeString([], {hour12:false});
+  var div = document.createElement("div");
+  div.innerHTML = '<span style="color:#8b949e;">['+time+']</span> <span style="color:'+(color||"#c9d1d9")+';">'+text+'</span>';
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  // Do NOT auto-open panel - only open when AI generates a preview or user requests it
+}
+function typeEffect(el,fullText,done){var i=0;el.innerHTML="";var plain=fullText.replace(/<[^>]*>/g,"");var timer=setInterval(function(){i+=3;if(i>=plain.length){clearInterval(timer);el.innerHTML=fmt(fullText);if(done)done();}else{el.innerHTML=esc(plain.substring(0,i))+"▊";}msgs.scrollTop=msgs.scrollHeight;},12);}
+function saveChats(){try{localStorage.setItem("zc-chats",JSON.stringify(chats));}catch(e){}}
+function loadChats(){try{chats=JSON.parse(localStorage.getItem("zc-chats")||"[]");}catch(e){chats=[];}renderChatList();}
+function renderChatList(){var l=document.getElementById("chatList");l.innerHTML="";chats.forEach(function(c){var d=document.createElement("div");d.className="chat-item"+(c.id===curId?" active":"");var im=document.createElement("img");im.src="data:image/webp;base64,UklGRgwJAABXRUJQVlA4IAAJAABwKwCdASqAAIAAPlEgjUSjoiEWSU7EOAUEsTVzLAzj4330v5Ze2ZeH9D+H/lsv9pAPU1Gc8wDn4/uP6lf2R9Wb0af4j1AP6r1OvoKdLt5TODsXUNyPOVlDMzozfyYfS37H/AT+un/E7AfpAfsYB3AtOKfShACtOZmjqgmO1zYjowS7mXkPZ6LKA/bqmvgWjSf0FS3Xxg9LmYISkV/neMmsD4xiQfb603Y9UPaIajof3n7uobJJYV7IOhvywWCAM4HLtadBxKXl+Oz9gK31yr92a2P2C+Xl24ubBmA/Wc/kqOzZaKjHPhyKRdlfrrZxFlyydQyL/bC22EQmZBnJB82so2nDgo/muJ0ZZ8Hsdt9NB30A74b3orCngHaorq4ze/NFcrQ3oPXbYHxZLuGEmFOdwp0Kdldjebsj2nLUO3PKVAafnmt2ZpbLnuISXGQlCQSAh3Mjn1IsJFEz50Y6Ol2XRJ8QwAD+/uyNl1q/T+iCsI85Kw9ePEK5dLyqjoYvF+/l6WjjiLFmJ70JYLS2JMI6Uu764za/jNshotcj6Afaz2t67Qb5JbvBEr41YVt33oM7QGjJf9LDPrqY6eW07gJWzJUweZwE36eLEbVUrEV8rowOogtrkd3b1diWQLfDV28xNeSbNa9LAqIE6STEjvgoyKgeBA2+Ir2SWUEhSS+d2vhMjGqrdChpwmHRs1M0f/D0I68L5BKPdmbezdPOmbVAAvrUpLS1fv3noNObzSYDo0LLf5KspFtK57Xhddd4eeF0jfeZVn6huv3WVNXx9rcGlmdNwq0fUDUFhtOqKtmgEzmwTbgjj2hgrC+wpHmPblblIJAA2WZIJG42u4BnVOSMogYIAtegZq6ISO55IVd4I0ACDsqT7TvUzh7ndcsc7p8HwXJEfAWP1/fkP3KhgKMEn6dIpnzOl8NDTliYn97eNuaxTS6HWCfSlt5ghqRVC9Ho+zgjPydSap+2MW8ZuVBHfmKzV/6n58i0woBwFfAlJV4n3VL0ZAIHj/D+iAF8x6vmilXnoYfpGct217+rnNnWxECrmAiULYy2zSnE4pILYtM6IvmousCKfQ3gj5MHLA0cVEP++u17XJ2bnJCrXgdrZ3+JsP0dr5xs6rAsw9CRthev3zXzys9MYD9tCBNAZ4iRNvqJB0wnB68HafGyJmbwTk06DFCMZlYB++g72qwwTtt0XXbPrUfMmAnuYyFUHY7/8kLa9UNt70iEC1uCNdgXvsuNEv4zaN/yQBzcuGFQyKZZlzmiCBOcvERrzb/dqNar48EftanIG7Wwej52gHfNqoW7UH0dbrPYpj0FYUWSpmutHL914LX8jPP2mQq45vT2QQbwEr/zix3PvcAm7WWCYYdw7DCZ0HOG+5JaN3QgN45X6b4/8O97NGAmKUqvhzju+fxB/MOzSsKuVNye6+la1ItGkkknEaMsFDRgMKfG513M9THlidyq//VxO7Us7VTEmGjWIYc37Lfj/kYKfpjhNWNYUFVd+Z9KneExLaICBAsOuiCcw54ywVnIHW11kqJlxNj/ShTBiJeG0fQOVDwaI+1+wrE4rczE2HZJRd0OSeDMrkiYU2wTH9V1eDGjeHbZa2GnudAfJndHIkB/V9f+jtXyIOT8G30gSOzxqObGXNxj1IG5OdyerZCuADah1k8ZnGrWkpMbK+62t2a4KScqgG8LdRdmBt/egjfP47lqS2yec08LwdcP7HIeshWTIwdkx/Dba8ZpmKSSlNTPEHLjMhHohpeMrfgpZJQCpWGdmURuWNnBZQOyMRXz2UtQdQUoFy3rR90CX9Dc0fQZNx+vq1WGGtTfepvHGIBEjq+CCbszLOzoHTSBuXPG3xzHH7Xs3C6+MalaMXEsYMVGuwKMJxV8FdW59/221Pko0RUfYvV3Ym19vpQ3Jmrv3FRD9GPTDGz/wDrfchN/4PvmAO+VDSOEFQboQr+DOPlPg4ni1FU7GX5h6FV5DReL2EcbkPbmwCs86S4txwc2AUxPpPMPGw9YAyoNZUORtx/JfnoHqonWcM8cleIm1peyckdQu73x5Zpn1n/9QWQnJAmHDN+iTDiPg/kmsrIYKDx3k8d/0OtAZ4SnwApD8ww28R3u34eccnsd7lpA+EqlWiiJMdlDgJWi9bc/o57VnXRQs8FKZSHOaGRlByvTJI0cE6s4SriDPH5hLr+JsXoGGivJnMWGTt4uVbgPSXcCmMyS1jxZek6gMRI6DkNOYonCILc5blIdCV5VpVWxVaBachE8x3NU7AezuBa5HTNrBhKqzpekKyKcvxDCDu/Qvi1v0wwgJPriSloyQLnCiuk5oMkjAxKWrx9YQQEttznc6efe/9Mf8Hdfw13KYs08k3J95y2BE59ACiwTgm+aHs0s1ugLQQezUGS3y9udxoZvGEFGH8qBDSOj6MQ8OxkNTbDXIuA+wLePI0hyZqC8dytVYtJUnOC/5jOkODRXWcqdGAw8s6FT2QBSJilJ+DfFYAJZ1mL0gWLVpyFCTtHiQ9sF/VUyd0qzer02F4vdoyM6IofifKaYLwLDx4tLwHSUUPpAC6BtY2JaGK42s7HU4f5Ls/95vhzIDaeDLOZ4xnkO7L/juCtzgAu+Q/avlICrTW/J6X4oD+0g0kx5zL7JHoV88++w5d79/B+1G/pWfmaITZe/jYO8z/BPIXPR6j3b2Z74Egk6sjM5Z9CyyLgfz7k/bcT8j3WetnoGusaPvi3dtXg9KZas+dpOY+5YiEAEDtSSc1KkNvLopLPGhhcFuwGPlqime+k/psl2NSdm3asSd3oJAHU2Ml9RCItODQtLOnr+M8hlxAag2T5nnvIQM5b/QGJsx6KFAoImV5swCGhS6QPOHiF348V621FHolZ+ND2qiRxYPci19NSWyqeMPaScLuNP7fJFIKhP9JcvU9GjlRIekKZScd6zTCtguFAJ8lDFMa0X/6aHp4xdFaj8fNyQ9XWL/g9x30/dDQQH9dXTdIqxS/ux6Hl9gE5y+QdhpwIkI9pvk1LNmKyYtp351A0df1oE33f5j7UiS1XdJEI+AWouJjpY43geigCrENh+qCkAdfC+AAA=";im.alt="";d.appendChild(im);var sp=document.createElement("span");sp.textContent=c.title;d.appendChild(sp);var id=c.id;d.onclick=function(){loadChat(id);};l.appendChild(d);});}
+function newChat(){curId=Date.now();chats.unshift({id:curId,title:"New chat",msgs:[]});saveChats();renderChatList();msgs.innerHTML="";greet();if(window.ZDIGEST)window.ZDIGEST.runSoon();}
+function loadChat(id){var c=chats.find(function(x){return x.id===id;});if(!c)return;curId=id;renderChatList();msgs.innerHTML="";var ds=document.getElementById("digestSec");if(ds){ds.innerHTML="";ds.hidden=true;}c.msgs.forEach(function(m){addMsg(m.role,fmt(m.text));});}
+function greet(){addMsg("ai","Hey, I'm <b>Zero</b>. I can help with just about anything — <b>building websites</b> with live preview, writing code, answering questions, explaining things, you name it. I can even <b>do web tasks</b>: compare flights, find the best deals, plan a booking — I research the options, you finish with one tap.<br><br>Try: <i>\"Build me a landing page for a coffee shop\"</i>");}
+/* ============ Scheduled for you (Zero AI digests) ============
+   On fresh chat views, due schedules (Customize Zero → Scheduled) generate
+   fresh AI content as cards at the top of the chat. lastRun is marked when
+   generation STARTS so a failed generation never retry-loops. Failures show
+   an honest error + Try again — never a dead card. Same-origin api-single.php
+   only; no new external requests. */
+window.ZDIGEST=(function(){
+"use strict";
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function fmtTime(hm){if(!hm)return"";var p=String(hm).split(":"),h=+p[0],m=p[1]||"00",ap=h>=12?"PM":"AM";h=h%12;if(h===0)h=12;return h+":"+m+" "+ap;}
+function promptFor(s){
+  var today=new Date().toDateString();
+  if(s.kind==="briefing") return "Write a concise morning briefing for "+today+": 4-6 top world and tech headlines (one line each), one line on what to watch today, and one practical productivity tip. Plain markdown, keep it short.";
+  if(s.kind==="news") return "Write today's top 5 news stories about "+s.subject+". One short paragraph each: what happened and why it matters. Plain markdown, keep it tight. If you have no current information on this topic, say so honestly instead of inventing stories.";
+  if(s.kind==="quiz") return "Create a 5-question multiple-choice quiz about "+s.subject+" (options A-D for each). Number the questions, then add an 'Answers' section at the end listing the correct letter plus a one-line explanation for each. Plain markdown.";
+  return "Write a short, helpful update about "+(s.subject||s.title)+". Plain markdown, keep it short.";
+}
+function genModel(){
+  try{
+    var live=(window.ZeroLineup&&window.ZeroLineup.filterPrefs)?window.ZeroLineup.filterPrefs([["groq","openai/gpt-oss-120b"],["groq","openai/gpt-oss-20b"],["cerebras","gpt-oss-120b"]]):null;
+    if(live&&live.length) return live[0];
+  }catch(e){}
+  return {provider:"groq",model:"openai/gpt-oss-120b"};
+}
+function fetchT(url,opts,ms){
+  ms=ms||60000;
+  return new Promise(function(res,rej){
+    var to=setTimeout(function(){rej(new Error("timeout"));},ms);
+    fetch(url,opts).then(function(r){clearTimeout(to);res(r);},function(e){clearTimeout(to);rej(e);});
+  });
+}
+function cardShell(s){
+  var sec=document.getElementById("digestSec");
+  if(!sec) return null;
+  sec.hidden=false;
+  var d=document.createElement("div"); d.className="zd-card";
+  d.innerHTML='<div class="zd-top"><span class="zd-time">'+esc(fmtTime(s.timeHHMM))+'</span><span class="zd-title">'+esc(s.title)+'</span><a class="zd-manage" href="customize.html">Manage</a><button class="zd-x" aria-label="Dismiss">&times;</button></div>'
+    +'<div class="zd-body"><div class="zd-loading">Generating with Zero AI <span class="dots"><span></span><span></span><span></span></span></div></div>';
+  d.querySelector(".zd-x").onclick=function(){ d.remove(); var sc=document.getElementById("digestSec"); if(sc&&!sc.children.length) sc.hidden=true; };
+  sec.appendChild(d);
+  return d;
+}
+function renderInto(card,text){
+  try{ card.querySelector(".zd-body").innerHTML=fmt(text); }
+  catch(e){ card.querySelector(".zd-body").textContent=text; }
+}
+function failInto(card,s){
+  var body=card.querySelector(".zd-body");
+  body.innerHTML='<div class="zd-err">Zero couldn\u2019t generate this one right now. Check your connection and try again.</div><button class="zd-retry">Try again</button>';
+  body.querySelector(".zd-retry").onclick=function(){ generate(s,card); };
+}
+function generate(s,card){
+  var m=genModel(),done=false;
+  fetchT("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({provider:m.provider,model:m.model,temp:0.7,max_tokens:1200,
+      messages:[{role:"system",content:"You are Zero, a helpful AI assistant. Follow the requested format exactly. Plain markdown only."},
+                {role:"user",content:promptFor(s)}]})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(done) return; done=true;
+      var t=(d&&(d.answer||d.text)||"").trim();
+      if(t) renderInto(card,t); else failInto(card,s);
+    })
+    .catch(function(){ if(done) return; done=true; failInto(card,s); });
+}
+function run(){
+  var sec=document.getElementById("digestSec");
+  if(sec){ sec.innerHTML=""; sec.hidden=true; }
+  if(!window.ZeroPrefs) return;
+  var due=[]; try{ due=window.ZeroPrefs.dueSchedules(); }catch(e){ return; }
+  if(!due.length) return;
+  due.forEach(function(s){
+    try{ window.ZeroPrefs.markRun(s.id); }catch(e){}
+    var card=cardShell(s);
+    if(card) generate(s,card);
+  });
+}
+function runSoon(){ setTimeout(run,1200); }
+return {run:run,runSoon:runSoon};
+})();
+function quickAsk(b){qin.value=b.textContent;send();}
+function checkVaultCommand(text){
+  if(/\bvault\b/i.test(text)||/\bopen\b[^.]{0,24}\bpasswords\b/i.test(text)){
+    window.open("zerovault.html","_blank","noopener");
+    return true;
+  }
+  return false;
+}
+/* ---------- Zero Computer: AI drives the user's Chrome via extension ---------- */
+var _compOpener=null;
+function openComputerSettings(){
+  _compOpener=document.activeElement;
+  try{
+    document.getElementById("compKey").value=localStorage.getItem("zc_comp_key")||"";
+    document.getElementById("compExtId").value=localStorage.getItem("zc_comp_extid")||"";
+  }catch(e){}
+  document.getElementById("compSettings").style.display="flex";
+  var k=document.getElementById("compKey"); if(k) k.focus();
+}
+function closeComputerSettings(){document.getElementById("compSettings").style.display="none";
+  if(_compOpener&&_compOpener.focus){try{_compOpener.focus();}catch(e){}} _compOpener=null;}
+function saveComputerSettings(){
+  try{
+    localStorage.setItem("zc_comp_key",(document.getElementById("compKey").value||"").trim());
+    localStorage.setItem("zc_comp_extid",(document.getElementById("compExtId").value||"").trim());
+  }catch(e){}
+  closeComputerSettings();
+}
+function checkComputerCommand(text){
+  var m=text.match(/^\s*computer\s*:\s*(.+)/i);
+  if(m){
+    // Skill toggle: Zero Computer (Customize Zero → Skills)
+    if(window.ZeroPrefs&&!window.ZeroPrefs.skillOn("computer")){
+      addMsg("user",esc("computer: "+m[1].trim()));qin.value="";
+      addMsg("ai","Zero Computer is turned off. Turn it back on in <b>Customize Zero</b> &rarr; Skills and I can drive your browser again.");
+      return true;
+    }
+    runComputerMode(m[1].trim());return true;
+  }
+  // No "computer:" prefix needed: plain browser-task commands ("go to Google
+  // and type YouTube") are detected and just done, while the viewer watches.
+  if(looksLikeBrowserTask(text)){
+    if(window.ZeroPrefs&&!window.ZeroPrefs.skillOn("computer")) return false;
+    runComputerMode(text.trim());return true;
+  }
+  return false;
+}
+// High-confidence browser-driving intent. Conservative on purpose: only fires
+// when the message is clearly an instruction to operate a browser.
+function looksLikeBrowserTask(t){
+  var s=String(t||"").trim();
+  if(!s||s.length>220) return false;
+  if(/^(hi+|hey|hello|thanks|thank you|bye)\b/i.test(s)) return false;
+  var pats=[
+    /^(go|goto|navigate|head)\s+to\s+/i,
+    /^(open|visit|launch)\s+(google|youtube|amazon|gmail|netflix|facebook|instagram|reddit|tiktok|twitter|disney\s?\+?|hulu|bing|duckduckgo|yahoo)\b/i,
+    /\btype\s+.+\s+in(to)?\s+the\s+(search|address)\s+(box|bar|field)\b/i,
+    /\b(search|look\s+up)\s+.+\s+on\s+(google|youtube|amazon|bing)\b/i,
+    /\bclick\s+(the|on)\s+/i,
+    /\bfill\s+(in|out)\s+(the|this)\s+/i,
+    /\bscroll\s+(down|up)\s+(the\s+)?page\b/i
+  ];
+  for(var i=0;i<pats.length;i++){ if(pats[i].test(s)) return true; }
+  return false;
+}
+async function runComputerMode(task){
+  var key="",extId="";
+  try{key=localStorage.getItem("zc_comp_key")||"";extId=localStorage.getItem("zc_comp_extid")||"";}catch(e){}
+  addMsg("user",esc("computer: "+task));qin.value="";
+  if(!key){
+    addMsg("ai","To let me drive a browser, pair the <b>Zero Computer</b> extension first:<br>1. <a href='zero-computer-extension.zip' download>Download the extension</a> and load it in Chrome (chrome://extensions → Developer mode → Load unpacked).<br>2. Click its toolbar icon, copy the pairing key.<br>3. Paste it in the settings above, then say <i>computer: …</i> again.<br><a href='zero-computer.html' target='_blank'>Full setup guide with pictures of every step →</a>");
+    return;
+  }
+  var old=document.getElementById("zcComputerCard");if(old)old.remove();
+  var d=document.createElement("div");d.className="msg ai";d.id="zcComputerCard";
+  d.innerHTML='<div class="browser-card"><div class="browser-card-head"><div class="browser-card-ico" style="display:flex;align-items:center;">'+ZC_SVG_MONITOR+'</div><div><div class="browser-card-title">Computer</div><div class="browser-card-status" id="zcComputerStatus">Working…</div></div></div><div id="zcComputerLog" style="font-size:13px;color:#5f6368;max-height:200px;overflow:auto;margin-top:8px;line-height:1.6;"></div></div>';
+  msgs.appendChild(d);msgs.scrollTop=msgs.scrollHeight;
+  var logEl=document.getElementById("zcComputerLog");
+  function clog(t){if(logEl){var dv=document.createElement("div");dv.textContent="• "+t;logEl.appendChild(dv);logEl.scrollTop=logEl.scrollHeight;}msgs.scrollTop=msgs.scrollHeight;}
+  function cstatus(s){var e=document.getElementById("zcComputerStatus");if(e)e.textContent=s;}
+  var RELAY="zero-relay.php";
+  async function relay(action,payload){
+    var r=await fetch(RELAY,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(Object.assign({action:action,key:key},payload||{}))});
+    return r.json();
+  }
+  async function wake(){
+    if(!extId)return;
+    try{if(window.chrome&&chrome.runtime&&chrome.runtime.sendMessage){await chrome.runtime.sendMessage(extId,{type:"zc-wake"});}}catch(e){}
+  }
+  var lastShot=null;
+  async function execAction(cmd){
+    clog(cmd.action+(cmd.url?" — "+cmd.url:"")+(cmd.selector?" — "+cmd.selector:""));
+    var p=await relay("push",{cmd:cmd});
+    if(!p||!p.id)throw new Error("relay unreachable");
+    wake();
+    for(var i=0;i<45;i++){
+      await new Promise(function(r){setTimeout(r,2000);});
+      var g=await relay("get",{id:p.id});
+      if(g&&!g.pending){
+        if(cmd.action==="shot"&&g.ok&&g.data&&g.data.image){lastShot=g.data.image;return {ok:true,shot:true};}
+        return g;
+      }
+    }
+    throw new Error("computer timed out — is Chrome open with the Zero Computer extension?");
+  }
+  function plannerPrompt(hist){
+    return "You are driving a real Chrome browser for the user through a computer-use extension. Reply with ONLY a JSON object, no other text.\n\n"+
+    "Actions:\n"+
+    '{"action":"navigate","url":"https://..."} — open a page\n'+
+    '{"action":"read"} — read the current page: its text, links, and form fields (newer extension versions also give each a ready-to-use "sel" CSS selector)\n'+
+    '{"action":"click","selector":"CSS selector"} — click an element; use the "sel" from read results when present, otherwise click via a[href="FULL_URL"] for links\n'+
+    '{"action":"fill","selector":"CSS selector","value":"text"} — type into a field; use the "sel" when present, otherwise build one from the field name/id, e.g. input[name="q"]\n'+
+    '{"action":"shot"} — screenshot the page (do this before done, so the user sees proof)\n'+
+    '{"action":"done","summary":"..."} — finished; write the final summary for the user\n\n'+
+    "Rules: NEVER touch password fields, NEVER log in as anyone, NEVER buy, pay, or complete purchases. Prefer direct URLs (e.g. search-result URLs) over clicking through homepages. If a step fails twice, try another site or finish with what you have. Be efficient — finish in as few steps as possible.\n\n"+
+    "Task: "+task+"\nSteps so far:\n"+(hist.length?hist.join("\n"):"(none yet)")+"\nNext action (JSON only):";
+  }
+  var hist=[];
+  try{
+    for(var step=0;step<12;step++){
+      var pr=await fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-120b",temp:0.2,messages:[{role:"user",content:plannerPrompt(hist)}]})});
+      var pj=await pr.json();
+      var txt=pj.answer||pj.text||"";
+      var jm=txt.match(/\{[\s\S]*\}/);
+      if(!jm)throw new Error("planner went quiet");
+      var act=JSON.parse(jm[0]);
+      if(act.action==="done"){
+        cstatus("Ready");clog("Done");
+        var html=fmt(act.summary||"Done.");
+        if(lastShot)html+='<br><img src="'+lastShot+'" alt="Screenshot from the computer task" style="max-width:100%;border-radius:12px;margin-top:8px;">';
+        addMsg("ai",html+"<br><br><i>Driven by Zero Computer — I operated the browser, you watched.</i>");
+        return;
+      }
+      if(["navigate","read","click","fill","shot"].indexOf(act.action)===-1)throw new Error("unknown action");
+      var res=await execAction(act);
+      var rtxt=res.ok?(res.shot?"[screenshot taken]":JSON.stringify(res.data).slice(0,2500)):("FAILED: "+((res.data&&res.data.error)||"unknown"));
+      hist.push((step+1)+". "+act.action+" "+(act.url||act.selector||"")+" → "+rtxt.slice(0,220));
+      if(hist.length>8)hist=hist.slice(-8);
+    }
+    cstatus("Ready");
+    addMsg("ai","I used all my steps. Here's what I found:<br>"+fmt(hist.join("\n")));
+  }catch(e){
+    cstatus("Error");
+    addMsg("ai","The computer run hit a problem: "+esc(e.message||"unknown error"));
+  }
+}
+function checkBrowseCommand(text){
+  var m=text.match(/(?:go to|open|visit|browse)\s+([\w\-\.]+(?:\.[\w]+)+)/i);
+  if(m){var url=m[1];if(!/^https?:\/\//i.test(url))url="https://"+url;
+    if(!artPane.classList.contains("open"))artPane.classList.add("open");
+    showArtTab("browse");loadBrowseUrl(url);
+    return true;}
+  return false;
+}
+/* ---------- Zero Tasks: AI does the web legwork, you do the final tap ---------- */
+function isTaskRequest(text){
+  if(/\bin order to\b/i.test(text)) return false;
+  var verbs=/\b(find me|find the|cheapest|best price|best deal|best deals|compare|comparison|book|booking|reserve|reservation|order|buy|deals? on|lowest price|where (can|should) i (buy|book|order|stay)|plan (a|my))\b/i;
+  var domains=/\b(flight|flights|hotel|hotels|car rental|rental car|restaurant|trip|vacation|laptop|phone|headphones|tv|television|shoes|watch|gadget|apartment|plumber|electrician|movers?|insurance)\b/i;
+  return verbs.test(text)&&domains.test(text);
+}
+function taskSearchQueries(text){
+  var q=text.substring(0,160);
+  var isFlight=/\bflight/i.test(text), isHotel=/\bhotel/i.test(text);
+  var q2=isFlight?q+" cheap flights":isHotel?q+" best hotel deals":q+" best price";
+  return [q,q2,q+" reviews"];
+}
+function openTaskUrl(url){
+  if(!/^https?:\/\//i.test(url))return;
+  if(!artPane.classList.contains("open"))artPane.classList.add("open");
+  showArtTab("browse");
+  loadBrowseUrl(url);
+}
+/* ---------- Zero AI browser card: "Browser / Open browser" UI ---------- */
+var ZC_GLOBE_SVG='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a5fd9" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.6 2.7 4 5.8 4 9s-1.4 6.3-4 9c-2.6-2.7-4-5.8-4-9s1.4-6.3 4-9z"/></svg>';
+function showBrowserCard(status){
+  var old=document.getElementById("zcBrowserCard"); if(old) old.remove();
+  var d=document.createElement("div"); d.className="msg ai"; d.id="zcBrowserCard";
+  var smallIco=ZC_GLOBE_SVG.replace('width="24" height="24"','width="14" height="14"');
+  d.innerHTML='<div class="browser-card"><div class="browser-card-head"><div class="browser-card-ico">'+ZC_GLOBE_SVG+'</div><div><div class="browser-card-title">Browser</div><div class="browser-card-status" id="zcBrowserStatus">'+esc(status||"Ready")+'</div></div></div>'+
+  '<div class="browser-card-preview"><div class="browser-mock-bar">'+smallIco+' Zero Browser</div><div class="browser-mock-line" style="width:92%"></div><div class="browser-mock-line" style="width:78%"></div><div class="browser-mock-line" style="width:85%"></div><div class="browser-mock-line" style="width:64%"></div></div>'+
+  '<button class="browser-card-open" onclick="openBrowseTab()">Open browser</button></div>';
+  msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
+}
+function setBrowserCardStatus(s){var e=document.getElementById("zcBrowserStatus"); if(e) e.textContent=s;}
+/* ---------- image attach for the composer ---------- */
+var attachedImg = null;
+function downscaleImage(file, cb){
+  var img = new Image();
+  var url = URL.createObjectURL(file);
+  img.onload = function(){
+    URL.revokeObjectURL(url);
+    var max = 1024, w = img.width, h = img.height;
+    if(w > max || h > max){ var r = max / Math.max(w, h); w = Math.round(w*r); h = Math.round(h*r); }
+    var c = document.createElement("canvas"); c.width = w; c.height = h;
+    c.getContext("2d").drawImage(img, 0, 0, w, h);
+    cb(c.toDataURL("image/jpeg", 0.85));
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); cb(null); };
+  img.src = url;
+}
+function setAttached(dataUrl){
+  attachedImg = dataUrl;
+  var row = document.getElementById("attachRow");
+  if(dataUrl){
+    document.getElementById("attachThumb").src = dataUrl;
+    row.classList.add("has");
+  }else{
+    row.classList.remove("has");
+  }
+}
+function handleImageFile(file){
+  if(!file || file.type.indexOf("image/") !== 0) return;
+  downscaleImage(file, function(dataUrl){ if(dataUrl) setAttached(dataUrl); });
+}
+(function(){
+  var plus = document.getElementById("plusBtn");
+  var pick = document.getElementById("imgPick");
+  var inp = document.getElementById("msgInput");
+  if(plus && pick) plus.addEventListener("click", function(){ pick.click(); });
+  if(pick) pick.addEventListener("change", function(){ if(pick.files[0]) handleImageFile(pick.files[0]); pick.value=""; });
+  var ax = document.getElementById("attachX");
+  if(ax) ax.addEventListener("click", function(){ setAttached(null); });
+  if(inp) inp.addEventListener("paste", function(e){
+    var items = (e.clipboardData && e.clipboardData.items) || [];
+    for(var i=0;i<items.length;i++){
+      if(items[i].type.indexOf("image/")===0){ e.preventDefault(); handleImageFile(items[i].getAsFile()); break; }
+    }
+  });
+})();
+/* ---------- Gmail SEND-ONLY for Zero AI (never reads mail) ---------- */
+var ZC_GMAIL_CLIENT_ID = "516883467803-7bv4svjs40uu4jutkahtc891r0hhglvr.apps.googleusercontent.com";
+var zcGmailToken = null;
+function zcGmailApi(path, opts){
+  opts = opts || {};
+  return fetch("https://gmail.googleapis.com/gmail/v1" + path, {
+    method: opts.method || "GET",
+    headers: { "Authorization": "Bearer " + zcGmailToken, "Content-Type": "application/json" },
+    body: opts.body
+  }).then(function(r){ return r.json(); });
+}
+function zcConnectGmail(cb){
+  if(zcGmailToken){ if(cb)cb(true); return; }
+  try{
+    google.accounts.oauth2.initTokenClient({
+      client_id: ZC_GMAIL_CLIENT_ID,
+      scope: "https://www.googleapis.com/auth/gmail.send",
+      callback: function(resp){
+        if(resp && resp.access_token){ zcGmailToken = resp.access_token; if(cb)cb(true); }
+        else if(cb)cb(false);
+      }
+    }).requestAccessToken();
+  }catch(e){ if(cb)cb(false); }
+}
+function zcDoSendMail(to, subject, body, done){
+  var raw = "To: " + to + "\r\nSubject: " + subject + "\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" + body;
+  var enc = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  zcGmailApi("/users/me/messages/send", { method: "POST", body: JSON.stringify({ raw: enc }) })
+    .then(function(d){ done(d && d.id); })
+    .catch(function(){ done(false); });
+}
+/* Detect "send an email to X ..." and show a compose card */
+function tryEmailSend(text){
+  var m = text.match(/send\s+(an?\s+)?e-?mail\s+to\s+([^\s,;]+@[^\s,;]+)/i);
+  if(!m) return false;
+  var to = m[2];
+  var rest = text.slice(m.index + m[0].length).trim().replace(/^[,:;\-]+/, "").trim();
+  var body = rest.replace(/^(saying|that|with the message|with)\s+/i, "").trim() || "";
+  zcConnectGmail(function(ok){
+    if(!ok){ addMsg("ai", "I couldn't connect to Gmail. Try again."); return; }
+    var card = document.createElement("div");
+    card.className = "msg ai";
+    card.innerHTML =
+      '<div style="border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card)">' +
+      '<div style="font-weight:700;margin-bottom:10px">\u2709\uFE0F Ready to send</div>' +
+      '<label for="zcTo" style="font-size:12px;color:var(--ink-soft)">To</label>' +
+      '<input id="zcTo" value="' + esc(to) + '" style="width:100%;margin:4px 0 10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--bg);color:var(--ink)">' +
+      '<label for="zcSub" style="font-size:12px;color:var(--ink-soft)">Subject</label>' +
+      '<input id="zcSub" placeholder="Subject" style="width:100%;margin:4px 0 10px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--bg);color:var(--ink)">' +
+      '<label for="zcBody" style="font-size:12px;color:var(--ink-soft)">Message</label>' +
+      '<textarea id="zcBody" rows="4" style="width:100%;margin:4px 0 12px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px;background:var(--bg);color:var(--ink);resize:vertical">' + esc(body) + '</textarea>' +
+      '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+      '<button id="zcCancel" style="padding:9px 18px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;font-size:14px">Cancel</button>' +
+      '<button id="zcSend" style="padding:9px 18px;border-radius:10px;border:0;background:#3a5fd9;color:#fff;cursor:pointer;font-size:14px;font-weight:600">Send email</button>' +
+      '</div></div>';
+    msgs.appendChild(card); msgs.scrollTop = msgs.scrollHeight;
+    document.getElementById("zcCancel").onclick = function(){ card.remove(); };
+    document.getElementById("zcSend").onclick = function(){
+      var t = document.getElementById("zcTo").value.trim();
+      var sj = document.getElementById("zcSub").value.trim();
+      var bd = document.getElementById("zcBody").value;
+      if(!t || !/.+@.+\..+/.test(t)){ zcDialog({title:'Invalid email',body:"Enter a valid email address.",info:true}); return; }
+      document.getElementById("zcSend").disabled = true;
+      document.getElementById("zcSend").textContent = "Sending\u2026";
+      zcDoSendMail(t, sj, bd, function(ok){
+        if(ok){ card.innerHTML = '<div style="padding:6px 2px">\u2705 Email sent to <b>' + esc(t) + '</b>.</div>'; }
+        else{ document.getElementById("zcSend").disabled = false; document.getElementById("zcSend").textContent = "Send email"; zcDialog({title:'Send failed',body:"Send failed. Try again.",info:true}); }
+      });
+    };
+  });
+  return true;
+}
+function sendMsg(){
+  var inp=document.getElementById("msgInput");
+  var text=inp.value.trim();
+  if(!text && !attachedImg)return;
+  if(attachedImg && !text) text = "What\u2019s in this image?";
+  // Copy to qin for compatibility
+  document.getElementById("q").value=text;
+  window._composerImg = attachedImg;
+  setAttached(null);
+  inp.value="";
+  send();
+}
+function send(){
+  var text=document.getElementById("q").value.trim();if(!text)return;
+  document.getElementById("sugg").style.display="none";
+  // Skill toggle: Zero Mail (Customize Zero → Skills) — when off, the send flow
+  // is disabled with a graceful note instead of silently ignoring the request.
+  if(window.ZeroPrefs&&!window.ZeroPrefs.skillOn("mail")&&/send\s+(an?\s+)?e-?mail\s+to\s+[^\s,;]+@[^\s,;]+/i.test(text)){
+    addMsg("user",esc(text));qin.value="";document.getElementById("q").value="";document.getElementById("msgInput").value="";
+    addMsg("ai","Zero Mail is turned off. Turn it back on in <b>Customize Zero</b> &rarr; Skills and I can send email for you again.");
+    return;
+  }
+  if(tryEmailSend(text)){ addMsg("user",esc(text)); qin.value=""; document.getElementById("q").value=""; document.getElementById("msgInput").value=""; return; }
+  var cImg=window._composerImg;window._composerImg=null;
+  addMsg("user",(cImg?'<img src="'+cImg+'" alt="Attached image" style="max-width:220px;border-radius:14px;display:block;margin-bottom:8px">':'')+esc(text));qin.value="";
+  document.getElementById("sugg").style.display="none";
+  if(checkComputerCommand(text)){return;}
+  if(checkVaultCommand(text)){addMsg("user",esc(text));qin.value="";addMsg("ai","Opening your <b>Zero Vault</b> — it's encrypted on your device with your master password, so I never see your passwords. Add, copy and manage them there.");return;}
+  if(checkBrowseCommand(text)){addMsg("user",esc(text));qin.value="";addMsg("ai",ZC_SVG_GLOBE+" Opening <b>"+esc(text)+"</b> in the browser panel. You can interact with it directly.");return;}
+  // Small-talk fast path: greetings/thanks get ONE quick short reply - no 10-model ensemble, no web search
+  var _isSmallTalk=/^(hi+|hey+|hello+|yo|sup|how are you( doing)?( today)?|how'?s it going|what'?s up|thanks|thank you|thx|good ?(morning|afternoon|evening|night)|bye+|goodbye|good ?night|see you( later)?|who are you)\s*[?!.]*$/i.test(text);
+  if(_isSmallTalk){
+    var _st=addMsg("ai",'<span class="typing-dots"><span></span><span></span><span></span></span>');
+    fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-20b",temp:0.7,max_tokens:200,messages:[{role:"system",content:"You are Zero, a warm friendly AI assistant. The user just said something casual. Reply in 1-2 short sentences, warm and natural with a little personality. No lists, no headings, no follow-up questions."},{role:"user",content:text}]})})
+    .then(function(r){return r.json();}).then(function(j){
+      var _a=j.answer||j.text||"Hey! I'm here and ready - what can I do for you?";
+      try{var _c=chats.find(function(x){return x.id===curId;});if(_c){_c.msgs.push({role:"user",text:text});_c.msgs.push({role:"ai",text:_a});if(_c.title==="New chat")_c.title=text.substring(0,30);saveChats();renderChatList();}}catch(e){}
+      typeEffect(_st,_a,function(){msgs.scrollTop=msgs.scrollHeight;});
+    }).catch(function(){_st.innerHTML=esc("Hey! I'm here and ready - what can I do for you?");});
+    return;
+  }
+  var isBuild=/build|create|make|design|landing|website|page|app|site|portfolio/i.test(text);
+  var _isBuildTask=/build|create|make|design|landing|website|page|app|site|portfolio|browse|open|visit/i.test(text);
+  var taskMode=isTaskRequest(text)&&!isBuild;
+  aiShareScreen(_isBuildTask);
+  var t=addMsg("ai",'<span class="typing-dots"><span></span><span></span><span></span></span>');
+  var sys=isBuild?"You are Zero, a careful coding assistant. Deliver complete, coherent code appropriate to the actual project and runtime. Inspect supplied files and interfaces before changing them; preserve unrelated behavior. Validate inputs, handle expected failures, async paths, empty values, and boundary cases. Use correct imports/types and secure defaults; protect secrets and consider auth, injection, XSS, CSRF, accessibility, and performance where relevant. Do not invent dependencies, APIs, test results, or deployment status. If tests/tools are available, run relevant checks and fix failures; clearly state what was verified and what remains untested. Avoid TODOs/placeholders unless explicitly requested or unavoidable and clearly labeled. (6) If building a website: output ONE complete self-contained HTML file in a ```html code block with inline <style> and <script>. Make it stunning - modern gradients, smooth animations, flexbox/grid layouts, responsive design, polished typography, intuitive UX. No external dependencies except Google Fonts. (7) If writing a function: include a brief usage example. (8) After the code, explain the key design decisions in 2-3 sentences. Be confident, precise, and thorough. Your code should work on the first try.":"You are Zero, a sharp and friendly AI assistant. Answer the user's question directly and well. Rules: (1) LENGTH: match the question - one-line questions get short answers; casual chat like 'how are you' or 'hi' gets 1-2 warm sentences and nothing more; only complex questions earn long structured answers. (2) Be accurate and specific with concrete facts, never filler. NEVER invent dates, scores, statistics, names, or URLs. (3) Structure longer answers with a title, short sections, numbered steps or bullets, and **bold** key terms. (4) NEVER output code unless the user explicitly asks for code, a script, a function, or a website. (5) When web search results are provided, use them for current facts and cite with links; if they do not contain the answer, say you could not confirm it - never fabricate. (6) Plain markdown only, no raw HTML tags, no --- separators. Always identify as Zero. Keep it family-friendly.";
+
+  var actBox=document.createElement("div"); actBox.className="activity";
+  t.appendChild(actBox);
+  if(taskMode){ showBrowserCard("Working..."); }
+  function runModels(){
+  // Self-update: keep only models still alive in the server lineup; fall back silently.
+  var _zcPrefs=[["groq","openai/gpt-oss-120b"],["groq","openai/gpt-oss-20b"],["groq","qwen/qwen3.8-27b"],["cerebras","gpt-oss-120b"],["cerebras","qwen-3-32b"],["openrouter","openrouter/free"],["openrouter","meta-llama/llama-3.3-70b-instruct:free"],["mistral","mistral-small-latest"],["pollinations","openai"]];
+  var _zcHard=[
+    {provider:"groq",model:"openai/gpt-oss-120b"},
+    {provider:"groq",model:"openai/gpt-oss-20b"},
+    {provider:"groq",model:"qwen/qwen3.8-27b"},
+    {provider:"cerebras",model:"gpt-oss-120b"},
+    {provider:"cerebras",model:"qwen-3-32b"},
+    {provider:"openrouter",model:"openrouter/free"},
+    {provider:"openrouter",model:"meta-llama/llama-3.3-70b-instruct:free"},
+    {provider:"mistral",model:"mistral-small-latest"},
+    {provider:"pollinations",model:"openai"}
+  ];
+  var _zcLive=(window.ZeroLineup&&window.ZeroLineup.filterPrefs)?window.ZeroLineup.filterPrefs(_zcPrefs):null;
+  var models=_zcLive||_zcHard;
+  logActivity(actBox,ZC_SVG_BOT,"Consulting "+models.length+" AI models...", true);
+  aiScreenLog(ZC_SVG_BOT+" Consulting "+models.length+" models in parallel...", "#d2a8ff");
+  var userContent = cImg
+    ? [{type:"text",text:text},{type:"image_url",image_url:{url:cImg}}]
+    : text;
+  // Build conversation history (last 10 exchanges) for context
+  var hist=[];
+  try{
+    var c=chats.find(function(x){return x.id===curId;});
+    if(c&&c.msgs){
+      c.msgs.slice(-30).forEach(function(m){
+        if(m.role==="user") hist.push({role:"user",content:String(m.text).substring(0,2000)});
+        else if(m.role==="ai") hist.push({role:"assistant",content:String(m.text).substring(0,2000)});
+      });
+    }
+  }catch(e){}
+  hist.push({role:"user",content:userContent});
+  // Web access: detect URLs or current-info needs
+  var urlMatch=text.match(/https?:\/\/[^\s)]+/);
+  // Skill toggle: Web search (Customize Zero → Skills) — when off, the AI
+  // answers from its own knowledge with no live-web augmentation.
+  var _wsOk=!window.ZeroPrefs||window.ZeroPrefs.skillOn("websearch");
+  var needsWeb=_wsOk&&(taskMode||urlMatch||/\b(current|today|now|latest|recent|2024|2025|2026|news|price|stock|weather|score|who won|what happened)\b/i.test(text));
+  // Fetch web context synchronously before models run (via async wrapper)
+  function fetchWebSync(cb){
+    if(!needsWeb) return cb("");
+    if(urlMatch){
+      // User shared a URL - fetch the page content via reader
+      logActivity(actBox,ZC_SVG_GLOBE,"Reading "+urlMatch[0].substring(0,50)+"...", true);
+      fetch("reader.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:urlMatch[0]})})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var content=String(d.content||d.text||"").substring(0,8000);
+          cb(content?"\n\nPage content from "+urlMatch[0]+":\n"+content:"");
+        })
+        .catch(function(){ cb(""); });
+    } else if(taskMode){
+      // Zero Tasks: run several targeted searches and merge the results
+      logActivity(actBox,ZC_SVG_WRENCH,"Working on it — researching the best options...", true);
+      var qs=taskSearchQueries(text);
+      var done=0, seen={}, merged=[];
+      qs.forEach(function(q){
+        fetch("zero-search-v2.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({source:"auto",q:q})})
+          .then(function(r){ return r.json(); })
+          .then(function(d){
+            (d.results||[]).forEach(function(r){
+              var u=String(r.url||"");
+              if(u&&!seen[u]){seen[u]=1;merged.push(r);}
+            });
+          })
+          .catch(function(){})
+          .then(function(){
+            if(++done===qs.length){
+              var results=merged.slice(0,8);
+              if(!results.length) return cb("");
+              var todayStr=new Date().toDateString();
+              var ctx="\n\nTASK RESEARCH (today is "+todayStr+" - treat these results as current and factual):\n";
+              results.forEach(function(r,i){
+                ctx+=(i+1)+". "+r.title+" - "+r.snippet+" ("+r.url+")\n";
+              });
+              cb(ctx);
+            }
+          });
+      });
+      return;
+    } else {
+      // Search the web for current info
+      logActivity(actBox,ZC_SVG_GLOBE,"Searching the web...", true);
+      fetch("zero-search-v2.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({source:"auto",q:text.substring(0,200)})})
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var results=(d.results||[]).slice(0,5);
+          if(!results.length) return cb("");
+          var todayStr=new Date().toDateString();
+          var ctx="\n\nCurrent web information (today is "+todayStr+" - treat these results as current and factual):\n";
+          results.forEach(function(r,i){
+            ctx+=(i+1)+". "+r.title+" - "+r.snippet+" ("+r.url+")\n";
+          });
+          cb(ctx);
+        })
+        .catch(function(){ cb(""); });
+    }
+  }
+  // Fetch with timeout (12s) so slow models don't block
+  function fetchT(url,opts,ms){
+    ms=ms||12000;
+    return new Promise(function(res,rej){
+      var to=setTimeout(function(){rej(new Error("timeout"));},ms);
+      fetch(url,opts).then(function(r){clearTimeout(to);res(r);},function(e){clearTimeout(to);rej(e);});
+    });
+  }
+  fetchWebSync(function(webCtx){
+  if(webCtx){
+    var lastH=hist[hist.length-1];
+    if(lastH&&lastH.role==="user"&&typeof lastH.content==="string") lastH.content+=webCtx;
+    logActivity(actBox,ZC_SVG_GLOBE,"Web context added", false);
+  }
+  var promises=models.map(function(m){
+    return fetchT("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:m.provider,model:m.model,temp:0.7,messages:[{role:"system",content:sys}].concat(hist)})})
+    .then(function(r){return r.json();}).then(function(j){return j.answer||j.text||"";}).catch(function(){return "";});
+  });
+  Promise.all(promises).then(function(answers){
+    answers=answers.filter(function(a){return a.trim().length>0;});
+    logActivity(actBox,ZC_SVG_BOLT,"Synthesizing best answer...");
+    aiScreenLog(ZC_SVG_BOLT+" Synthesizing "+answers.length+" responses...", "#d2a8ff");
+    if(answers.length===0){
+      var ans="Sorry, I couldn't generate a response.";
+      finishAIResponse(t,text,ans,actBox);
+      return;
+    }
+    if(answers.length===1){ finishAIResponse(t,text,answers[0],actBox); return; }
+    // Synthesize multiple answers into one superior response
+    var synthPrompt="You are Zero, synthesizing "+answers.length+" draft answers into ONE final answer. Rules: (1) Combine the best, most accurate content into one complete, well-structured answer. NEVER end mid-sentence or leave sections unfinished - if the topic has N parts, cover all N completely. (2) When drafts disagree, go with the majority; if genuinely uncertain, say so in one line. (3) Match length to the question: short questions get short answers. No padding, no filler, no forced follow-up-question endings. (4) NEVER invent facts, scores, dates, statistics, names, or URLs. When LIVE WEB SEARCH RESULTS are provided below, only state what they support and cite sources with links; if they do not cover the question, say you could not confirm it - do not fabricate. (5) Structure with a clear title, ## section headers, numbered lists for steps/sequences, bullets for collections, **bold** key terms, short paragraphs. (6) Plain markdown only - no raw HTML tags, no --- separators. (7) If the user asked for code, output complete working code in fenced blocks; otherwise NO code. (8) SELF-CHECK before finalizing: verify every fact and number against the drafts and web results; fix anything wrong. Output only the final answer - never mention drafts or synthesis. Question: "+text+(webCtx?"\n\nLIVE WEB SEARCH RESULTS (current info from the live internet - you DO have internet access via these results. NEVER claim you have no internet access or that your knowledge stops at a cutoff date. Treat the results as real and current - do NOT hedge with 'simulation', 'snapshot', or 'may not be real' caveats. Use these results to answer and cite each source with a clickable link):\n"+webCtx:"")+"\n\nResponses:\n"+answers.map(function(a,i){return "--- Response "+(i+1)+" ---\n"+a.substring(0,4000);}).join("\n");
+    if(taskMode){
+      synthPrompt+="\n\nTASK MODE: The user asked you to DO a web task (compare options, find deals, plan a booking) - not just chat. Using ONLY the real TASK RESEARCH results above: (1) Start with one short line summarizing what you found. (2) Then output a markdown comparison table with 4-6 REAL options and exactly these columns: | Option | Price | Why it stands out | Link | - the Link cell must be a markdown link like [Open](URL) using a REAL result URL, never an invented URL. If a price is not in the results, write 'see site'. (3) IGNORE your usual rule about ending with a follow-up question or offer — instead, end your answer with EXACTLY this closing line and nothing after it: 'Tap any option to open it in a new tab and finish there — I did the research, you do the final tap. I can't log in as you or pay with your card.' NEVER invent prices, deals, or URLs. If the results are thin, say so plainly and give the best you actually found. Do not add any text after the closing line.";
+    }
+    fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-120b",temp:0.5,max_tokens:2200,messages:[{role:"user",content:synthPrompt}]})})
+    .then(function(r){return r.json();}).then(function(j){
+      var ans=j.answer||j.text||answers[0];
+      // Self-critique revision pass: review generated code for bugs BEFORE showing it
+      var hasCode=/```(html|css|js|javascript|python|py|java|typescript|ts|php|go|rust|cpp|c)\b/i.test(ans);
+      var wantsCode=/\b(code|script|function|program|website|webpage|app|build|create|write)\b/i.test(text||'');
+      if(hasCode&&wantsCode){
+        try{logActivity(actBox,ZC_SVG_SEARCH,"Reviewing the code for bugs…",true);}catch(e){}
+        reviewCode(ans,text).then(function(r2){finishAIResponse(t,text,r2,actBox);});
+        return;
+      }
+      finishAIResponse(t,text,ans,actBox);
+    }).catch(function(){ finishAIResponse(t,text,answers[0],actBox); });
+  }).catch(function(){ t.innerHTML=ZC_SVG_WARN+" Error. Please try again."; });
+  }); // end fetchWebSync
+  // Dedicated code-review pass: a second model critically reviews generated code for bugs
+  // and returns the corrected version. Falls back to the original on any failure.
+  function reviewCode(ans,text){
+    var prompt="You are a senior code reviewer doing a final pre-release review. Review the code in the answer below.\n"+
+    "Rules: (1) Trace every line for syntax errors, logic bugs, undefined variables, wrong APIs, and edge cases. (2) If you find ANY issue, output the FULL CORRECTED answer with the fixed code in the same markdown fenced blocks. (3) If the code is already correct, output it EXACTLY unchanged. (4) Keep any non-code explanation text as-is. (5) Output ONLY the reviewed answer — no meta-commentary, no preamble.\n\n"+
+    "User request: "+text+"\n\nAnswer to review:\n"+ans;
+    return fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({provider:"groq",model:"openai/gpt-oss-120b",temp:0.2,messages:[{role:"user",content:prompt}]})})
+    .then(function(r){return r.json();}).then(function(j){
+      var out=j.answer||j.text||ans;
+      // sanity: the review must still contain fenced code; otherwise keep the original
+      if(/```/.test(out)&&out.length>ans.length*0.5)return out;
+      return ans;
+    }).catch(function(){return ans;});
+  }
+  function finishAIResponse(t,text,ans,actBox){
+    var ans=ans||"Sorry, I couldn't generate a response.";
+    // Zero Tasks: guarantee the exact honest closing line (cut any garbled variant first)
+    if(taskMode){
+      var CLOSING="Tap any option to open it in a new tab and finish there — I did the research, you do the final tap. I can't log in as you or pay with your card.";
+      var cut=ans.search(/you do the final tap/i);
+      if(cut!==-1){ans=ans.substring(0,cut).replace(/\s+$/,"");}
+      ans+="\n\n"+CLOSING;
+    }
+    var c=chats.find(function(x){return x.id===curId;});
+    if(c){c.msgs.push({role:"user",text:text});c.msgs.push({role:"ai",text:ans});if(c.title==="New chat")c.title=text.substring(0,30);saveChats();renderChatList();}
+    var rows=actBox.querySelectorAll(".act-row"); rows.forEach(markDone);
+    clearThinking(actBox);
+    aiScreenLog(ZC_SVG_CHECK+" Task complete", "#28c840");
+    // Website builds: describe in chat, don't paste the code — the file card + live preview carry it
+    var _ansRawEarly=ans.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"');
+    var _builtHTML=null; try{ _builtHTML=extractHTML(_ansRawEarly); }catch(e){}
+    var _displayAns=ans;
+    if(_builtHTML&&_builtHTML.length>500){
+      _displayAns=ans.replace(/```[a-z]*\n?[\s\S]*?```/gi,'').replace(/<!DOCTYPE[\s\S]*?<\/html>/gi,'').replace(/\n{3,}/g,'\n\n').trim();
+      if(_displayAns.length<20)_displayAns="I've built your page — preview it live below, or download the file.";
+    }
+    typeEffect(t,_displayAns,function(){
+      if(taskMode){
+        setBrowserCardStatus("Ready");
+        // Zero Tasks: style option links as tappable buttons (they open in a new tab)
+        try{
+          t.querySelectorAll("a[href]").forEach(function(a){
+            try{a.classList.add("task-link");}
+            catch(e){a.setAttribute("class",((a.getAttribute("class")||"")+" task-link").trim());}
+          });
+        }catch(e){}
+        // safety net: the honest closing line must survive to the final render
+        try{
+          var txt=t.textContent||"";
+          if(txt.indexOf("log in as you")!==-1&&txt.indexOf("can't log in as you")===-1){
+            // model wrote a garbled variant ("I log in as you") — strip it
+            t.innerHTML=t.innerHTML.replace(/I log in as you or pay with your card\.?/,"");
+            txt=t.textContent||"";
+          }
+          if(txt.indexOf("can't log in as you")===-1){
+            var cdiv=document.createElement("div");
+            cdiv.innerHTML="<br><br>Tap any option to open it in a new tab and finish there — I did the research, you do the final tap. I can't log in as you or pay with your card.";
+            t.appendChild(cdiv);
+          }
+        }catch(e){}
+      }
+      // NEW: Casual talk gets NO code and NO attachments at all.
+      // (The answer was already code-stripped before typing, so skip everything here.)
+      var userAskedForCode = /\b(code|script|function|program|website|webpage|app|build|create|write)\b/i.test(text || '');
+      if(!userAskedForCode){ msgs.scrollTop=msgs.scrollHeight; return; }
+      // Unescape HTML entities for detection (ans may have &lt; instead of <)
+      var ansRaw = ans.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"');
+      // NEW: Multi-file support — multiple fenced blocks become multiple downloadable files
+      var multiFileDone=(function(){
+        var fenceRe=/```(\w+)\n?([\s\S]*?)```/g, fm, blocks=[];
+        while((fm=fenceRe.exec(ansRaw))!==null){
+          var fl=(fm[1]||"").toLowerCase(), fc=(fm[2]||"").trim();
+          if(fc.length>20)blocks.push({lang:fl,code:fc});
+        }
+        if(blocks.length<2)return false;
+        var extMapM={python:'py',javascript:'js',js:'js',html:'html',css:'css',java:'java',cpp:'cpp',c:'c',ruby:'rb',php:'php',typescript:'ts',ts:'ts',json:'json',xml:'xml',sql:'sql',go:'go',rust:'rs'};
+        var used={};
+        blocks.forEach(function(b,i){
+          var ext=extMapM[b.lang]||'txt';
+          var base=b.lang==='html'?'index':b.lang==='css'?'styles':(b.lang==='javascript'||b.lang==='js')?'script':b.lang==='python'?'script':'code';
+          var fn=base+'.'+ext, n=1;
+          while(used[fn]){n++;fn=base+n+'.'+ext;}
+          used[fn]=1;
+          var mm={html:'text/html',py:'text/x-python',js:'text/javascript',css:'text/css',json:'application/json'};
+          showFileAttachment(fn,b.code,mm[ext]||'text/plain',b.lang==='html');
+        });
+        return true;
+      })();
+      if(multiFileDone){msgs.scrollTop=msgs.scrollHeight;return;}
+            // NEW: Detect ANY code block and create Muse-style attachment
+      // First try: fenced code block with language
+      var codeBlockMatch = ansRaw.match(/```(\w+)\n?([\s\S]*?)```/);
+      var lang = null, code = null;
+      if(codeBlockMatch && codeBlockMatch[2].trim().length > 20){
+        lang = codeBlockMatch[1].toLowerCase();
+        code = codeBlockMatch[2].trim();
+      } else {
+        // Second try: detect language from content patterns - AGGRESSIVE HTML detection
+        // If user asked for website/webpage and response has ANY HTML, treat as HTML
+        var wantsWeb = /\b(website|webpage|web page|landing page|site|html page)\b/i.test(text || '');
+        var hasHTML = /<!DOCTYPE|<html|<head|<body|<style|<div|<h1|<p>/i.test(ansRaw);
+        if(wantsWeb && hasHTML){
+          lang = 'html';
+          // Extract the HTML - try multiple approaches
+          var htmlIdx = ansRaw.indexOf('<!DOCTYPE');
+          if(htmlIdx === -1) htmlIdx = ansRaw.indexOf('<html');
+          if(htmlIdx === -1){
+            // Find first HTML tag
+            var tagMatch = ansRaw.match(/<(html|head|body|style|div|h1)/i);
+            if(tagMatch) htmlIdx = ansRaw.indexOf(tagMatch[0]);
+          }
+          if(htmlIdx !== -1){
+            var htmlEnd = ansRaw.lastIndexOf('</html>');
+            if(htmlEnd === -1) htmlEnd = ansRaw.length;
+            else htmlEnd += 7;
+            code = ansRaw.substring(htmlIdx, htmlEnd).trim();
+            // Clean up: remove markdown fences if present
+            code = code.replace(/^```html\n?/i, '').replace(/```$/,'').trim();
+          } else {
+            // Fallback: try fenced block
+            var fenced = ansRaw.match(/```html\n?([\s\S]*?)```/i);
+            if(fenced) code = fenced[1].trim();
+          }
+        }
+        // Original DOCTYPE/html detection as backup
+        if(!code){
+          var htmlIdx2 = ansRaw.indexOf('<!DOCTYPE');
+          if(htmlIdx2 === -1) htmlIdx2 = ansRaw.indexOf('<html');
+          if(htmlIdx2 !== -1){
+            var htmlEnd2 = ansRaw.lastIndexOf('</html>');
+            if(htmlEnd2 > htmlIdx2){
+              lang = 'html';
+              code = ansRaw.substring(htmlIdx2, htmlEnd2 + 7);
+            }
+          }
+        }
+        // AGGRESSIVE: If user asked for Python and response has Python, treat as Python
+        var wantsPython = /\bpython\b/i.test(text || '');
+        var hasPython = /\bdef \w+\s*\(|\bimport \w+|print\s*\(|if __name__/.test(ansRaw);
+        if(!code && wantsPython && hasPython){
+          lang = 'python';
+          var pyFenced = ansRaw.match(/```python\n?([\s\S]*?)```/i);
+          if(pyFenced) code = pyFenced[1].trim();
+          else code = ansRaw;
+        }
+        // Python patterns: def, import, print(, if __name__
+        if(!code && /\bdef \w+\s*\(|\bimport \w+|print\s*\(|if __name__/.test(ansRaw)){
+          lang = 'python';
+          // Extract Python code: find def/import blocks
+          var pyMatch = ansRaw.match(/((?:def |import |from |print\s*\(|#.*\n|\w+\s*=.*\n)+[\s\S]{20,}?)(?=\n\n[^\s]|$)/);
+          if(pyMatch) code = pyMatch[1].trim();
+          else code = ansRaw; // fallback to full text
+        }
+        // AGGRESSIVE: If user asked for JavaScript and response has JS, treat as JS
+        var wantsJS = /\bjavascript\b|\bjs\b/i.test(text || '');
+        var hasJS = /\bfunction\s+\w+|const \w+\s*=|=>|console\.log/.test(ansRaw);
+        if(!code && wantsJS && hasJS){
+          lang = 'javascript';
+          var jsFenced = ansRaw.match(/```(?:javascript|js)\n?([\s\S]*?)```/i);
+          if(jsFenced) code = jsFenced[1].trim();
+          else code = ansRaw;
+        }
+        // JavaScript patterns - extract only the code, not English text
+        if(!code && /\bfunction\s+\w+|const \w+\s*=|=>|console\.log/.test(ansRaw)){
+          lang = 'javascript';
+          // Try to extract fenced block first, otherwise find function/const blocks
+          var jsMatch = ansRaw.match(/```(?:javascript|js)?\n?([\s\S]*?)```/);
+          if(jsMatch && jsMatch[1].trim().length > 20){
+            code = jsMatch[1].trim();
+          } else {
+            // Find JS code patterns
+            var jsCodeMatch = ansRaw.match(/((?:function\s+\w+|const\s+\w+|let\s+\w+|var\s+\w+)[\s\S]{20,}?)(?=\n\n[^\s]|$)/);
+            code = jsCodeMatch ? jsCodeMatch[1].trim() : ansRaw;
+          }
+        }
+      }
+        // AGGRESSIVE: If user asked for CSS and response has CSS, treat as CSS
+        var wantsCSS = /\bcss\b/i.test(text || '');
+        var hasCSS = /[.#]\w+\s*\{[^}]*:[^}]*\}/.test(ansRaw);
+        if(!code && wantsCSS && hasCSS){
+          lang = 'css';
+          var cssFenced = ansRaw.match(/```css\n?([\s\S]*?)```/i);
+          if(cssFenced) code = cssFenced[1].trim();
+          else code = ansRaw;
+        }
+      if(lang && code && code.length > 20){
+        // Map language to filename
+        var extMap = {python:'py', javascript:'js', js:'js', html:'html', css:'css', 
+                      java:'java', cpp:'cpp', c:'c', ruby:'rb', php:'php', 
+                      typescript:'ts', ts:'ts', json:'json', xml:'xml', sql:'sql',
+                      bash:'sh', shell:'sh', go:'go', rust:'rs', kotlin:'kt'};
+        var ext = extMap[lang] || 'txt';
+        var fname = 'code.' + ext;
+        if(lang==='html') fname = 'index.html';
+        if(lang==='python') fname = 'script.py';
+        if(lang==='javascript'||lang==='js') fname = 'script.js';
+        
+        var mimeMap = {html:'text/html', py:'text/x-python', js:'text/javascript',
+                       css:'text/css', json:'application/json'};
+        var mime = mimeMap[ext] || 'text/plain';
+        
+        // Show attachment (with preview for HTML)
+        showFileAttachment(fname, code, mime, lang==='html');
+        // Don't show duplicate preview via old logic
+        return;
+      }
+      
+      var html=extractHTML(ansRaw);
+      // Auto-show rich preview card for HTML files (like Muse sharing)
+      if(html && html.length>500){
+        // Use Muse-style attachment
+        showFileAttachment("index.html", html, "text/html", true);
+        window._lastHTML=html;
+      } else {
+        // Fallback: detect ANY substantial code (HTML, CSS, JS) even without fences
+        var codeContent=null, fileName="code.txt", fileType="text/plain";
+        // Try HTML
+        var doctypeIdx=ansRaw.indexOf("<!DOCTYPE");
+        if(doctypeIdx!==-1){
+          var htmlEnd=ans.lastIndexOf("</html>");
+          if(htmlEnd!==-1 && htmlEnd>doctypeIdx){
+            codeContent=ans.substring(doctypeIdx, htmlEnd+7);
+            fileName="index.html"; fileType="text/html";
+          }
+        }
+        // Try CSS (look for <style>...</style> or substantial CSS)
+        if(!codeContent){
+          var styleStart=ansRaw.indexOf("<style>");
+          if(styleStart!==-1){
+            var styleEnd=ansRaw.indexOf("</style>", styleStart);
+            if(styleEnd!==-1){
+              codeContent=ans.substring(styleStart, styleEnd+8);
+              fileName="styles.css"; fileType="text/css";
+            }
+          }
+        }
+        // Try: response is mostly CSS (has :root, --variables, { })
+        if(!codeContent && ansRaw.length>500){
+          var cssScore=(ansRaw.match(/--[\w-]+:/g)||[]).length + (ansRaw.match(/\{[^}]*\}/g)||[]).length;
+          if(cssScore>10 && ansRaw.indexOf("<")!==-1){
+            // Extract from first < to last >
+            var firstLt=ansRaw.indexOf("<");
+            var lastGt=ansRaw.lastIndexOf(">");
+            if(lastGt>firstLt && (lastGt-firstLt)>500){
+              codeContent=ansRaw.substring(firstLt, lastGt+1);
+              fileName="code.html"; fileType="text/html";
+            }
+          }
+        }
+        // ULTRA fallback: if still nothing but ans looks like code, show download anyway
+        if(!codeContent && ansRaw.length>800){
+          var hasCodePatterns = (ansRaw.indexOf("{")!==-1 && ansRaw.indexOf("}")!==-1 && ansRaw.indexOf(":")!==-1) ||
+                                ansRaw.indexOf("function")!==-1 ||
+                                ansRaw.indexOf("<")!==-1;
+          if(hasCodePatterns){
+            // Try to extract just the HTML part for preview
+            var htmlStart=ansRaw.indexOf("<!DOCTYPE");
+            if(htmlStart===-1) htmlStart=ansRaw.indexOf("<html");
+            if(htmlStart!==-1){
+              var htmlEnd=ansRaw.lastIndexOf("</html>");
+              if(htmlEnd!==-1 && htmlEnd>htmlStart){
+                codeContent=ansRaw.substring(htmlStart, htmlEnd+7);
+                fileName="index.html"; fileType="text/html";
+                // Also show preview for HTML
+                window._previewHTML=codeContent;
+              } else {
+                codeContent=ansRaw;
+                fileName="response.txt"; fileType="text/plain";
+              }
+            } else {
+              codeContent=ansRaw;
+              fileName="response.txt"; fileType="text/plain";
+            }
+          }
+        }
+        if(codeContent && codeContent.length>300){
+          var fb=document.createElement("div");
+          fb.style.cssText="background:var(--card);border:1px solid var(--line);border-radius:16px;margin:16px 0;padding:16px;display:flex;align-items:center;gap:12px";
+          fb.innerHTML='<div style="display:flex;align-items:center;color:var(--blue,#3a5fd9)">'+ZC_SVG_DOC+'</div><div style="flex:1"><div style="font-weight:600">'+fileName+'</div><div style="font-size:13px;color:var(--sub)">'+Math.round(codeContent.length/1024*10)/10+' KB — Ready to download</div></div><button class="cb-btn dl" style="padding:10px 20px" onclick="downloadRawFile()">'+ZC_SVG_DOWN+' Download File</button>';
+          t.insertBefore(fb, t.firstChild);
+          window._lastHTML=codeContent;
+          window._lastFileName=fileName;
+          window._lastFileType=fileType;
+          // If this is HTML, also show the preview card
+          if(window._previewHTML && fileType==="text/html"){
+            var pc=document.createElement("div");
+            pc.style.cssText="background:var(--card);border:1px solid var(--line);border-radius:16px;margin:16px 0;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)";
+            var pBlob=URL.createObjectURL(new Blob([window._previewHTML],{type:"text/html"}));
+            pc.innerHTML=
+              '<div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)">'+
+                '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#3a5fd9,#00C6FF);display:flex;align-items:center;justify-content:center;color:#fff">'+ZC_SVG_GLOBE+'</div>'+
+                '<div style="flex:1"><div style="font-weight:600;font-size:15px">Preview</div><div style="font-size:12px;color:var(--sub)">Working</div></div>'+
+              '</div>'+
+              '<div style="position:relative;height:480px;overflow:hidden;background:#fff">'+
+                '<iframe src="'+pBlob+'" title="Live website preview" style="width:100%;height:100%;border:0"></iframe>'+
+              '</div>'+
+              '<button onclick="openSharedPreview()" style="width:calc(100% - 32px);margin:16px;padding:14px;border:0;border-radius:24px;background:var(--field);font-size:16px;font-weight:500;cursor:pointer;color:var(--ink)">Open browser</button>';
+            t.insertBefore(pc, t.firstChild);
+            window._lastBlobUrl=pBlob;
+            window._previewHTML=null;
+          }
+        }
+      }
+      // Preview cards for code blocks (non-HTML)
+      var codeBlocks=t.querySelectorAll("pre code");
+      if(codeBlocks.length>0 && !(html && html.length>500)){
+        codeBlocks.forEach(function(cb, idx){
+          var lang=(cb.className||"").replace("language-","")||"code";
+          var code=cb.textContent||"";
+          if(code.length>200){
+            var cc=document.createElement("div");
+            cc.style.cssText="background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 0;overflow:hidden";
+            var ext=lang==="javascript"?"js":lang==="python"?"py":lang==="css"?"css":"txt";
+            cc.innerHTML=
+              '<div style="padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)">'+
+                '<div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#34C759,#30B0C7);display:flex;align-items:center;justify-content:center;color:#fff">'+ZC_SVG_DOC+'</div>'+
+                '<div style="flex:1"><div style="font-weight:600;font-size:15px">Code.'+ext+'</div><div style="font-size:12px;color:var(--sub)">'+lang+' · '+Math.round(code.length/1024*10)/10+' KB</div></div>'+
+              '</div>'+
+              '<div style="padding:16px;max-height:200px;overflow:hidden;background:var(--field);font-family:monospace;font-size:12px;white-space:pre-wrap;opacity:0.7">'+esc(code.substring(0,500))+(code.length>500?"...":"")+'</div>'+
+              '<button onclick="downloadCodeBlock('+idx+')" style="width:calc(100% - 32px);margin:16px;padding:14px;border:0;border-radius:24px;background:var(--field);font-size:16px;font-weight:500;cursor:pointer;color:var(--ink)">'+ZC_SVG_DOWN+' Download file</button>';
+            // Insert after the code block's parent
+            var pre=cb.closest("pre");
+            if(pre && pre.parentNode){
+              pre.parentNode.insertBefore(cc, pre.nextSibling);
+            }
+            // Store for download
+            if(!window._codeBlocks) window._codeBlocks=[];
+            window._codeBlocks[idx]={lang:lang, code:code, ext:ext};
+          }
+        });
+      }
+      if(html){var b=document.createElement("button");b.className="artifact-btn";b.innerHTML=ZC_SVG_EYE+" View live preview";b.onclick=function(){showArtifact(html);};t.appendChild(document.createElement("br"));t.appendChild(b);showArtifact(html);}
+      msgs.scrollTop=msgs.scrollHeight;
+    });
+  }
+  }
+  runModels();
+}
+if(!chats.length)newChat();else{curId=chats[0].id;loadChat(curId);}
+</script>
+<script>
+function quickAskText(t){ document.getElementById("msgInput").value=t; sendMsg(); }
+function downloadRawHTML(){ downloadRawFile(); }
+// Muse-style file attachment - unified for all file types
+function showFileAttachment(filename, content, mimeType, previewHTML){
+  // Create as SEPARATE message bubble like Muse attachments
+  var msgs = document.getElementById('msgs');
+  if(!msgs) return;
+  var bubble = document.createElement('div');
+  bubble.className = 'msg ai attachment-msg';
+  bubble.style.cssText = 'background:transparent;padding:4px 0;';
+  msgs.appendChild(bubble);
+  var t = bubble;
+  
+  var sizeKB = Math.round(content.length/1024*10)/10;
+  var ext = filename.split('.').pop().toLowerCase();
+  var icon = ZC_SVG_DOC;
+  var iconBg = 'linear-gradient(135deg,#3a5fd9,#00C6FF)';
+  
+  // Choose icon by file type
+  if(['html','htm'].includes(ext)){ icon=ZC_SVG_GLOBE; iconBg='linear-gradient(135deg,#3a5fd9,#00C6FF)'; }
+  else if(['js'].includes(ext)){ icon=ZC_SVG_BOLT; iconBg='linear-gradient(135deg,#FFD60A,#FF9F0A)'; }
+  else if(['css'].includes(ext)){ icon=ZC_SVG_PALETTE; iconBg='linear-gradient(135deg,#BF5AF2,#5E5CE6)'; }
+  else if(['py'].includes(ext)){ icon=ZC_SVG_CODE; iconBg='linear-gradient(135deg,#30D158,#64D2FF)'; }
+  else if(['txt','md'].includes(ext)){ icon=ZC_SVG_DOC; iconBg='linear-gradient(135deg,#8E8E93,#48484A)'; }
+  else if(['png','jpg','jpeg','gif','webp'].includes(ext)){ icon=ZC_SVG_IMG; iconBg='linear-gradient(135deg,#FF375F,#FF9F0A)'; }
+  
+  var card = document.createElement('div');
+  card.className = 'muse-attachment';
+  card.style.cssText = 'background:var(--card);border:1px solid var(--line);border-radius:16px;margin:12px 0;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.06)';
+  
+  var html = '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px">';
+  html += '<div style="width:44px;height:44px;border-radius:12px;background:'+iconBg+';display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0">'+icon+'</div>';
+  html += '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+filename+'</div>';
+  html += '<div style="font-size:13px;color:var(--sub)">'+sizeKB+' KB</div></div>';
+  html += '<button onclick="downloadAttachment(this)" data-filename="'+filename+'" style="background:#3a5fd9;color:#fff;border:none;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;flex-shrink:0">Download</button></div>';
+  
+  // Add preview for HTML (rendered via web with blob fallback)
+  if(ext==='html'){
+    var previewId = 'preview_' + Math.random().toString(36).substr(2,9);
+    var blobUrl = URL.createObjectURL(new Blob([content],{type:'text/html'}));
+    // Show blob preview IMMEDIATELY
+    html += '<div style="border-top:1px solid var(--line);padding:10px 16px 0;font-size:13px;font-weight:600;color:var(--sub)">Live preview — tap and scroll inside, it fully works</div>';
+    html += '<div id="'+previewId+'" style="border-top:1px solid var(--line);position:relative;height:480px;overflow:hidden;background:#fff">';
+    html += '<iframe src="'+blobUrl+'" title="Live website preview" style="width:100%;height:100%;border:0"></iframe></div>';
+    html += '<button id="'+previewId+'_btn" style="width:calc(100% - 32px);margin:12px 16px;padding:12px;border:1px solid var(--line);border-radius:20px;background:var(--field);font-size:15px;font-weight:500;cursor:pointer;color:var(--ink)">Open in browser</button>';
+    // Stash the blob URL + button id: the button is wired AFTER the card is
+    // inserted into the DOM below (getElementById can't find it while it is
+    // still just an HTML string — that was why the button did nothing).
+    card._blobUrl = blobUrl;
+    card._previewId = previewId;
+    // Open in browser uses ONLY the blob URL — nothing is ever uploaded to the server,
+    // so website previews take up zero server storage.
+  } else if(['py','js','css','java','cpp','c','rb','php','ts','json','xml','sql','sh','go','rs','kt','txt'].includes(ext)){
+    // Code preview: FULL SIZE like Muse attachments, not small cut-off
+    var escCode = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html += '<div style="border-top:1px solid var(--line);background:#1e1e1e;max-height:500px;overflow-y:auto">';
+    html += '<pre style="margin:0;padding:20px;font-family:ui-monospace,Menlo,monospace;font-size:14px;line-height:1.6;color:#d4d4d4;white-space:pre-wrap;word-break:break-word">'+escCode+'</pre></div>';
+  }
+  
+  // Add inline preview for images
+  if(mimeType && mimeType.startsWith('image/')){
+    html += '<div style="border-top:1px solid var(--line)"><img src="'+content+'" alt="Image preview" style="width:100%;display:block"></div>';
+  }
+  
+  card.innerHTML = html;
+  card._content = content;
+  card._mimeType = mimeType;
+  card._filename = filename;
+  // Wire "Open in browser" via the card itself (card isn't in the document yet,
+  // so document.getElementById can't find the button — use card.querySelector).
+  if(card._previewId){
+    (function(pid, bUrl){
+      var btn = card.querySelector('#'+CSS.escape(pid+'_btn'));
+      if(btn) btn.onclick = function(){ window.open(bUrl, '_blank'); };
+    })(card._previewId, card._blobUrl);
+  }
+  
+  // Insert at top like Muse attachments
+  t.insertBefore(card, t.firstChild);
+  return card;
+}
+
+function downloadAttachment(btn){
+  var card = btn.closest('.muse-attachment');
+  if(!card || !card._content) return;
+  var blob = new Blob([card._content], {type: card._mimeType || 'text/plain'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = card._filename || 'file.txt';
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+}
+
+function downloadRawFile(){
+  if(!window._lastHTML) return;
+  var blob=new Blob([window._lastHTML],{type:window._lastFileType||"text/html"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=window._lastFileName||"index.html";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function downloadCodeBlock(idx){
+  if(!window._codeBlocks || !window._codeBlocks[idx]) return;
+  var cb=window._codeBlocks[idx];
+  var blob=new Blob([cb.code],{type:"text/plain"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="code."+cb.ext;
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+function openSharedPreview(){
+  if(window._lastBlobUrl){
+    window.open(window._lastBlobUrl, "_blank");
+  } else if(window._lastHTML){
+    var blobUrl=URL.createObjectURL(new Blob([window._lastHTML],{type:"text/html"}));
+    window.open(blobUrl, "_blank");
+  }
+}
+function downloadHTMLFile(){
+  if(!window._lastHTML) return;
+  var blob=new Blob([window._lastHTML],{type:"text/html"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="index.html";
+  a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+}
+// Screen sharing with AI vision - fully opt-in
+var screenStream=null, screenVideo=null;
+/* In-page dialog — replaces native confirm()/prompt() (native dialogs have
+   caused renderer hangs in this app). Returns a Promise: true/false for
+   confirm mode, text/null for input mode. Escape or backdrop tap cancels. */
+function zcDialog(o){
+  return new Promise(function(resolve){
+    var prevFocus=document.activeElement;
+    var ov=document.createElement("div");
+    ov.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px";
+    var card=document.createElement("div");
+    card.style.cssText="background:#fff;color:#1a1a1a;border-radius:18px;padding:22px;width:100%;max-width:400px;box-shadow:0 16px 48px rgba(0,0,0,.25);animation:zcDlgIn .25s cubic-bezier(.32,.72,0,1)";
+    var h='<div style="font-size:17px;font-weight:700;margin-bottom:8px">'+esc(o.title||"")+'</div>';
+    if(o.body)h+='<div style="font-size:14px;line-height:1.55;color:#5f6368;margin-bottom:14px">'+esc(o.body)+'</div>';
+    if(o.input)h+='<input id="zcDlgIn" placeholder="'+esc(o.placeholder||"")+'" autocomplete="off" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1px solid #dadce0;border-radius:12px;font-size:16px;margin-bottom:14px;outline:none">';
+    h+='<div style="display:flex;gap:10px;justify-content:flex-end">'
+      +(o.info?"":'<button id="zcDlgNo" style="padding:10px 18px;border-radius:12px;border:1px solid #dadce0;background:transparent;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;min-width:88px;min-height:40px">'+esc(o.cancelText||"Cancel")+'</button>')
+      +'<button id="zcDlgYes" style="padding:10px 18px;border-radius:12px;border:0;background:'+(o.danger?"#d93025":"#3a5fd9")+';color:#fff;font-size:14px;font-weight:700;cursor:pointer;min-width:88px;min-height:40px">'+esc(o.okText||"OK")+'</button></div>';
+    card.innerHTML=h;ov.appendChild(card);document.body.appendChild(ov);
+    function done(v){ov.remove();document.removeEventListener("keydown",onKey,true);
+      if(prevFocus&&prevFocus.focus){try{prevFocus.focus();}catch(e){}}
+      resolve(v);}
+    function onKey(e){if(e.key==="Escape"){e.stopPropagation();done(o.input?null:false);}}
+    document.addEventListener("keydown",onKey,true);
+    ov.addEventListener("click",function(e){if(e.target===ov)done(o.input?null:false);});
+    var noBtn=ov.querySelector("#zcDlgNo");if(noBtn)noBtn.onclick=function(){done(o.input?null:false);};
+    var yes=ov.querySelector("#zcDlgYes"),inp=ov.querySelector("#zcDlgIn");
+    yes.onclick=function(){done(o.input?((inp.value.trim())||null):true);};
+    if(inp){inp.setAttribute("aria-label",o.placeholder||o.title||"Text input");inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();yes.click();}});inp.focus();}
+    else{yes.focus();}
+  });
+}
+var _zcDlgStyle=document.createElement("style");
+_zcDlgStyle.textContent="@keyframes zcDlgIn{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:none}}";
+document.head.appendChild(_zcDlgStyle);
+async function toggleShare(){
+  var btn=document.getElementById("shareBtn");
+  if(screenStream){
+    screenStream.getTracks().forEach(function(t){ t.stop(); });
+    screenStream=null;
+    if(screenVideo){ screenVideo.remove(); screenVideo=null; }
+    var ab=document.getElementById("askScreenBtn");
+    if(ab) ab.remove();
+    if(btn){ btn.innerHTML=ZC_SVG_MONITOR; btn.title="Share screen with AI"; }
+    addMsg("ai","Screen sharing stopped. The AI can no longer see your screen.");
+    return;
+  }
+  var ok=await zcDialog({
+    title:"Share your screen with Zero AI?",
+    body:"The AI will be able to see what you share. Choose a tab, window, or your screen. You can include audio if you want. Stop anytime from the screen-share button.",
+    okText:"Start sharing"
+  });
+  if(!ok) return;
+  try{
+    screenStream=await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
+    screenVideo=document.createElement("video");
+    screenVideo.style.cssText="position:fixed;bottom:80px;right:20px;width:320px;border-radius:12px;border:2px solid #3a5fd9;z-index:9999;background:#000";
+    screenVideo.autoplay=true; screenVideo.muted=true;
+    screenVideo.srcObject=screenStream;
+    document.body.appendChild(screenVideo);
+    var askBtn=document.createElement("button");
+    askBtn.innerHTML=ZC_SVG_EYE+" Ask AI about screen";
+    askBtn.id="askScreenBtn";
+    askBtn.style.cssText="position:fixed;bottom:20px;right:20px;z-index:9999;padding:12px 20px;background:#3a5fd9;color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(58,95,217,.4)";
+    askBtn.onclick=captureAndAsk;
+    document.body.appendChild(askBtn);
+    if(btn){ btn.innerHTML=ZC_SVG_STOP; btn.title="Stop sharing"; }
+    addMsg("ai","Screen sharing active! Click 'Ask AI about screen' anytime and I'll look at your screen and help.");
+    screenStream.getVideoTracks()[0].onended=function(){
+      if(screenVideo){ screenVideo.remove(); screenVideo=null; }
+      var ab2=document.getElementById("askScreenBtn");
+      if(ab2) ab2.remove();
+      screenStream=null;
+      var b=document.getElementById("shareBtn");
+      if(b){ b.innerHTML=ZC_SVG_MONITOR; }
+    };
+  }catch(e){
+    addMsg("ai","Screen sharing cancelled.");
+  }
+}
+async function captureAndAsk(){
+  if(!screenVideo) return;
+  var canvas=document.createElement("canvas");
+  canvas.width=screenVideo.videoWidth||1280;
+  canvas.height=screenVideo.videoHeight||720;
+  canvas.getContext("2d").drawImage(screenVideo,0,0,canvas.width,canvas.height);
+  var dataUrl=canvas.toDataURL("image/jpeg",0.7);
+  var question=await zcDialog({
+    title:"Ask about your screen",
+    body:"What do you want me to help with on your screen?",
+    input:true, placeholder:"e.g. What's on my screen?", okText:"Ask Zero"
+  });
+  if(!question) question="What do you see on my screen and how can you help?";
+  addMsg("user",esc(question)+' <span style="color:var(--sub);font-size:12px">[Screenshot shared]</span>');
+  askVision(dataUrl, question);
+}
+/* Vision Q&A for the screen-share flow — routes through Zero's own backend
+   (pollinations vision), the same as the composer image path. */
+function askVision(imageData, question){
+  var t=addMsg("ai",'<span class="typing-dots"><span></span><span></span><span></span></span>');
+  fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({provider:"pollinations",model:"openai",temp:0.7,max_tokens:1200,
+      messages:[
+        {role:"system",content:"You are Zero, a sharp and friendly AI assistant. The user shared a screenshot of their screen. Look at it carefully and ground your answer in what you actually see. Plain markdown only."},
+        {role:"user",content:[{type:"text",text:question||"What do you see on my screen?"},{type:"image_url",image_url:{url:imageData}}]}
+      ]})})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    var ans=String((d&&(d.answer||d.text))||"").trim();
+    t.innerHTML=ans?fmt(ans):esc("I couldn't see your screen clearly. Try again.");
+    msgs.scrollTop=msgs.scrollHeight;
+  })
+  .catch(function(){ t.innerHTML=esc("Couldn't analyze the screen. Check your connection and try again."); });
+}
+function downloadChat(){
+  var txt=document.getElementById("msgs").innerText;
+  var b=new Blob([txt],{type:"text/plain"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="zero-chat.txt"; a.click();
+}
+function toggleMic(){
+  var inp=document.getElementById("msgInput");
+  if(!("webkitSpeechRecognition" in window)){ zcDialog({title:'Voice not supported',body:"Voice not supported in this browser.",info:true}); return; }
+  var r=new webkitSpeechRecognition(); r.lang="en-US";
+  r.onresult=function(e){ inp.value=e.results[0][0].transcript; };
+  r.start();
+}
+</script>
+<script>
+/* ---------- macOS-style menu bar (Zero AI) ---------- */
+(function(){
+  var aiClose=document.getElementById("aiClose");
+if(aiClose)aiClose.addEventListener("click",function(){location.href="index.html";});
+var aiMin=document.getElementById("aiMin");
+if(aiMin)aiMin.addEventListener("click",function(){/* standalone page: nothing to minimize into */});
+var aiMax=document.getElementById("aiMax");
+if(aiMax)aiMax.addEventListener("click",function(){
+  if(document.fullscreenElement){document.exitFullscreen().catch(function(){});}
+  else if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});
+});
+var bar = document.getElementById("macbar");
+  if(!bar) return;
+  var openMenu = null;
+  function closeMenus(){
+    var ms = document.querySelectorAll(".macmenu"), i;
+    for(i=0;i<ms.length;i++) ms[i].hidden = true;
+    var bs = document.querySelectorAll(".macmenu-btn.open,.macprofile.open");
+    for(i=0;i<bs.length;i++) bs[i].classList.remove("open");
+    openMenu = null;
+  }
+  function toggleMenu(id, btn){
+    var m = document.getElementById(id);
+    if(!m) return;
+    if(openMenu === id){ closeMenus(); return; }
+    closeMenus();
+    var r = btn.getBoundingClientRect();
+    m.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 235)) + "px";
+    m.hidden = false;
+    btn.classList.add("open");
+    openMenu = id;
+    if(id === "mHist") fillHist();
+    if(id === "mBook") fillBooks();
+  }
+  var btns = document.querySelectorAll(".macmenu-btn"), i;
+  for(i=0;i<btns.length;i++){
+    (function(b){ b.addEventListener("click", function(e){ e.stopPropagation(); toggleMenu(b.getAttribute("data-macmenu"), b); }); })(btns[i]);
+  }
+  var prof = document.getElementById("macProfileBtn");
+  if(prof) prof.addEventListener("click", function(e){ e.stopPropagation(); toggleMenu("mProfile", prof); });
+  document.addEventListener("click", function(e){ if(!e.target.closest(".macmenu")) closeMenus(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape") closeMenus(); });
+  function toast(msg){
+    var t = document.getElementById("macToast");
+    if(!t){
+      t = document.createElement("div"); t.id = "macToast";
+      t.style.cssText = "position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(20,20,22,.92);color:#fff;padding:10px 18px;border-radius:20px;font-size:13.5px;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;max-width:80vw;text-align:center";
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = "1";
+    clearTimeout(t._h); t._h = setTimeout(function(){ t.style.opacity = "0"; }, 2200);
+  }
+  try{ window.toast = toast; }catch(e){} // expose for Zero self-update module
+  function activeField(){
+    var a = document.activeElement;
+    return (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.isContentEditable)) ? a : null;
+  }
+  var zoomF = 1;
+  function getChats(){
+    try{ var c = JSON.parse(localStorage.getItem("zc-chats") || "[]"); return Array.isArray(c) ? c : []; }catch(e){ return []; }
+  }
+  function fillHist(){
+    var box = document.getElementById("macHistItems");
+    if(!box) return;
+    var h = "";
+    getChats().slice(0,8).forEach(function(c){
+      var t = String(c.title || "Chat").replace(/</g,"&lt;");
+      h += '<button data-cid="' + c.id + '">' + t + "</button>";
+    });
+    box.innerHTML = h || '<div class="mactitle">No chats yet</div>';
+    var bs = box.querySelectorAll("[data-cid]"), j;
+    for(j=0;j<bs.length;j++){
+      (function(b){ b.addEventListener("click", function(){ closeMenus(); if(typeof loadChat === "function") loadChat(Number(b.getAttribute("data-cid")) || b.getAttribute("data-cid")); }); })(bs[j]);
+    }
+  }
+  function getBooks(){
+    try{ var b = JSON.parse(localStorage.getItem("zc-bookmarks") || "[]"); return Array.isArray(b) ? b : []; }catch(e){ return []; }
+  }
+  function fillBooks(){
+    var box = document.getElementById("macBookItems");
+    if(!box) return;
+    var h = "";
+    getBooks().slice(0,10).forEach(function(b){
+      var t = String(b.t || "Chat").replace(/</g,"&lt;");
+      h += '<button data-cid="' + b.id + '">' + t + "</button>";
+    });
+    box.innerHTML = h || '<div class="mactitle">No bookmarks yet</div>';
+    var bs = box.querySelectorAll("[data-cid]"), j;
+    for(j=0;j<bs.length;j++){
+      (function(b){ b.addEventListener("click", function(){ closeMenus(); if(typeof loadChat === "function") loadChat(Number(b.getAttribute("data-cid")) || b.getAttribute("data-cid")); }); })(bs[j]);
+    }
+  }
+  var acts = document.querySelectorAll(".macmenu [data-act]"), k;
+  for(k=0;k<acts.length;k++){
+    (function(b){
+      b.addEventListener("click", function(){
+        var a = b.getAttribute("data-act"), f = activeField();
+        if(a === "newchat"){ closeMenus(); if(typeof newChat === "function") newChat(); }
+        else if(a === "download"){ closeMenus(); if(typeof downloadChat === "function") downloadChat(); }
+        else if(a === "print"){ closeMenus(); window.print(); }
+        else if(a === "share"){
+          closeMenus();
+          if(navigator.share){ navigator.share({title:"Zero AI", url:location.href}).catch(function(){}); }
+          else if(navigator.clipboard){ navigator.clipboard.writeText(location.href).then(function(){ toast("Link copied"); }); }
+        }
+        else if(a === "undo"){ var mi = document.getElementById("msgInput"); if(mi){ mi.focus(); } if(f || mi) document.execCommand("undo"); closeMenus(); }
+        else if(a === "cut"){ if(f){ f.focus(); document.execCommand("cut"); } closeMenus(); }
+        else if(a === "copy"){ if(f){ f.focus(); document.execCommand("copy"); } closeMenus(); }
+        else if(a === "paste"){ if(f){ f.focus(); document.execCommand("paste"); } closeMenus(); }
+        else if(a === "selectall"){ if(f && f.select){ f.focus(); f.select(); } else document.execCommand("selectAll"); closeMenus(); }
+        else if(a === "zoomin"){ zoomF = Math.min(1.5, zoomF + 0.1); document.body.style.zoom = zoomF; closeMenus(); }
+        else if(a === "zoomout"){ zoomF = Math.max(0.7, zoomF - 0.1); document.body.style.zoom = zoomF; closeMenus(); }
+        else if(a === "zoomreset"){ zoomF = 1; document.body.style.zoom = ""; closeMenus(); }
+        else if(a === "fullscreen"){
+          closeMenus();
+          if(document.fullscreenElement) document.exitFullscreen();
+          else if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){});
+        }
+        else if(a === "clearhist"){
+          closeMenus();
+          try{ localStorage.removeItem("zc-chats"); }catch(e){}
+          if(typeof newChat === "function") newChat();
+          else if(typeof loadChats === "function") loadChats();
+          toast("Chats cleared");
+        }
+        else if(a === "addbook"){
+          var cs = getChats();
+          var cur = null, i;
+          for(i=0;i<cs.length;i++){ if(typeof curId !== "undefined" && cs[i].id === curId){ cur = cs[i]; break; } }
+          if(!cur) cur = cs[0];
+          if(cur){
+            var bs = getBooks();
+            bs.unshift({id:cur.id, t:cur.title});
+            try{ localStorage.setItem("zc-bookmarks", JSON.stringify(bs.slice(0,30))); }catch(e){}
+            toast("Bookmarked");
+          } else toast("Nothing to bookmark yet");
+          closeMenus();
+        }
+        else if(a === "home"){ closeMenus(); window.open("/", "_blank"); }
+        else if(a === "about"){ closeMenus(); toast("Zero AI \u2014 ask anything"); }
+      });
+    })(acts[k]);
+  }
+})();
+</script>
+<script src="zero-prefs.js"></script>
+<script>
+/* ============ Zero self-update: live AI lineup (zero-lineup.php) ============
+   Fetches the server's current model lineup on page load, caches it 24h in
+   localStorage, and builds the Fast/Balanced/Deep ensembles from live data.
+   If the fetch fails, callers silently fall back to their hardcoded lists. */
+window.ZeroLineup=(function(){
+  var CK="zero-lineup-v1",SK="zero-lineup-sig",TTL=86400000;
+  var live=null;
+  function sigOf(lu){return lu.map(function(p){return p.provider+":"+(p.models||[]).join(",");}).join("|");}
+  function adopt(lu){live={};lu.forEach(function(p){if(p&&p.provider){live[String(p.provider)]=(p.models||[]).map(String);}});}
+  function has(p,m){return !!(live&&live[p]&&live[p].indexOf(m)>=0);}
+  function pick(p,m){return has(p,m)?{provider:p,model:m,temp:0.7}:null;}
+  function sets(){
+    if(!live)return null;
+    var s={fast:[],balanced:[],deep:[]},i,pm,x;
+    var fastP=[["groq","openai/gpt-oss-20b"],["groq","qwen/qwen3.8-27b"],["pollinations","openai"]];
+    var balP=[["groq","openai/gpt-oss-120b"],["groq","openai/gpt-oss-20b"],["groq","qwen/qwen3.8-27b"],["cerebras","gpt-oss-120b"],["cerebras","qwen-3-32b"],["openrouter","openrouter/free"],["openrouter","meta-llama/llama-3.3-70b-instruct:free"],["mistral","mistral-small-latest"],["pollinations","openai"]];
+    for(i=0;i<fastP.length;i++){pm=fastP[i];x=pick(pm[0],pm[1]);if(x)s.fast.push(x);}
+    for(i=0;i<balP.length;i++){pm=balP[i];x=pick(pm[0],pm[1]);if(x)s.balanced.push(x);}
+    Object.keys(live).forEach(function(p){live[p].forEach(function(m){s.deep.push({provider:p,model:m,temp:0.7});});});
+    return s;
+  }
+  function filterPrefs(prefs){
+    if(!live)return null;
+    var out=[],i,x;
+    for(i=0;i<prefs.length;i++){x=pick(prefs[i][0],prefs[i][1]);if(x)out.push(x);}
+    return out.length?out:null;
+  }
+  function toastSafe(m){try{if(typeof toast==="function")toast(m);}catch(e){}}
+  function refresh(){
+    var cached=null;
+    try{cached=JSON.parse(localStorage.getItem(CK));}catch(e){}
+    var fresh=cached&&cached.ts&&(Date.now()-cached.ts)<TTL&&cached.lineup;
+    if(fresh){adopt(cached.lineup);return;}
+    if(cached&&cached.lineup)adopt(cached.lineup);
+    fetch("zero-lineup.php",{method:"GET"}).then(function(r){return r.json();}).then(function(d){
+      if(!d||d.ok!==true||!d.lineup||!d.lineup.length)return;
+      var sig=sigOf(d.lineup),prev=null;
+      try{prev=localStorage.getItem(SK);}catch(e){}
+      adopt(d.lineup);
+      try{localStorage.setItem(CK,JSON.stringify({ts:Date.now(),lineup:d.lineup}));localStorage.setItem(SK,sig);}catch(e){}
+      if(prev&&prev!==sig)toastSafe("Zero refreshed its AI lineup");
+    }).catch(function(){});
+  }
+  try{refresh();}catch(e){}
+  return{sets:sets,filterPrefs:filterPrefs,refresh:refresh};
+})();
+
+</script>
+
+<!-- ============ Zero Study Notebooks ============ -->
+<div class="nb-overlay" id="nbOverlay" role="dialog" aria-label="Study notebooks">
+  <div class="nb-head">
+    <button class="nb-x" onclick="ZNB.close()" aria-label="Close notebooks">×</button>
+    <h2 id="nbTitle">Study notebooks</h2>
+    <button class="nb-btn" id="nbNewBtn" onclick="ZNB.showCreate()">+ New</button>
+  </div>
+  <div class="nb-body"><div class="nb-wrap" id="nbWrap"></div></div>
+</div>
+<div class="nb-mbg" id="nbModalBg"><div class="nb-modal" id="nbModal"></div></div>
+<script>
+/* ============ Zero Study Notebooks ============
+   Gemini-Students-style persistent study notebooks for Zero AI.
+   100% client-side storage (zero-notebooks-v1); AI generation uses the
+   existing same-origin api-single.php flow. No new external requests. */
+window.ZNB = (function(){
+"use strict";
+var KEY = "zero-notebooks-v1";
+var S = { view:"list", nbId:null, tab:"lessons", quiz:null, fc:null, busy:false };
+
+/* ---------- storage ---------- */
+function load(){ try{ var n=JSON.parse(localStorage.getItem(KEY)); if(Array.isArray(n)) return n; }catch(e){} return []; }
+function save(n){ try{ localStorage.setItem(KEY, JSON.stringify(n)); }catch(e){} }
+function uid(p){ return (p||"id")+Date.now().toString(36)+Math.floor(Math.random()*46656).toString(36); }
+function getNB(id){ var all=load(),i; for(i=0;i<all.length;i++) if(all[i].id===id) return all[i]; return null; }
+function putNB(nb){ var all=load(),i; for(i=0;i<all.length;i++){ if(all[i].id===nb.id){ all[i]=nb; save(all); return; } } all.unshift(nb); save(all); }
+function delNB(id){ save(load().filter(function(n){ return n.id!==id; })); }
+function say(m){ try{ if(typeof toast==="function") toast(m); }catch(e){} }
+function escH(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+/* ---------- AI generation (reuses existing backend flow) ---------- */
+function genModel(){
+  try{
+    var live=(window.ZeroLineup&&window.ZeroLineup.filterPrefs)?window.ZeroLineup.filterPrefs([["groq","openai/gpt-oss-120b"],["groq","openai/gpt-oss-20b"],["cerebras","gpt-oss-120b"]]):null;
+    if(live&&live.length) return live[0];
+  }catch(e){}
+  return {provider:"groq", model:"openai/gpt-oss-120b"};
+}
+function fetchT(url,opts,ms){
+  ms=ms||60000;
+  return new Promise(function(res,rej){
+    var to=setTimeout(function(){ rej(new Error("timeout")); },ms);
+    fetch(url,opts).then(function(r){ clearTimeout(to); res(r); },function(e){ clearTimeout(to); rej(e); });
+  });
+}
+function parseJSON(t){
+  var s=String(t||"").replace(/```json|```/g,"");
+  var i=s.indexOf("{"), k=s.lastIndexOf("}");
+  if(i<0||k<=i) throw new Error("bad-json");
+  return JSON.parse(s.substring(i,k+1));
+}
+function tailoring(nb){
+  var p=[];
+  var weak=[];
+  (nb.quizzes||[]).forEach(function(qz){
+    var at=qz.attempts||[]; if(!at.length) return;
+    var last=at[at.length-1];
+    (last.missed||[]).forEach(function(m){ if(weak.indexOf(m)<0) weak.push(m); });
+  });
+  weak=weak.slice(0,5);
+  if(weak.length) p.push("The student struggled with these recently - emphasize and re-teach them: "+weak.join("; ")+".");
+  return p.length?("Personal context (use it to tailor difficulty and emphasis):\n"+p.join("\n")):"";
+}
+var SYSJSON="You are Zero, writing study material for a student's personal notebook. Output STRICT JSON only - no prose outside the JSON, no markdown fences, no commentary. Never invent facts, dates, statistics, or URLs.";
+function aiJSON(userPrompt,maxTokens){
+  var m=genModel();
+  return fetchT("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({provider:m.provider,model:m.model,temp:0.7,max_tokens:maxTokens||1500,
+      messages:[{role:"system",content:SYSJSON},{role:"user",content:userPrompt}]})})
+    .then(function(r){ return r.json(); })
+    .then(function(j){ return parseJSON(j.answer||j.text||""); });
+}
+
+/* ---------- modal ---------- */
+var _nbModalOpener=null;
+function showModal(html){
+  _nbModalOpener=document.activeElement;
+  var m=document.getElementById("nbModal");
+  m.innerHTML=html;
+  m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true");
+  var h3=m.querySelector("h3"); if(h3) m.setAttribute("aria-label",h3.textContent.trim());
+  document.getElementById("nbModalBg").classList.add("open");
+  /* Move focus inside: first field when the dialog has a form, otherwise the
+     dialog itself (never auto-arm a button — some dialogs are destructive). */
+  var f=m.querySelector("input,textarea,select");
+  if(f){ f.focus(); }
+  else{ if(!m.hasAttribute("tabindex")) m.setAttribute("tabindex","-1"); m.focus(); }
+}
+function closeModal(){ document.getElementById("nbModalBg").classList.remove("open");
+  if(_nbModalOpener&&_nbModalOpener.focus){ try{_nbModalOpener.focus();}catch(e){} } _nbModalOpener=null; }
+
+/* ---------- views ---------- */
+function el(id){ return document.getElementById(id); }
+var _nbOpener=null;
+function open(){ _nbOpener=document.activeElement; var o=el("nbOverlay"); o.classList.add("open"); render();
+  var x=o.querySelector(".nb-x"); if(x) x.focus(); }
+function close(){ el("nbOverlay").classList.remove("open"); S.quiz=null; S.fc=null;
+  if(_nbOpener&&_nbOpener.focus){ try{_nbOpener.focus();}catch(e){} } _nbOpener=null; }
+function render(){
+  var w=el("nbWrap");
+  if(S.view==="list") renderList(w);
+  else renderDetail(w);
+}
+function counts(nb){
+  var qa=0; (nb.quizzes||[]).forEach(function(q){ qa+=(q.attempts||[]).length; });
+  return { lessons:(nb.lessons||[]).length, decks:(nb.decks||[]).length, quizzes:qa };
+}
+function renderList(w){
+  el("nbTitle").textContent="Study notebooks";
+  el("nbNewBtn").style.display="";
+  var all=load(), h="";
+  if(!all.length){
+    h='<div style="text-align:center;padding:60px 20px;color:#5f6368">'
+      +'<div style="margin-bottom:16px;opacity:.5"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>'
+      +'<div style="font-size:17px;font-weight:700;color:#202124;margin-bottom:8px">No notebooks yet</div>'
+      +'<div style="font-size:14px;line-height:1.6;max-width:380px;margin:0 auto 18px">Create one per subject. Zero writes custom lessons, builds flashcards, quizzes you, and tracks your progress over time.</div>'
+      +'<button class="nb-btn" onclick="ZNB.showCreate()">Create your first notebook</button></div>';
+  }else{
+    h='<div class="nb-grid">';
+    all.forEach(function(nb){
+      var c=counts(nb);
+      h+='<div class="nb-card" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ZNB.openNB(\''+nb.id+'\')}" onclick="ZNB.openNB(\''+nb.id+'\')">'
+        +'<button class="nb-del" title="Delete notebook" onclick="event.stopPropagation();ZNB.askDelete(\''+nb.id+'\')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+        +'<h3>'+escH(nb.name)+'</h3>'
+        +'<div class="subj">'+escH(nb.subject)+'</div>'
+        +'<div class="goal">'+escH(nb.goal)+'</div>'
+        +'<div class="meta">'+c.lessons+' lessons · '+c.decks+' decks · '+c.quizzes+' quizzes taken</div>'
+        +'</div>';
+    });
+    h+='<div class="nb-new" tabindex="0" role="button" aria-label="Create a new notebook" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ZNB.showCreate()}" onclick="ZNB.showCreate()"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>';
+    h+='</div>';
+  }
+  w.innerHTML=h;
+}
+function showCreate(){
+  showModal(
+    '<h3>New study notebook</h3>'
+    +'<label for="nbFName">Name</label><input class="nb-input" id="nbFName" placeholder="e.g. Bio Final Prep" maxlength="60">'
+    +'<label for="nbFSubject">Subject</label><input class="nb-input" id="nbFSubject" placeholder="e.g. Biology" maxlength="60">'
+    +'<label for="nbFGoal">Goal</label><input class="nb-input" id="nbFGoal" placeholder="e.g. Ace the final on Dec 12" maxlength="120">'
+    +'<div class="mrow"><button class="nb-btn" style="flex:1" onclick="ZNB.doCreate()">Create</button>'
+    +'<button class="nb-btn-ghost" onclick="ZNB.closeModal()">Cancel</button></div>'
+  );
+  setTimeout(function(){ var i=el("nbFName"); if(i) i.focus(); },50);
+}
+function doCreate(){
+  var name=el("nbFName").value.trim(), subj=el("nbFSubject").value.trim(), goal=el("nbFGoal").value.trim();
+  if(!name){ say("Give your notebook a name."); return; }
+  var nb={id:uid("nb"),name:name,subject:subj||"General",goal:goal||"",created:Date.now(),lessons:[],decks:[],quizzes:[]};
+  putNB(nb); closeModal(); openNB(nb.id);
+  say("Notebook created.");
+}
+function askDelete(id){
+  var nb=getNB(id); if(!nb) return;
+  showModal(
+    '<h3>Delete notebook?</h3>'
+    +'<p style="font-size:14px;color:#5f6368;line-height:1.6;margin-bottom:6px">"<b>'+escH(nb.name)+'</b>" and all its lessons, flashcards, quizzes and progress will be gone. This cannot be undone.</p>'
+    +'<div class="mrow"><button class="nb-danger" onclick="ZNB.doDelete(\''+id+'\')">Delete</button>'
+    +'<button class="nb-btn-ghost" onclick="ZNB.closeModal()">Keep it</button></div>'
+  );
+}
+function doDelete(id){
+  delNB(id); closeModal();
+  if(S.nbId===id){ S.view="list"; S.nbId=null; }
+  render(); say("Notebook deleted.");
+}
+function openNB(id){ S.view="detail"; S.nbId=id; S.tab="lessons"; S.quiz=null; S.fc=null; render(); }
+function backToList(){ S.view="list"; S.nbId=null; S.quiz=null; S.fc=null; render(); }
+function setTab(t){ S.tab=t; S.quiz=null; S.fc=null; render(); }
+
+function renderDetail(w){
+  var nb=getNB(S.nbId);
+  if(!nb){ backToList(); return; }
+  el("nbTitle").textContent=nb.name;
+  el("nbNewBtn").style.display="none";
+  var h='<button class="nb-btn-ghost" onclick="ZNB.back()" style="margin-bottom:6px">&larr; All notebooks</button>'
+    +'<div style="font-size:13.5px;color:#5f6368;margin-bottom:4px"><b style="color:#3a5fd9">'+escH(nb.subject)+'</b>'
+    +(nb.goal?' · '+escH(nb.goal):'')+'</div>'
+    +'<div class="nb-tabs">'
+    +'<button class="nb-tab'+(S.tab==="lessons"?" on":"")+'" onclick="ZNB.setTab(\'lessons\')">Lessons</button>'
+    +'<button class="nb-tab'+(S.tab==="flashcards"?" on":"")+'" onclick="ZNB.setTab(\'flashcards\')">Flashcards</button>'
+    +'<button class="nb-tab'+(S.tab==="quiz"?" on":"")+'" onclick="ZNB.setTab(\'quiz\')">Quiz me</button>'
+    +'<button class="nb-tab'+(S.tab==="progress"?" on":"")+'" onclick="ZNB.setTab(\'progress\')">Progress</button>'
+    +'</div><div id="nbTabBody"></div>';
+  w.innerHTML=h;
+  var b=el("nbTabBody");
+  if(S.tab==="lessons") renderLessons(b,nb);
+  else if(S.tab==="flashcards") renderFlashcards(b,nb);
+  else if(S.tab==="quiz") renderQuiz(b,nb);
+  else renderProgress(b,nb);
+}
+
+/* ---------- lessons ---------- */
+function renderLessons(b,nb){
+  var h='<div class="nb-row"><input class="nb-input" id="nbLessonTopic" placeholder="What should Zero teach? e.g. Photosynthesis">'
+    +'<button class="nb-btn" id="nbGenLesson" onclick="ZNB.genLesson()">Teach me</button></div>'
+    +'<div id="nbLessonErr"></div><div id="nbLessonList">';
+  var ls=nb.lessons||[];
+  if(!ls.length) h+='<p style="color:#9aa0a6;font-size:14px">No lessons yet — ask Zero to teach you something above.</p>';
+  ls.forEach(function(l){
+    h+='<div class="nb-lesson" id="nbl_'+l.id+'"><div class="nb-lesson-head" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ZNB.toggleLesson(\''+l.id+'\')}" onclick="ZNB.toggleLesson(\''+l.id+'\')">' 
+      +'<h4>'+escH(l.title)+'</h4>'
+      +(l.done?'<span style="font-size:12px;color:#188038;font-weight:700">Done</span>':'')
+      +'</div><div class="nb-lesson-body"><div class="md">'+fmt(l.body)+'</div>'
+      +'<label class="nb-check"><input type="checkbox"'+(l.done?" checked":"")+' onchange="ZNB.lessonDone(\''+l.id+'\',this.checked)"> Mark as completed</label></div></div>';
+  });
+  h+='</div>';
+  b.innerHTML=h;
+}
+function toggleLesson(id){ var d=el("nbl_"+id); if(d) d.classList.toggle("open"); }
+function lessonDone(id,done){
+  var nb=getNB(S.nbId); if(!nb) return;
+  (nb.lessons||[]).forEach(function(l){ if(l.id===id) l.done=!!done; });
+  putNB(nb); render();
+}
+function genLesson(){
+  var nb=getNB(S.nbId); if(!nb||S.busy) return;
+  var topic=el("nbLessonTopic").value.trim();
+  if(!topic){ say("Tell Zero what to teach first."); return; }
+  S.busy=true;
+  el("nbGenLesson").disabled=true;
+  el("nbGenLesson").innerHTML='<span class="nb-spin"></span>Writing lesson…';
+  var prompt="Subject: "+nb.subject+". Student goal: "+(nb.goal||"learn well")+".\n"+tailoring(nb)
+    +"\nWrite a lesson on: "+topic+".\n"
+    +'Output exactly this JSON shape:\n{"title":"Lesson title","body":"Full lesson in plain markdown: start with a 2-3 sentence plain-language explanation, then a ## Key terms section (5-7 terms, each bolded with a one-line definition), then a ## Worked example section (one concrete example worked through step by step), then a ## Quick check section (3-4 numbered questions, no answers given). Keep the body 300-450 words. No code unless the topic requires it."}';
+  aiJSON(prompt,1400).then(function(d){
+    S.busy=false;
+    if(!d.title||!d.body) throw new Error("bad-json");
+    var l={id:uid("ls"),topic:topic,title:String(d.title).substring(0,120),body:String(d.body).substring(0,12000),done:false,created:Date.now()};
+    nb.lessons.unshift(l); putNB(nb); render();
+    say("Lesson saved to your notebook.");
+    setTimeout(function(){ toggleLesson(l.id); },60);
+  }).catch(function(){
+    S.busy=false; render();
+    el("nbLessonErr").innerHTML='<div class="nb-err">Zero could not write that lesson right now. <a href="#" onclick="ZNB.genLesson();return false;" style="color:#3a5fd9">Try again</a>.</div>';
+  });
+}
+
+/* ---------- flashcards ---------- */
+function renderFlashcards(b,nb){
+  var decks=nb.decks||[], h="";
+  if(S.fc){ renderFcStudy(b,nb); return; }
+  h+='<div class="nb-row"><button class="nb-btn" id="nbGenDeck" onclick="ZNB.genDeck()">'+(decks.length?"New deck from latest lessons":"Generate my first deck")+'</button></div>'
+    +'<div id="nbDeckErr"></div>';
+  if(!decks.length) h+='<p style="color:#9aa0a6;font-size:14px">No flashcard decks yet. Zero builds them from your lessons.</p>';
+  decks.forEach(function(d){
+    h+='<div class="nb-lesson"><div class="nb-lesson-head" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();ZNB.studyDeck(\''+d.id+'\')}" onclick="ZNB.studyDeck(\''+d.id+'\')">' 
+      +'<h4>'+escH(d.title)+'</h4><span style="font-size:12.5px;color:#9aa0a6">'+d.cards.length+' cards'+(d.reviewed?' · reviewed '+d.reviewed+'x':'')+'</span></div></div>';
+  });
+  b.innerHTML=h;
+}
+function genDeck(){
+  var nb=getNB(S.nbId); if(!nb||S.busy) return;
+  var src=(nb.lessons||[]).slice(0,3).map(function(l){ return "## "+l.title+"\n"+l.body; }).join("\n\n").substring(0,6000);
+  if(!src){ el("nbDeckErr").innerHTML='<div class="nb-err">Generate a lesson first — decks are built from your lessons.</div>'; return; }
+  S.busy=true;
+  el("nbGenDeck").disabled=true;
+  el("nbGenDeck").innerHTML='<span class="nb-spin"></span>Building deck…';
+  var prompt="Subject: "+nb.subject+".\n"+tailoring(nb)+"\nFrom these lessons, make exactly 10 flashcards:\n"+src+"\n"
+    +'Output exactly: {"cards":[{"q":"short question","a":"answer in 1-2 sentences"}, ...]}. Cover the key terms and the worked examples. Strict JSON only.';
+  aiJSON(prompt,1400).then(function(d){
+    S.busy=false;
+    if(!d.cards||!d.cards.length) throw new Error("bad-json");
+    var cards=d.cards.slice(0,12).map(function(c){ return {q:String(c.q||"").substring(0,300), a:String(c.a||"").substring(0,600)}; })
+      .filter(function(c){ return c.q&&c.a; });
+    if(!cards.length) throw new Error("bad-json");
+    var deck={id:uid("dk"),title:"Deck "+((nb.decks||[]).length+1)+" — "+nb.subject, cards:cards, reviewed:0, created:Date.now()};
+    nb.decks.unshift(deck); putNB(nb); render();
+    say("Flashcard deck saved.");
+  }).catch(function(){
+    S.busy=false; render();
+    el("nbDeckErr").innerHTML='<div class="nb-err">Zero could not build the deck right now. <a href="#" onclick="ZNB.genDeck();return false;" style="color:#3a5fd9">Try again</a>.</div>';
+  });
+}
+function studyDeck(id){ S.fc={nbId:S.nbId,deckId:id,idx:0,flip:false}; render(); }
+function fcGo(d){ var nb=getNB(S.nbId),dk=nb&&nb.decks.filter(function(x){return x.id===S.fc.deckId;})[0]; if(!dk) return;
+  S.fc.idx=(S.fc.idx+d+dk.cards.length)%dk.cards.length; S.fc.flip=false; render(); }
+function fcFlip(){ S.fc.flip=!S.fc.flip; var f=el("nbFcCard"); if(f) f.classList.toggle("flip",S.fc.flip); }
+function fcDone(){
+  var nb=getNB(S.nbId); if(!nb) return;
+  (nb.decks||[]).forEach(function(d){ if(d.id===S.fc.deckId) d.reviewed=(d.reviewed||0)+1; });
+  putNB(nb); S.fc=null; render(); say("Deck reviewed — nice work.");
+}
+function renderFcStudy(b,nb){
+  var dk=(nb.decks||[]).filter(function(x){ return x.id===S.fc.deckId; })[0];
+  if(!dk){ S.fc=null; renderFlashcards(b,nb); return; }
+  var c=dk.cards[S.fc.idx];
+  b.innerHTML='<button class="nb-btn-ghost" onclick="ZNB.fcExit()" style="margin-bottom:12px">&larr; All decks</button>'
+    +'<h3 style="font-size:17px;margin-bottom:4px">'+escH(dk.title)+'</h3>'
+    +'<div class="nb-fc-stage"><div class="nb-fc'+(S.fc.flip?" flip":"")+'" id="nbFcCard" onclick="ZNB.fcFlip()">'
+    +'<div class="nb-fc-face">'+escH(c.q)+'</div>'
+    +'<div class="nb-fc-face nb-fc-back">'+escH(c.a)+'</div>'
+    +'</div></div>'
+    +'<div class="nb-fc-nav"><button class="nb-btn-ghost" onclick="ZNB.fcGo(-1)">&larr;</button>'
+    +'<span class="nb-fc-count">'+(S.fc.idx+1)+' / '+dk.cards.length+'</span>'
+    +'<button class="nb-btn-ghost" onclick="ZNB.fcGo(1)">&rarr;</button></div>'
+    +'<p style="text-align:center;font-size:12.5px;color:#9aa0a6;margin-bottom:14px">Tap the card to flip it</p>'
+    +'<div style="text-align:center"><button class="nb-btn" onclick="ZNB.fcDone()">Done studying</button></div>';
+}
+function fcExit(){ S.fc=null; render(); }
+
+/* ---------- quiz ---------- */
+function renderQuiz(b,nb){
+  if(S.quiz){ renderQuizRun(b,nb); return; }
+  var h='<div class="nb-row"><input class="nb-input" id="nbQuizTopic" placeholder="Quiz topic (blank = everything)">'
+    +'<button class="nb-btn" id="nbGenQuiz" onclick="ZNB.genQuiz()">Quiz me</button></div>'
+    +'<div id="nbQuizErr"></div>';
+  var qs=nb.quizzes||[];
+  if(qs.length){
+    h+='<h4 style="font-size:14px;color:#5f6368;margin:18px 0 6px">Past quizzes</h4>';
+    qs.slice(0,8).forEach(function(q){
+      var at=q.attempts||[], last=at[at.length-1];
+      h+='<div class="nb-attempt"><span>'+escH(q.topic||"Mixed")+'</span>'
+        +'<span style="color:#9aa0a6;font-size:12.5px">'+at.length+' attempt'+(at.length>1?"s":"")+'</span>'
+        +(last?'<b style="color:#3a5fd9">'+last.score+'/'+last.total+'</b><button class="nb-btn-ghost" style="padding:7px 14px;font-size:12.5px" onclick="ZNB.retake(\''+q.id+'\')">Retake</button>':'')
+        +'</div>';
+    });
+  }else h+='<p style="color:#9aa0a6;font-size:14px">No quizzes yet. Zero writes 8 questions, explains every answer, and tracks your scores.</p>';
+  b.innerHTML=h;
+}
+function genQuiz(retakeId){
+  var nb=getNB(S.nbId); if(!nb||S.busy) return;
+  var topic=retakeId?null:el("nbQuizTopic").value.trim();
+  S.busy=true;
+  var btn=el("nbGenQuiz"); if(btn){ btn.disabled=true; btn.innerHTML='<span class="nb-spin"></span>Writing quiz…'; }
+  var src=(nb.lessons||[]).slice(0,4).map(function(l){ return "## "+l.title+"\n"+l.body; }).join("\n\n").substring(0,5000);
+  var prompt="Subject: "+nb.subject+". Student goal: "+(nb.goal||"learn well")+".\n"+tailoring(nb)+"\n"
+    +"Write an 8-question multiple-choice quiz"+(topic?(" on: "+topic):" covering this notebook's lessons")+".\n"
+    +(src?("Lesson material:\n"+src+"\n"):"")
+    +'Output exactly: {"questions":[{"q":"question","topic":"2-4 word topic label","choices":["A","B","C","D"],"answer":0,"why":"1-2 sentence explanation of the correct answer"}, ...]}. '
+    +'Exactly 4 choices per question, answer is the 0-based index of the correct choice. Every question MUST have a why. Realistic difficulty for a student. Strict JSON only.';
+  aiJSON(prompt,2000).then(function(d){
+    S.busy=false;
+    if(!d.questions||d.questions.length<4) throw new Error("bad-json");
+    var qs=d.questions.slice(0,8).map(function(q){
+      var ch=(q.choices||[]).slice(0,4).map(function(c){ return String(c).substring(0,300); });
+      while(ch.length<4) ch.push("—");
+      var an=parseInt(q.answer,10); if(!(an>=0&&an<4)) an=0;
+      return {q:String(q.q||"").substring(0,400), topic:String(q.topic||"general").substring(0,40),
+        choices:ch, answer:an, why:String(q.why||"").substring(0,500)};
+    }).filter(function(q){ return q.q&&q.why; });
+    if(qs.length<4) throw new Error("bad-json");
+    var qz={id:uid("qz"),topic:topic||"Mixed review",questions:qs,attempts:[],created:Date.now()};
+    nb.quizzes.unshift(qz); putNB(nb);
+    startQuiz(qz.id);
+  }).catch(function(){
+    S.busy=false; render();
+    el("nbQuizErr").innerHTML='<div class="nb-err">Zero could not write that quiz right now. <a href="#" onclick="ZNB.genQuiz();return false;" style="color:#3a5fd9">Try again</a>.</div>';
+  });
+}
+function retake(id){ startQuiz(id); }
+function startQuiz(qzId){ S.quiz={qzId:qzId,idx:0,score:0,picked:-1,missed:[],done:false}; render(); }
+function answer(i){
+  var q=S.quiz; if(!q||q.done||q.picked>=0) return;
+  var nb=getNB(S.nbId), qz=(nb.quizzes||[]).filter(function(x){ return x.id===q.qzId; })[0];
+  if(!qz) return;
+  var qu=qz.questions[q.idx];
+  q.picked=i;
+  if(i===qu.answer) q.score++;
+  else q.missed.push(qu.topic||qu.q.substring(0,60));
+  render();
+}
+function nextQ(){
+  var q=S.quiz; if(!q) return;
+  var nb=getNB(S.nbId), qz=(nb.quizzes||[]).filter(function(x){ return x.id===q.qzId; })[0];
+  if(!qz) return;
+  if(q.idx<qz.questions.length-1){ q.idx++; q.picked=-1; render(); }
+  else{
+    q.done=true;
+    qz.attempts.push({ts:Date.now(),score:q.score,total:qz.questions.length,missed:q.missed.slice(0,8)});
+    putNB(nb); render();
+    say("Quiz complete: "+q.score+"/"+qz.questions.length+".");
+  }
+}
+function renderQuizRun(b,nb){
+  var q=S.quiz, qz=(nb.quizzes||[]).filter(function(x){ return x.id===q.qzId; })[0];
+  if(!qz){ S.quiz=null; renderQuiz(b,nb); return; }
+  var h="";
+  if(q.done){
+    var pct=Math.round(100*q.score/qz.questions.length);
+    h+='<div class="nb-score"><div class="big">'+q.score+'/'+qz.questions.length+'</div>'
+      +'<p>'+(pct>=80?"Excellent — you have got this down.":pct>=60?"Good progress — review the ones you missed.":"Keep at it — Zero will emphasize these in your next lesson.")+'</p>'
+      +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+      +'<button class="nb-btn" onclick="ZNB.quizExit()">Back to quizzes</button>'
+      +'<button class="nb-btn-ghost" onclick="ZNB.genQuiz()">New quiz</button></div></div>';
+    h+='<h4 style="font-size:14px;color:#5f6368;margin:10px 0 8px">Review</h4>';
+    qz.questions.forEach(function(qu,i){
+      h+='<div class="nb-q" style="padding:16px"><h4 style="font-size:14.5px">'+escH((i+1)+". "+qu.q)+'</h4>'
+        +'<div style="font-size:13.5px;color:#188038;font-weight:600">Answer: '+escH(qu.choices[qu.answer])+'</div>'
+        +'<div class="nb-why"><b>Why:</b> '+escH(qu.why)+'</div></div>';
+    });
+  }else{
+    var qu=qz.questions[q.idx];
+    h+='<div style="font-size:13px;color:#9aa0a6;margin-bottom:10px">Question '+(q.idx+1)+' of '+qz.questions.length+' · Score so far: '+q.score+'</div>'
+      +'<div class="nb-q"><h4>'+escH(qu.q)+'</h4>';
+    qu.choices.forEach(function(c,i){
+      var cls="nb-opt";
+      if(q.picked>=0){
+        if(i===qu.answer) cls+=" right";
+        else if(i===q.picked) cls+=" wrong";
+      }
+      h+='<button class="'+cls+'" '+(q.picked>=0?"disabled":"")+' onclick="ZNB.answer('+i+')">'+escH(c)+'</button>';
+    });
+    if(q.picked>=0){
+      h+='<div class="nb-why"><b>Why:</b> '+escH(qu.why)+'</div>'
+        +'<button class="nb-btn" onclick="ZNB.nextQ()">'+(q.idx<qz.questions.length-1?"Next question":"See my score")+'</button>';
+    }
+    h+='</div>';
+  }
+  b.innerHTML=h;
+}
+function quizExit(){ S.quiz=null; render(); }
+
+/* ---------- progress ---------- */
+function renderProgress(b,nb){
+  var lessonsDone=(nb.lessons||[]).filter(function(l){ return l.done; }).length;
+  var rev=(nb.decks||[]).reduce(function(a,d){ return a+(d.reviewed||0); },0);
+  var pts=[]; // {ts,pct}
+  (nb.quizzes||[]).forEach(function(qz){
+    (qz.attempts||[]).forEach(function(a){ pts.push({ts:a.ts,pct:a.total?Math.round(100*a.score/a.total):0}); });
+  });
+  pts.sort(function(a,c){ return a.ts-c.ts; });
+  var recent=pts.slice(-5);
+  var avg=recent.length?Math.round(recent.reduce(function(a,p){ return a+p.pct; },0)/recent.length):null;
+  var h='<div class="nb-stats">'
+    +'<div class="nb-stat"><div class="v">'+(nb.lessons||[]).length+'</div><div class="l">lessons<br>('+lessonsDone+' done)</div></div>'
+    +'<div class="nb-stat"><div class="v">'+(nb.decks||[]).length+'</div><div class="l">flashcard decks<br>('+rev+' reviews)</div></div>'
+    +'<div class="nb-stat"><div class="v">'+pts.length+'</div><div class="l">quizzes taken</div></div>'
+    +'<div class="nb-stat"><div class="v">'+(avg===null?"—":avg+"%")+'</div><div class="l">recent avg score</div></div>'
+    +'</div>';
+  if(avg!==null){
+    var lvl=avg>=80?"Mastering it":avg>=60?"Getting there":"Still building";
+    h+='<div class="nb-master"><b>Mastery estimate: '+lvl+'.</b><br>'
+      +'Based on your last '+recent.length+' quiz attempt'+(recent.length>1?"s":"")+' in this notebook'
+      +(nb.goal?(' — working toward: '+escH(nb.goal)+'.'):'')+'</div>';
+  }else{
+    h+='<div class="nb-master"><b>Not enough data yet.</b><br>Take a quiz and Zero will start estimating your mastery and tailoring future lessons to your weak spots.</div>';
+  }
+  if(pts.length>1) h+=spark(pts);
+  if(pts.length){
+    h+='<h4 style="font-size:14px;color:#5f6368;margin:16px 0 6px">Quiz history</h4>';
+    pts.slice().reverse().slice(0,10).forEach(function(p){
+      var d=new Date(p.ts);
+      h+='<div class="nb-attempt"><b style="color:#3a5fd9">'+p.pct+'%</b><span class="dt">'+escH(d.toLocaleDateString()+" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}))+'</span></div>';
+    });
+  }
+  b.innerHTML=h;
+}
+function spark(pts){
+  var W=340,H=90,P=14;
+  var xs=pts.map(function(p,i){ return pts.length>1?P+i*(W-2*P)/(pts.length-1):W/2; });
+  var ys=pts.map(function(p){ return H-P-(p.pct/100)*(H-2*P); });
+  var line=xs.map(function(x,i){ return (i?"L":"M")+x.toFixed(1)+","+ys[i].toFixed(1); }).join(" ");
+  var dots=xs.map(function(x,i){ return '<circle cx="'+x.toFixed(1)+'" cy="'+ys[i].toFixed(1)+'" r="4" fill="#3a5fd9"><title>'+pts[i].pct+'%</title></circle>'; }).join("");
+  return '<div style="background:#f8f9fa;border:1px solid #e8eaed;border-radius:14px;padding:14px;margin-bottom:6px">'
+    +'<div style="font-size:12.5px;color:#5f6368;margin-bottom:8px">Score over time</div>'
+    +'<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block">'
+    +'<line x1="'+P+'" y1="'+(H-P)+'" x2="'+(W-P)+'" y2="'+(H-P)+'" stroke="#dadce0"/>'
+    +'<path d="'+line+'" fill="none" stroke="#3a5fd9" stroke-width="2.5" stroke-linecap="round"/>'+dots+'</svg></div>';
+}
+
+/* ---------- public API ---------- */
+return {
+  open:open, close:close, showCreate:showCreate, doCreate:doCreate,
+  askDelete:askDelete, doDelete:doDelete, closeModal:closeModal,
+  openNB:openNB, back:backToList, setTab:setTab,
+  toggleLesson:toggleLesson, lessonDone:lessonDone, genLesson:genLesson,
+  genDeck:genDeck, studyDeck:studyDeck, fcGo:fcGo, fcFlip:fcFlip, fcDone:fcDone, fcExit:fcExit,
+  genQuiz:genQuiz, retake:retake, answer:answer, nextQ:nextQ, quizExit:quizExit,
+  _load:load, _save:save, _parseJSON:parseJSON, _tailoring:tailoring
+};
+})();
+
+</script>
+<script>
+/* ---------- Escape closes every overlay: chat drawer, study notebooks,
+   computer settings modal, notebook modal ---------- */
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Escape") return;
+  /* Runs even when focus is in an input: dismissing an open overlay takes
+     precedence. (zcDialog handles its own Escape in the capture phase.) */
+  var d=document.getElementById("drawer");
+  if(d&&d.classList.contains("open")){ d.classList.remove("open"); return; }
+  var nb=document.getElementById("nbOverlay");
+  if(nb&&nb.classList.contains("open")){ if(window.ZNB) window.ZNB.close(); return; }
+  var mb=document.getElementById("nbModalBg");
+  if(mb&&mb.classList.contains("open")){ mb.classList.remove("open"); return; }
+  var cs=document.getElementById("compSettings");
+  if(cs&&cs.style.display!=="none"){ closeComputerSettings(); return; }
+});
+</script>
+<script>
+/* ---------- Skill toggles: hide disabled skill buttons (Customize Zero → Skills) ---------- */
+(function(){
+  try{
+    if(!window.ZeroPrefs) return;
+    if(!window.ZeroPrefs.skillOn("computer")){
+      var c=document.getElementById("compPillBtn"); if(c) c.style.display="none";
+    }
+    if(!window.ZeroPrefs.skillOn("notebooks")){
+      var n=document.getElementById("nbPillBtn"); if(n) n.style.display="none";
+    }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

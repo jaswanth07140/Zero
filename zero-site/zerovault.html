@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zero Vault</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--blue:#3a5fd9;--ink:#1d1c19;--soft:#6b6a63;--line:#e5e2d9;--bg:#f6f4ef}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh}
+  .top{position:sticky;top:0;background:#fbfaf7;border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;z-index:5}
+  .lock-ico{width:34px;height:34px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex:none}
+  .top h1{font-size:18px}
+  .top .sub{font-size:12px;color:var(--soft)}
+  .top .sp{flex:1}
+  .btn{border:1px solid var(--line);background:#fbfaf7;border-radius:999px;padding:8px 16px;font-size:14px;cursor:pointer;color:var(--ink);min-height:34px}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+  .btn.danger{color:#c5221f;border-color:#f1c6c4}
+  .wrap{max-width:640px;margin:0 auto;padding:20px 16px 60px}
+  .card{background:#fbfaf7;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px}
+  .center{text-align:center;padding:40px 20px}
+  .center h2{margin:14px 0 8px;font-size:22px}
+  .center p{color:var(--soft);font-size:14px;margin-bottom:18px;line-height:1.5}
+  input[type=text],input[type=password]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font-size:16px;margin-bottom:10px;outline:none}
+  input:focus{border-color:var(--blue)}
+  label{font-size:13px;font-weight:600;color:var(--soft);display:block;margin:12px 0 6px}
+  label:first-child{margin-top:0}
+  .row{display:flex;gap:8px}
+  .row .btn{flex:none}
+  .entry{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
+  .entry:last-child{border-bottom:0}
+  .entry .meta{flex:1;min-width:0}
+  .entry .site{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .entry .user{font-size:13px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .entry .pw{font-family:Menlo,Consolas,monospace;font-size:14px;margin-top:4px;word-break:break-all}
+  .iconbtn{border:1px solid var(--line);background:#fbfaf7;border-radius:10px;padding:7px 12px;font-size:13px;cursor:pointer;flex:none;min-height:34px;min-width:34px}
+  .iconbtn:hover{background:#efece4}
+  .searchrow{margin-bottom:12px}
+  .searchrow input{margin-bottom:0}
+  .pwrow{display:flex;gap:8px;align-items:center}
+  .pwrow input{flex:1;margin-bottom:0}
+  .pwrow .iconbtn{flex:none}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#323232;color:#fff;padding:10px 20px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .note{font-size:12px;color:var(--soft);line-height:1.6;background:#fbfaf7;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+  .note b{color:var(--ink)}
+  .err{color:#c5221f;font-size:13px;margin-bottom:10px;min-height:18px}
+  .fab{position:fixed;bottom:24px;right:24px;width:60px;height:60px;border-radius:50%;background:var(--blue);color:#fff;border:0;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(26,115,232,.4)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+  .modal .sheet{background:#fbfaf7;border-radius:20px 20px 0 0;width:100%;max-width:640px;padding:20px 16px 30px;max-height:90vh;overflow:auto}
+  .modal h3{margin-bottom:14px}
+  @media(min-width:640px){.modal{align-items:center}.modal .sheet{border-radius:20px}}
+  .empty{text-align:center;color:var(--soft);padding:30px 10px;font-size:14px}
+
+/* ============ ZERO PREMIUM LAYER (2026-10-19) — additive, no layout overrides ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid #3a5fd9;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+input:focus,textarea:focus,select:focus{border-color:#3a5fd9;box-shadow:0 0 0 3px rgba(58,95,217,.12);outline:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ============ ATELIER HARMONY LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid #a8894e;outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#a8894e;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="lock-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+  <div><h1>Zero Vault</h1><div class="sub">Encrypted on this device</div></div>
+  <div class="sp"></div>
+  <button class="btn" id="lockBtn" style="display:none" onclick="lock()">Lock</button>
+</div>
+<div class="wrap" id="wrap"></div>
+<button class="fab" id="fab" style="display:none" onclick="openForm()">+</button>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+var enc=new TextEncoder(), dec=new TextDecoder();
+var KEY=null, ENTRIES=[], lockTimer=null, editingId=null;
+var LS_SALT="zv_salt", LS_VERIFY="zv_verify", LS_DATA="zv_data";
+
+function b64e(buf){var s="";var b=new Uint8Array(buf);for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s);}
+function b64d(s){var bin=atob(s);var b=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b.buffer;}
+function escH(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show");},2500);}
+
+async function deriveKey(pw,salt){
+  var base=await crypto.subtle.importKey("raw",enc.encode(pw),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:310000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+async function encJSON(key,obj){
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,enc.encode(JSON.stringify(obj)));
+  return {iv:b64e(iv),ct:b64e(ct)};
+}
+async function decJSON(key,payload){
+  var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(b64d(payload.iv))},key,b64d(payload.ct));
+  return JSON.parse(dec.decode(pt));
+}
+function randSalt(){return crypto.getRandomValues(new Uint8Array(16));}
+
+function resetLockTimer(){
+  clearTimeout(lockTimer);
+  lockTimer=setTimeout(function(){ if(KEY) { lock(); toast("Vault auto-locked"); } }, 5*60*1000);
+}
+["pointerdown","keydown"].forEach(function(ev){document.addEventListener(ev,resetLockTimer,{passive:true});});
+
+function show(html){document.getElementById("wrap").innerHTML=html;}
+
+/* ---------- setup / unlock ---------- */
+function screenSetup(){
+  document.getElementById("lockBtn").style.display="none";
+  document.getElementById("fab").style.display="none";
+  show('<div class="card center"><div class="lock-ico" style="width:64px;height:64px;margin:0 auto;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>'+
+  '<h2>Set your master password</h2><p>This password encrypts everything in your vault. It never leaves this device — if you forget it, your passwords cannot be recovered.</p>'+
+  '<div class="err" id="err"></div>'+
+  '<input type="password" id="pw1" placeholder="Master password (min 8 characters)" autocomplete="new-password">'+
+  '<input type="password" id="pw2" placeholder="Repeat master password" autocomplete="new-password">'+
+  '<button class="btn primary" style="width:100%;padding:12px" onclick="doSetup()">Create vault</button></div>'+
+  '<div class="note"><b>How it works:</b> your passwords are encrypted with AES-256 (key derived from your master password via PBKDF2, 310,000 rounds) and stored only in this browser. This page makes zero network requests with your data — not even Zero AI can see them.</div>');
+}
+async function doSetup(){
+  var p1=document.getElementById("pw1").value, p2=document.getElementById("pw2").value;
+  var err=document.getElementById("err");
+  if(p1.length<8){err.textContent="Use at least 8 characters.";return;}
+  if(p1!==p2){err.textContent="Passwords don't match.";return;}
+  err.textContent="Creating…";
+  try{
+    var salt=randSalt();
+    KEY=await deriveKey(p1,salt);
+    localStorage.setItem(LS_SALT,b64e(salt));
+    localStorage.setItem(LS_VERIFY,JSON.stringify(await encJSON(KEY,"zero-vault-ok")));
+    localStorage.setItem(LS_DATA,JSON.stringify(await encJSON(KEY,[])));
+    p1=p2=null;
+    ENTRIES=[];
+    screenMain();resetLockTimer();
+    toast("Vault created");
+  }catch(e){err.textContent="Couldn't create vault: "+e.message;}
+}
+function screenUnlock(){
+  document.getElementById("lockBtn").style.display="none";
+  document.getElementById("fab").style.display="none";
+  show('<div class="card center"><div class="lock-ico" style="width:64px;height:64px;margin:0 auto;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>'+
+  '<h2>Unlock Zero Vault</h2><p>Enter your master password. Wrong passwords can\'t decrypt anything.</p>'+
+  '<div class="err" id="err"></div>'+
+  '<input type="password" id="pw" placeholder="Master password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')doUnlock()">'+
+  '<button class="btn primary" style="width:100%;padding:12px" onclick="doUnlock()">Unlock</button></div>');
+  setTimeout(function(){var i=document.getElementById("pw");if(i)i.focus();},100);
+}
+async function doUnlock(){
+  var pw=document.getElementById("pw").value;
+  var err=document.getElementById("err");
+  if(!pw){err.textContent="Enter your master password.";return;}
+  err.textContent="Unlocking…";
+  try{
+    var salt=new Uint8Array(b64d(localStorage.getItem(LS_SALT)));
+    var key=await deriveKey(pw,salt);
+    var ok=await decJSON(key,JSON.parse(localStorage.getItem(LS_VERIFY)));
+    if(ok!=="zero-vault-ok") throw new Error("bad");
+    KEY=key;
+    ENTRIES=await decJSON(key,JSON.parse(localStorage.getItem(LS_DATA)));
+    pw=null;
+    screenMain();resetLockTimer();
+  }catch(e){err.textContent="Wrong password. Try again.";}
+}
+function lock(){
+  KEY=null;ENTRIES=[];editingId=null;clearTimeout(lockTimer);
+  screenUnlock();
+}
+
+/* ---------- main ---------- */
+function screenMain(){
+  document.getElementById("lockBtn").style.display="";
+  document.getElementById("fab").style.display="";
+  renderList();
+}
+function renderList(){
+  var h='<div class="note"><b>Private by design:</b> entries are encrypted on this device. Copy a password to paste it into any site — the clipboard clears itself after 30 seconds.</div>';
+  h+='<div class="searchrow"><input type="text" id="q" placeholder="Search passwords…" autocomplete="off" aria-label="Search passwords"></div>';
+  h+='<div class="card" id="listCard">';
+  if(!ENTRIES.length){
+    h+='<div class="empty">No passwords yet.<br>Tap + to add your first one.</div>';
+  }else{
+    h+='<div id="elist"></div><div class="empty" id="noMatch" style="display:none">No matches.</div>';
+  }
+  h+='</div><div class="card"><button class="btn" onclick="openChangeMaster()">Change master password</button></div>';
+  show(h);
+  if(ENTRIES.length) renderEntries("");
+  var q=document.getElementById("q");
+  if(q){
+    q.addEventListener("input",function(){renderEntries(q.value.trim().toLowerCase());});
+    q.addEventListener("keydown",function(e){if(e.key==="Escape"){q.value="";renderEntries("");q.blur();}});
+  }
+}
+function entryRow(e){
+  return '<div class="entry" data-id="'+e.id+'"><div class="meta"><div class="site">'+escH(e.site)+'</div><div class="user">'+escH(e.username||"")+'</div>'+
+  '<div class="pw" id="pw-'+e.id+'" style="display:none"></div></div>'+
+  '<button class="iconbtn" onclick="copyPw(\''+e.id+'\')">Copy</button>'+
+  '<button class="iconbtn" onclick="togglePw(\''+e.id+'\')">Show</button>'+
+  '<button class="iconbtn" onclick="openForm(\''+e.id+'\')">Edit</button>'+
+  '<button class="iconbtn" onclick="askDelete(\''+e.id+'\')" aria-label="Delete">&times;</button></div>';
+}
+function renderEntries(q){
+  var box=document.getElementById("elist"); if(!box)return;
+  var list=ENTRIES.filter(function(e){
+    return !q || (e.site||"").toLowerCase().indexOf(q)>=0 || (e.username||"").toLowerCase().indexOf(q)>=0;
+  });
+  box.innerHTML=list.map(entryRow).join("");
+  document.getElementById("noMatch").style.display=list.length?"none":"";
+}
+function findEntry(id){for(var i=0;i<ENTRIES.length;i++)if(ENTRIES[i].id===id)return ENTRIES[i];return null;}
+async function persist(){
+  localStorage.setItem(LS_DATA,JSON.stringify(await encJSON(KEY,ENTRIES)));
+}
+function copyPw(id){
+  var e=findEntry(id);if(!e)return;
+  var done=function(){toast("Copied — clipboard clears in 30s");setTimeout(function(){try{navigator.clipboard.writeText("");}catch(_){}} ,30000);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(e.password).then(done).catch(function(){fallbackCopy(e.password);done();});}
+  else{fallbackCopy(e.password);done();}
+  resetLockTimer();
+}
+function fallbackCopy(t){
+  var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(_){}document.body.removeChild(ta);
+}
+function togglePw(id){
+  var e=findEntry(id);if(!e)return;
+  var el=document.getElementById("pw-"+id);
+  if(el.style.display==="none"){el.textContent=e.password;el.style.display="block";}
+  else{el.textContent="";el.style.display="none";}
+  resetLockTimer();
+}
+function askDelete(id){
+  var e=findEntry(id);if(!e)return;
+  openModal("Delete password?",
+    '<p style="font-size:14px;color:var(--soft);margin-bottom:18px;line-height:1.5">Delete the password for <b style="color:var(--ink)">'+escH(e.site)+'</b>? This can\'t be undone.</p>'+
+    '<div class="row"><button class="btn danger" style="flex:1;padding:12px" id="mOk">Delete</button><button class="btn" style="flex:1;padding:12px" id="mCancel">Cancel</button></div>',
+    function(){
+      ENTRIES=ENTRIES.filter(function(x){return x.id!==id;});
+      persist().then(renderList);
+      toast("Deleted");
+    });
+}
+function openModal(title,bodyHtml,onOk){
+  closeModal();
+  var m=document.createElement("div");m.className="modal";m.id="genModal";
+  m.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>'+escH(title)+'</h3>'+bodyHtml+'</div>';
+  m.addEventListener("click",function(ev){if(ev.target===m)closeModal();});
+  document.body.appendChild(m);
+  var ok=document.getElementById("mOk"),cx=document.getElementById("mCancel");
+  if(cx)cx.onclick=closeModal;
+  if(ok)ok.onclick=function(){closeModal();if(onOk)onOk();};
+  setTimeout(function(){var f=m.querySelector("input");if(f)f.focus();},100);
+}
+function closeModal(){var m=document.getElementById("genModal");if(m)m.remove();}
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Escape")return;
+  closeModal();closeForm();
+});
+
+/* ---------- add / edit form ---------- */
+function openForm(id){
+  editingId=id||null;
+  var e=id?findEntry(id):null;
+  var m=document.createElement("div");m.className="modal";m.id="formModal";
+  m.innerHTML='<div class="sheet"><h3>'+(e?"Edit password":"Add password")+'</h3>'+
+  '<label>Site / app</label><input type="text" id="f-site" value="'+escH(e?e.site:"")+'" placeholder="e.g. Gmail">'+
+  '<label>Username / email</label><input type="text" id="f-user" value="'+escH(e?e.username:"")+'" placeholder="you@example.com" autocomplete="off">'+
+  '<label>Password</label><div class="pwrow"><input type="password" id="f-pw" value="'+escH(e?e.password:"")+'" placeholder="Password" autocomplete="off"><button type="button" class="iconbtn" id="f-pwshow" aria-label="Show password">Show</button><button type="button" class="btn" onclick="genPw()">Generate</button></div>'+
+  '<label>Notes (optional)</label><input type="text" id="f-notes" value="'+escH(e?(e.notes||""):"")+'" placeholder="Anything to remember" autocomplete="off">'+
+  '<div class="row" style="margin-top:16px"><button class="btn primary" style="flex:1;padding:12px" onclick="saveForm()">Save</button><button class="btn" style="padding:12px" onclick="closeForm()">Cancel</button></div></div>';
+  m.addEventListener("click",function(ev){if(ev.target===m)closeForm();});
+  document.body.appendChild(m);
+  var pwShow=document.getElementById("f-pwshow");
+  pwShow.onclick=function(){
+    var f=document.getElementById("f-pw");
+    var show=f.type==="password";
+    f.type=show?"text":"password";
+    pwShow.textContent=show?"Hide":"Show";
+  };
+  setTimeout(function(){var i=document.getElementById("f-site");if(i)i.focus();},100);
+}
+function closeForm(){var m=document.getElementById("formModal");if(m)m.remove();editingId=null;}
+function genPw(){
+  var chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*";
+  var rnd=crypto.getRandomValues(new Uint8Array(20));
+  var s="";for(var i=0;i<20;i++)s+=chars[rnd[i]%chars.length];
+  document.getElementById("f-pw").value=s;
+}
+async function saveForm(){
+  var site=document.getElementById("f-site").value.trim();
+  var user=document.getElementById("f-user").value.trim();
+  var pw=document.getElementById("f-pw").value;
+  var notes=document.getElementById("f-notes").value.trim();
+  if(!site){toast("Give it a site name");return;}
+  if(!pw){toast("Enter or generate a password");return;}
+  if(editingId){
+    var e=findEntry(editingId);
+    if(e){e.site=site;e.username=user;e.password=pw;e.notes=notes;}
+  }else{
+    ENTRIES.push({id:"e"+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36),site:site,username:user,password:pw,notes:notes});
+  }
+  await persist();
+  closeForm();renderList();resetLockTimer();
+  toast("Saved");
+}
+function openChangeMaster(){
+  closeModal();
+  var m=document.createElement("div");m.className="modal";m.id="genModal";
+  m.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><h3>Change master password</h3>'+
+    '<div class="err" id="mErr"></div>'+
+    '<label>New master password</label><input type="password" id="m-p1" placeholder="Min 8 characters" autocomplete="new-password">'+
+    '<label>Repeat new password</label><input type="password" id="m-p2" placeholder="Repeat new password" autocomplete="new-password">'+
+    '<div class="row" style="margin-top:14px"><button class="btn primary" style="flex:1;padding:12px" id="mGo">Change password</button><button class="btn" style="padding:12px" id="mCancel">Cancel</button></div></div>';
+  m.addEventListener("click",function(ev){if(ev.target===m)closeModal();});
+  document.body.appendChild(m);
+  document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mGo").onclick=async function(){
+    var p1=document.getElementById("m-p1").value,p2=document.getElementById("m-p2").value;
+    var err=document.getElementById("mErr");
+    if(p1.length<8){err.textContent="Use at least 8 characters.";return;}
+    if(p1!==p2){err.textContent="Passwords don't match.";return;}
+    err.textContent="Changing…";
+    try{
+      var salt=randSalt();
+      var key=await deriveKey(p1,salt);
+      localStorage.setItem(LS_SALT,b64e(salt));
+      localStorage.setItem(LS_VERIFY,JSON.stringify(await encJSON(key,"zero-vault-ok")));
+      KEY=key;
+      await persist();
+      closeModal();
+      resetLockTimer();
+      toast("Master password changed");
+    }catch(e){err.textContent="Couldn't change it: "+e.message;}
+  };
+  setTimeout(function(){var f=document.getElementById("m-p1");if(f)f.focus();},100);
+}
+
+/* ---------- boot ---------- */
+(function(){
+  if(!window.crypto||!crypto.subtle){
+    show('<div class="card center"><h2>Not available</h2><p>Your browser doesn\'t support the encryption this vault needs (WebCrypto). Try a recent Chrome, Safari, Edge or Firefox over HTTPS.</p></div>');
+    return;
+  }
+  if(localStorage.getItem(LS_SALT)){screenUnlock();}
+  else{screenSetup();}
+})();
+</script>
+</body>
+</html>

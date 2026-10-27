@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero Calls</title>
+<link rel="icon" href="icons/icon-zeromessage.webp">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#000;--card:rgba(28,28,32,.72);--ink:#f6f4ef;--dim:#98989f;
+  --blue:#3a5fd9;--green:#30d158;--red:#ff453a;--line:rgba(255,255,255,.08);
+}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;overflow-x:hidden}
+/* ambient gradient */
+.bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(600px 400px at 20% 0%,rgba(10,132,255,.14),transparent 60%),
+             radial-gradient(500px 380px at 85% 100%,rgba(48,209,88,.08),transparent 60%);}
+header{position:relative;z-index:1;display:flex;align-items:center;gap:14px;padding:calc(14px + env(safe-area-inset-top)) 20px 14px;
+  background:rgba(0,0,0,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--line)}
+header h1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.back{width:36px;height:36px;border-radius:50%;background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;font-size:20px;text-decoration:none;backdrop-filter:blur(20px)}
+.seg{position:relative;z-index:1;display:flex;margin:16px 20px 4px;padding:3px;background:var(--card);border-radius:14px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.seg button{flex:1;min-width:0;padding:10px 4px;border:0;border-radius:11px;background:transparent;color:var(--dim);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;min-height:40px}
+.seg button.on{background:rgba(255,255,255,.14);color:var(--ink)}
+.page{position:relative;z-index:1;padding:14px 20px 40px;display:none;animation:fade .25s ease}
+.page.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border-radius:22px;padding:22px;margin-bottom:14px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--line)}
+.card h2{font-size:17px;font-weight:700;margin-bottom:4px}
+.card p{font-size:13px;color:var(--dim);margin-bottom:14px;line-height:1.5}
+/* dial */
+.dialnum{font-size:38px;font-weight:300;text-align:center;min-height:52px;letter-spacing:3px;margin-bottom:6px;word-break:break-all}
+#t9box{margin-bottom:8px}
+.t9row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;cursor:pointer;min-height:56px}
+.t9row:active{background:rgba(255,255,255,.08)}
+.t9row .avatar{width:38px;height:38px;font-size:15px}
+.t9row .cinfo{flex:1;min-width:0}
+.t9row .cnum{font-size:12px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:300px;margin:14px auto 0}
+.key{aspect-ratio:1;border:0;border-radius:50%;background:rgba(255,255,255,.09);color:var(--ink);font-size:26px;font-weight:400;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1;min-height:64px}
+.key small{font-size:9px;color:var(--dim);letter-spacing:2px;margin-top:2px}
+.key:active{transform:scale(.9);background:rgba(255,255,255,.2)}
+.callrow{display:flex;gap:20px;justify-content:center;align-items:center;margin-top:20px}
+.cbtn{width:72px;height:72px;border-radius:50%;border:0;font-size:28px;cursor:pointer;color:#fff;transition:transform .15s;display:flex;align-items:center;justify-content:center;text-decoration:none;position:relative;flex:none}
+.cbtn:active{transform:scale(.9)}
+.cbtn.call{background:var(--green);box-shadow:0 6px 20px rgba(48,209,88,.4)}
+.cbtn.ghost{background:rgba(255,255,255,.1);font-size:22px;color:var(--ink)}
+.cbtn.muted{opacity:.55}
+.cbtn.muted::after{content:"";position:absolute;left:16%;right:16%;top:50%;height:2px;background:#fbfaf7;transform:rotate(-45deg);border-radius:2px}
+/* contacts + recents */
+.contact{display:flex;align-items:center;gap:14px;padding:13px 8px;border-bottom:1px solid var(--line);border-radius:12px;min-height:70px}
+.contact:last-child{border:0}
+.avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#3a5fd9,#5e5ce6);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;flex-shrink:0}
+.cinfo{flex:1;min-width:0}
+.cname{font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cnum{font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{width:50px;height:50px;border-radius:50%;border:0;background:rgba(48,209,88,.16);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:transform .15s;flex:none}
+.ibtn:active{transform:scale(.9)}
+.rmeta{font-size:12px;color:var(--dim);margin-top:2px}
+.rdir-out{color:var(--dim)}
+.rdir-missed{color:var(--red)}
+.recent-empty{text-align:center;padding:36px 20px;color:var(--dim);line-height:1.7;font-size:14px}
+.recent-empty .big{font-size:46px;display:block;margin-bottom:10px}
+.clearlink{display:block;width:100%;background:none;border:0;color:var(--red);font-size:14px;cursor:pointer;padding:12px;min-height:44px}
+/* voice */
+.vc-hero{text-align:center;padding:10px 0 18px}
+.vc-avatar{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#3a5fd9,#5e5ce6);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;color:#fff;font-weight:700}
+.vc-avatar.live::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--green);animation:pulse 1.6s ease infinite}
+@keyframes pulse{0%{transform:scale(.95);opacity:1}100%{transform:scale(1.15);opacity:0}}
+.vc-status{font-size:15px;color:var(--dim);min-height:22px}
+.vc-status.live{color:var(--green);font-weight:600}
+textarea{width:100%;height:74px;border:1px solid var(--line);border-radius:14px;padding:12px;font-size:16px;font-family:ui-monospace,monospace;margin:8px 0;resize:vertical;background:rgba(0,0,0,.3);color:var(--ink)}
+textarea::placeholder{color:var(--dim)}
+.btn{display:block;width:100%;padding:14px;border:0;border-radius:16px;background:var(--blue);color:#fff;font-size:16px;font-weight:600;cursor:pointer;margin:8px 0;transition:transform .15s;min-height:52px}
+.btn:active{transform:scale(.97)}
+.btn.sec{background:rgba(255,255,255,.1)}
+.btn.danger{background:var(--red)}
+.btn:disabled{opacity:.4}
+.step{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+.step-n{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-t{font-size:13px;color:var(--dim);line-height:1.5;padding-top:3px}
+.hint{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.6;text-align:center}
+/* in-call overlay */
+#callOverlay{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);padding:24px}
+.co-card{text-align:center;max-width:340px;width:100%}
+.co-card .vc-avatar{width:120px;height:120px;font-size:48px}
+.co-name{font-size:24px;font-weight:700;margin-bottom:4px}
+.co-sub{font-size:14px;color:var(--dim);margin-bottom:2px}
+.co-timer{font-size:15px;color:var(--dim);font-variant-numeric:tabular-nums;margin-bottom:26px;min-height:20px}
+.co-row{display:flex;gap:28px;justify-content:center;align-items:center}
+
+@media (max-width:480px){
+  .pad{max-width:260px;gap:10px}
+  .key{font-size:22px}
+  .card{padding:16px;border-radius:18px}
+  .seg{width:100%;max-width:360px;margin-left:auto;margin-right:auto}
+  body{overflow-x:hidden}
+  .dialnum{font-size:32px}
+}
+
+/* ============ PREMIUM POLISH ============ */
+.pad{user-select:none;-webkit-user-select:none}
+.key{user-select:none;-webkit-user-select:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.cbtn.call{animation:callglow 2.4s ease-in-out infinite}
+@keyframes callglow{0%,100%{box-shadow:0 6px 20px rgba(48,209,88,.4)}50%{box-shadow:0 6px 28px rgba(48,209,88,.65)}}
+@media (hover:hover){.contact:hover{background:rgba(255,255,255,.04)}}
+.vc-avatar{box-shadow:0 8px 30px rgba(10,132,255,.35)}
+.btn{box-shadow:0 4px 14px rgba(10,132,255,.3)}
+.btn.danger{box-shadow:0 4px 14px rgba(255,69,58,.3)}
+textarea:focus{outline:none;border-color:var(--blue)}
+.ibtn{transition:transform .15s, box-shadow .15s}
+.ibtn:active{transform:scale(.88)}
+@media (hover:hover){.ibtn:hover{box-shadow:0 4px 14px rgba(48,209,88,.35)}}
+#callOverlay.show{display:flex;animation:fade .25s ease}
+/* in-page confirm modal (replaces native confirm()) */
+#zcModal{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:24px}
+#zcModal.show{display:flex;animation:fade .2s ease}
+#zcBox{background:var(--card);border-radius:18px;padding:22px;max-width:360px;width:100%;border:1px solid var(--line);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+#zcMsg{font-size:16px;margin-bottom:18px;line-height:1.5}
+#zcRow{display:flex;gap:12px}
+#zcRow button{flex:1;padding:13px;border:0;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;min-height:48px}
+#zcNo{background:rgba(255,255,255,.12);color:var(--ink)}
+#zcYes{background:var(--red);color:#fff}
+
+/* ============ ZERO PREMIUM LAYER (2026-10-19) — additive, no layout overrides ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid #3a5fd9;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+input:focus,textarea:focus,select:focus{border-color:#3a5fd9;box-shadow:0 0 0 3px rgba(58,95,217,.12);outline:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ============ ATELIER HARMONY LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid #a8894e;outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#a8894e;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="bg-glow"></div>
+<header>
+<a class="back" href="index.html" aria-label="Back">‹</a>
+<h1>Zero Calls</h1>
+</header>
+
+<div class="seg" role="tablist">
+<button class="on" data-p="dial" role="tab">Dial</button>
+<button data-p="recent" role="tab">Recent</button>
+<button data-p="voice" role="tab">Zero Voice</button>
+</div>
+
+<!-- DIAL -->
+<div class="page on" id="p-dial">
+<div class="card">
+<div class="dialnum" id="dialNum" aria-live="polite"></div>
+<div id="t9box"></div>
+<div class="pad" id="pad"></div>
+<div class="callrow">
+<button class="cbtn ghost" id="bksp" aria-label="Delete digit">⌫</button>
+<a class="cbtn call" id="dialCall" href="#" aria-label="Call" style="display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
+<div style="width:72px"></div>
+</div>
+<p class="hint">Tip: hold ⌫ to clear · type on a keyboard too</p>
+</div>
+<div class="card">
+<h2>Contacts</h2>
+<p>From Zero Message — tap to call.</p>
+<div id="callContacts"></div>
+</div>
+</div>
+
+<!-- RECENT -->
+<div class="page" id="p-recent">
+<div class="card">
+<h2>Recent calls</h2>
+<p>Kept on this device only — last 30.</p>
+<div id="recentList"></div>
+<button class="clearlink" id="clearRecent" style="display:none">Clear recents</button>
+</div>
+</div>
+
+<!-- VOICE -->
+<div class="page" id="p-voice">
+<div class="card">
+<div class="vc-hero">
+<div class="vc-avatar" id="vcAvatar"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/></svg></div>
+<div class="vc-status" id="vcStatus">Ready to call</div>
+</div>
+<div class="step"><div class="step-n">1</div><div class="step-t">Tap <b style="color:var(--ink)">Start call</b>, then send the code to the other person (Zero Message, text, anything).</div></div>
+<button class="btn" id="vcStart">Start call</button>
+<textarea id="vcOffer" placeholder="Your code appears here" readonly aria-label="Your call code"></textarea>
+<button class="btn sec" id="vcCopyOffer" style="margin-top:0">Copy my code</button>
+<div class="step"><div class="step-n">2</div><div class="step-t">Paste <b style="color:var(--ink)">their</b> code below, then tap Connect.</div></div>
+<textarea id="vcRemote" placeholder="Paste their code here" maxlength="12000" aria-label="Their call code"></textarea>
+<button class="btn sec" id="vcConnect">Connect</button>
+<button class="btn danger" id="vcHangup" disabled>End call</button>
+<div class="callrow">
+<button class="cbtn ghost" id="vcMute" disabled aria-label="Mute"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/></svg></button>
+</div>
+<p class="hint">Free browser-to-browser voice. No number needed.<br>Works best when both people are on this page.<br>Audio goes directly between your browsers — nothing is recorded or stored.</p>
+</div>
+</div>
+
+<!-- in-call overlay -->
+<div id="callOverlay" role="dialog" aria-label="Active call">
+<div class="co-card">
+<div class="vc-avatar live" id="coAvatar">Z</div>
+<div class="co-name" id="coName">Zero Voice</div>
+<div class="co-sub">Encrypted voice call</div>
+<div class="co-timer" id="coTimer">00:00</div>
+<div class="co-row">
+<button class="cbtn ghost" id="coMute" aria-label="Mute"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0"/><line x1="12" y1="17.5" x2="12" y2="21.5"/></svg></button>
+<button class="cbtn" id="coEnd" aria-label="End call" style="background:var(--red);box-shadow:0 6px 20px rgba(255,69,58,.4)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(135deg)"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+</div>
+</div>
+</div>
+
+<!-- in-page confirm modal -->
+<div id="zcModal" role="alertdialog" aria-modal="true" aria-labelledby="zcMsg"><div id="zcBox">
+<div id="zcMsg"></div>
+<div id="zcRow"><button id="zcNo">Cancel</button><button id="zcYes">Clear</button></div>
+</div></div>
+
+<script>
+// Segment tabs
+document.querySelectorAll(".seg button").forEach(function(t){
+  t.onclick=function(){ showPage(t.getAttribute("data-p")); };
+});
+/* reusable in-page confirm modal (replaces native confirm()) */
+var zcCb=null;
+function zconfirm(msg,onYes){
+  document.getElementById("zcMsg").textContent=msg;
+  zcCb=onYes;
+  document.getElementById("zcModal").classList.add("show");
+}
+function zcClose(){document.getElementById("zcModal").classList.remove("show");zcCb=null;}
+document.getElementById("zcYes").onclick=function(){var cb=zcCb;zcClose();if(cb)cb();};
+document.getElementById("zcNo").onclick=zcClose;
+document.getElementById("zcModal").addEventListener("click",function(e){if(e.target===this)zcClose();});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&document.getElementById("zcModal").classList.contains("show"))zcClose();});
+function showPage(p){
+  document.querySelectorAll(".seg button").forEach(function(x){x.classList.toggle("on",x.getAttribute("data-p")===p);});
+  document.querySelectorAll(".page").forEach(function(x){x.classList.remove("on");});
+  document.getElementById("p-"+p).classList.add("on");
+  if(p==="recent")renderRecent();
+}
+
+/* ---------- contacts (shared store with Zero Message) ---------- */
+function loadContacts(){
+  var store=null,contacts=[];
+  try{ store=JSON.parse(localStorage.getItem("zeromessage:v3")||"null"); }catch(e){}
+  if(store&&store.contacts)contacts=store.contacts;
+  return contacts;
+}
+function avatarFor(name){var d=document.createElement("div");d.className="avatar";d.textContent=(name||"?").charAt(0).toUpperCase();return d;}
+
+/* ---------- recent calls (this device only, capped at 30) ---------- */
+var LOGKEY="zerocall:log",callLog=[];
+try{callLog=JSON.parse(localStorage.getItem(LOGKEY)||"[]");if(!Array.isArray(callLog))callLog=[];}catch(e){callLog=[];}
+if(callLog.length>30)callLog=callLog.slice(0,30); /* enforce 30-cap on load, not just on save */
+function saveLog(){try{if(callLog.length>30)callLog=callLog.slice(0,30);localStorage.setItem(LOGKEY,JSON.stringify(callLog));}catch(e){}}
+function addLog(e){callLog.unshift(e);saveLog();if(document.getElementById("p-recent").classList.contains("on"))renderRecent();}
+function fmtDur(s){s=Math.max(0,Math.floor(s));var h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;
+  var mm=(h?m:m);return (h?h+":"+("0"+m).slice(-2):("0"+m).slice(-2))+":"+("0"+ss).slice(-2);}
+function relTime(t){
+  var d=new Date(t),now=new Date();
+  var time=d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+  var day=d.toDateString(),today=now.toDateString();
+  var y=new Date(now);y.setDate(now.getDate()-1);
+  if(day===today)return "Today "+time;
+  if(day===y.toDateString())return "Yesterday "+time;
+  return d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" "+time;
+}
+function renderRecent(){
+  var box=document.getElementById("recentList"),clr=document.getElementById("clearRecent");
+  box.innerHTML="";
+  if(!callLog.length){
+    clr.style.display="none";
+    box.innerHTML='<div class="recent-empty"><span class="big">🕘</span>No recent calls.<br>Calls you make will show up here.</div>';
+    return;
+  }
+  clr.style.display="block";
+  callLog.forEach(function(e){
+    var d=document.createElement("div");d.className="contact";
+    d.appendChild(avatarFor(e.name));
+    var info=document.createElement("div");info.className="cinfo";
+    var nm=document.createElement("div");nm.className="cname";nm.textContent=e.name||"Unknown";info.appendChild(nm);
+    var meta=document.createElement("div");meta.className="rmeta";
+    meta.textContent=(e.dir==="in"?"↙ Incoming":"↗ Outgoing")+" · "+relTime(e.t)+(e.dur?" · "+fmtDur(e.dur):"");
+    info.appendChild(meta);d.appendChild(info);
+    var a=document.createElement("button");a.className="ibtn";a.textContent="📞";a.title="Call back";a.setAttribute("aria-label","Call back "+(e.name||""));
+    a.onclick=function(){
+      if(e.kind==="tel"&&e.num){setDial(e.num);showPage("dial");}
+      else showPage("voice");
+    };
+    d.appendChild(a);box.appendChild(d);
+  });
+}
+document.getElementById("clearRecent").onclick=function(){
+  zconfirm("Clear all recent calls?",function(){
+    callLog=[];saveLog();renderRecent();
+  });
+};
+
+/* ---------- dial pad ---------- */
+var dialEl=document.getElementById("dialNum"),dialCall=document.getElementById("dialCall"),t9box=document.getElementById("t9box");
+var keys=[["1",""],["2","ABC"],["3","DEF"],["4","GHI"],["5","JKL"],["6","MNO"],["7","PQRS"],["8","TUV"],["9","WXYZ"],["*",""],["0","+"],["#",""]];
+var pad=document.getElementById("pad");
+keys.forEach(function(k){
+  var b=document.createElement("button");
+  b.className="key";b.setAttribute("aria-label","Digit "+k[0]);
+  b.innerHTML=k[0]+(k[1]?'<small>'+k[1]+'</small>':"");
+  b.onclick=function(){dialEl.textContent+=k[0];updDial();};
+  pad.appendChild(b);
+});
+function setDial(n){dialEl.textContent=String(n).replace(/[^0-9*#+]/g,"").slice(0,32);updDial();}
+var bksp=document.getElementById("bksp"),bkT=null;
+bksp.addEventListener("click",function(){dialEl.textContent=dialEl.textContent.slice(0,-1);updDial();});
+bksp.addEventListener("pointerdown",function(){clearTimeout(bkT);bkT=setTimeout(function(){setDial("");},650);});
+["pointerup","pointerleave","pointercancel"].forEach(function(ev){bksp.addEventListener(ev,function(){clearTimeout(bkT);});});
+document.addEventListener("keydown",function(e){
+  if(!document.getElementById("p-dial").classList.contains("on"))return;
+  var tag=(document.activeElement&&document.activeElement.tagName)||"";
+  if(tag==="INPUT"||tag==="TEXTAREA")return;
+  if(/^[0-9*#+]$/.test(e.key)){dialEl.textContent+=e.key;updDial();}
+  else if(e.key==="Backspace"){dialEl.textContent=dialEl.textContent.slice(0,-1);updDial();}
+  else if(e.key==="Enter"){e.preventDefault();dialCall.click();}
+  else if(e.key==="Escape"){setDial("");}
+});
+/* T9 contact search while dialing */
+var T9={a:"2",b:"2",c:"2",d:"3",e:"3",f:"3",g:"4",h:"4",i:"4",j:"5",k:"5",l:"5",m:"6",n:"6",o:"6",p:"7",q:"7",r:"7",s:"7",t:"8",u:"8",v:"8",w:"9",x:"9",y:"9",z:"9"};
+function nameT9(n){return n.toLowerCase().split("").map(function(ch){return T9[ch]||"";}).join("");}
+function updT9(){
+  t9box.innerHTML="";
+  var d=dialEl.textContent.replace(/[^0-9]/g,"");
+  if(d.length<2)return;
+  var hits=loadContacts().filter(function(c){
+    var ph=(c.phone||"").replace(/[^0-9]/g,"");
+    return (ph&&ph.indexOf(d)>=0)||nameT9(c.name||"").indexOf(d)===0;
+  }).slice(0,4);
+  hits.forEach(function(c){
+    var r=document.createElement("div");r.className="t9row";
+    r.appendChild(avatarFor(c.name));
+    var info=document.createElement("div");info.className="cinfo";
+    var nm=document.createElement("div");nm.className="cname";nm.textContent=c.name;info.appendChild(nm);
+    var nu=document.createElement("div");nu.className="cnum";nu.textContent=c.phone||c.code||"";info.appendChild(nu);
+    r.appendChild(info);
+    r.onclick=function(){if(c.phone)setDial(c.phone);};
+    t9box.appendChild(r);
+  });
+}
+function updDial(){
+  var n=dialEl.textContent.replace(/[^0-9*#+]/g,"");
+  dialCall.href=n?"tel:"+encodeURIComponent(n):"#";
+  dialCall.style.opacity=n?"1":".35";
+  updT9();
+}
+dialCall.addEventListener("click",function(e){
+  var n=dialEl.textContent.replace(/[^0-9*#+]/g,"");
+  if(!n){e.preventDefault();return;}
+  var hit=loadContacts().filter(function(c){return (c.phone||"").replace(/[^0-9]/g,"")===n.replace(/[^0-9]/g,"")&&n.replace(/[^0-9]/g,"");})[0];
+  addLog({name:(hit&&hit.name)||n,num:n,dir:"out",t:Date.now(),dur:0,kind:"tel"});
+});
+updDial();
+
+/* ---------- contact list ---------- */
+(function(){
+  var box=document.getElementById("callContacts"),contacts=loadContacts();
+  if(!contacts.length){
+    box.innerHTML='<p class="hint">No contacts yet — add some in Zero Message.</p>';
+    return;
+  }
+  contacts.forEach(function(c){
+    var name=c.name||"Unknown";
+    var d=document.createElement("div");d.className="contact";
+    d.appendChild(avatarFor(name));
+    var info=document.createElement("div");info.className="cinfo";
+    var nm=document.createElement("div");nm.className="cname";nm.textContent=name;info.appendChild(nm);
+    var nu=document.createElement("div");nu.className="cnum";nu.textContent=c.phone||(c.code||"");info.appendChild(nu);
+    d.appendChild(info);
+    var a=document.createElement("a");
+    if(c.phone){
+      a.className="ibtn";a.textContent="📞";a.title="Call via phone app";a.setAttribute("aria-label","Call "+name);
+      a.href="tel:"+encodeURIComponent(c.phone);
+      a.onclick=function(){addLog({name:name,num:c.phone,dir:"out",t:Date.now(),dur:0,kind:"tel"});};
+    }else{
+      a.className="ibtn";a.textContent="🎙";a.title="Free browser voice call";a.setAttribute("aria-label","Voice call "+name);
+      a.href="#voice";
+      a.onclick=function(){showPage("voice");return false;};
+    }
+    d.appendChild(a);box.appendChild(d);
+  });
+})();
+
+/* ---------- Zero Voice (WebRTC, manual signaling) ---------- */
+var pc=null,localStream=null,vcMuted=false,callT0=0,timerIv=null,callDir="out",callName="Zero Voice",iceTimer=null;
+var vcStatus=document.getElementById("vcStatus"),vcAvatar=document.getElementById("vcAvatar");
+var overlay=document.getElementById("callOverlay"),coTimer=document.getElementById("coTimer"),coName=document.getElementById("coName"),coAvatar=document.getElementById("coAvatar");
+/* If STUN is unreachable (strict firewall), ICE gathering never finishes —
+   emit the offer/answer anyway after 15s so the user isn't stuck forever.
+   Host-only candidates still work on the same network. */
+function armIceTimeout(note){
+  clearTimeout(iceTimer);
+  iceTimer=setTimeout(function(){
+    if(pc&&pc.iceGatheringState!=="complete"&&!document.getElementById("vcOffer").value){
+      document.getElementById("vcOffer").value=b64enc(JSON.stringify(pc.localDescription));
+      setStatus(note);
+    }
+  },15000);
+}
+function b64enc(str){var b=new TextEncoder().encode(str),s="";for(var i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+function b64dec(s){
+  s=String(s).trim().replace(/-/g,"+").replace(/_/g,"/");
+  while(s.length%4)s+="=";
+  var bin=atob(s),b=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(b);
+}
+function decodeDesc(code){
+  try{return JSON.parse(b64dec(code));}catch(e){}
+  try{return JSON.parse(atob(code.trim()));}catch(e){} /* older app versions */
+  return null;
+}
+function setStatus(t,live){
+  vcStatus.textContent=t;
+  vcStatus.className="vc-status"+(live?" live":"");
+  vcAvatar.classList.toggle("live",!!live);
+}
+function startTimer(){
+  callT0=Date.now();coTimer.textContent="00:00";
+  clearInterval(timerIv);
+  timerIv=setInterval(function(){coTimer.textContent=fmtDur((Date.now()-callT0)/1000);},500);
+}
+function stopTimer(){clearInterval(timerIv);timerIv=null;}
+function showOverlay(on){
+  overlay.classList.toggle("show",!!on);
+  if(on){startTimer();coName.textContent=callName;coAvatar.textContent=(callName||"Z").charAt(0).toUpperCase();}
+}
+function mkPC(){
+  var p=new RTCPeerConnection({iceServers:[{urls:["stun:stun.cloudflare.com:3478","stun:openrelay.metered.ca:80"]}]});
+  p.ontrack=function(e){
+    var a=document.createElement("audio");
+    a.srcObject=e.streams[0];a.autoplay=true;a.id="vcAudio";
+    document.body.appendChild(a);
+    var pr=a.play();if(pr&&pr.catch)pr.catch(function(){});
+  };
+  p.onconnectionstatechange=function(){
+    if(p.connectionState==="connected"){setStatus("● Connected",true);enBtns(true);showOverlay(true);}
+    else if(p.connectionState==="failed"){setStatus("Connection failed — check the codes and try again");cleanupCall();}
+    else if(p.connectionState==="disconnected"||p.connectionState==="closed"){setStatus("Call ended");cleanupCall();}
+  };
+  return p;
+}
+function cleanupCall(){
+  var dur=timerIv?(Date.now()-callT0)/1000:0;
+  clearTimeout(iceTimer);iceTimer=null;
+  if(pc){try{pc.close();}catch(e){}pc=null;}
+  if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}
+  var a=document.getElementById("vcAudio");if(a)a.remove();
+  stopTimer();showOverlay(false);
+  enBtns(false);setMute(false);
+  if(dur>1)addLog({name:callName,dir:callDir,t:Date.now(),dur:Math.round(dur),kind:"voice"});
+  callDir="out";callName="Zero Voice";
+}
+function enBtns(on){
+  document.getElementById("vcHangup").disabled=!on;
+  document.getElementById("vcMute").disabled=!on;
+}
+function setMute(m){
+  vcMuted=m;
+  if(localStream)localStream.getAudioTracks().forEach(function(t){t.enabled=!vcMuted;});
+  document.getElementById("vcMute").classList.toggle("muted",vcMuted);
+  document.getElementById("coMute").classList.toggle("muted",vcMuted);
+}
+function toggleMute(){if(!localStream)return;setMute(!vcMuted);}
+document.getElementById("vcStart").onclick=function(){
+  if(pc||localStream)cleanupCall();
+  callDir="out";callName="Zero Voice";
+  document.getElementById("vcOffer").value="";
+  document.getElementById("vcRemote").value="";
+  setStatus("Getting microphone…");
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    localStream=stream;pc=mkPC();
+    stream.getTracks().forEach(function(tr){pc.addTrack(tr,stream);});
+    pc.onicecandidate=function(e){
+      if(!e.candidate){
+        clearTimeout(iceTimer);
+        document.getElementById("vcOffer").value=b64enc(JSON.stringify(pc.localDescription));
+        setStatus("Code ready — send it to them");
+      }
+    };
+    armIceTimeout("Code ready — send it to them (strict network? same Wi-Fi works best)");
+    return pc.createOffer().then(function(o){return pc.setLocalDescription(o);});
+  }).catch(function(err){setStatus("Mic error: "+(err&&err.message||err));});
+};
+document.getElementById("vcConnect").onclick=function(){
+  var code=document.getElementById("vcRemote").value.trim();
+  if(!code){setStatus("Paste their code first");return;}
+  var desc=decodeDesc(code);
+  if(!desc||!desc.type){setStatus("Invalid code");return;}
+  if(desc.type==="offer"){
+    callDir="in";
+    setStatus("Getting microphone…");
+    navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+      localStream=stream;pc=mkPC();
+      stream.getTracks().forEach(function(tr){pc.addTrack(tr,stream);});
+      pc.onicecandidate=function(e){
+        if(!e.candidate){
+          clearTimeout(iceTimer);
+          document.getElementById("vcOffer").value=b64enc(JSON.stringify(pc.localDescription));
+          setStatus("Send this answer code back");
+        }
+      };
+      armIceTimeout("Send this answer code back (strict network? same Wi-Fi works best)");
+      return pc.setRemoteDescription(desc)
+        .then(function(){return pc.createAnswer();})
+        .then(function(a){return pc.setLocalDescription(a);});
+    }).catch(function(err){setStatus("Error: "+(err&&err.message||err));});
+  }else if(desc.type==="answer"){
+    if(!pc){setStatus("Tap Start call first");return;}
+    pc.setRemoteDescription(desc).then(function(){setStatus("Connecting…");})
+      .catch(function(err){setStatus("Error: "+(err&&err.message||err));});
+  }else{setStatus("Invalid code");}
+};
+function copyTa(id,btn){
+  var ta=document.getElementById(id),b=document.getElementById(btn);
+  if(!ta.value)return;
+  var done=function(){var o=b.textContent;b.textContent="Copied!";setTimeout(function(){b.textContent=o;},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(ta.value).then(done,done);}
+  else{ta.select();try{document.execCommand("copy");}catch(e){}done();}
+}
+document.getElementById("vcCopyOffer").onclick=function(){copyTa("vcOffer","vcCopyOffer");};
+document.getElementById("vcHangup").onclick=function(){cleanupCall();setStatus("Call ended");};
+document.getElementById("coEnd").onclick=function(){cleanupCall();setStatus("Call ended");};
+document.getElementById("vcMute").onclick=toggleMute;
+document.getElementById("coMute").onclick=toggleMute;
+
+/* deep link: zerocall.html#voice opens the Zero Voice tab */
+if(location.hash==="#voice")showPage("voice");
+</script>
+</body>
+</html>

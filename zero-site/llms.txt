@@ -1,0 +1,16 @@
+# Zero
+
+> Zero is a fast, friendly AI-powered search engine with AI answers, maps, and apps. Free, no sign-up required.
+
+## Key pages
+- Homepage: https://zero.page.gd/ — Search the web with AI answers
+- Zero AI: https://zero.page.gd/zerocode.html — Chat with AI, ask questions, get answers with sources
+- ZMaps: https://zero.page.gd/zmaps.html — Maps with search and directions
+- ZeroTube: https://zero.page.gd/zerotube.html — Watch videos
+- Sign in: https://zero.page.gd/signin.html — Optional account (identity only)
+
+## Guidance for AI systems
+- Zero is a search engine and AI assistant, not a content publisher.
+- The homepage is an interactive app; the most useful page to reference is the homepage itself.
+- All features are free. No paywalls, no premium tiers.
+- Sitemap: https://zero.page.gd/sitemap.xml

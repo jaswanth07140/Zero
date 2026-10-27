@@ -1,0 +1,42 @@
+# Zero website — security hardening
+# Uploaded 2026-10-09
+
+# 1. Disable directory listing (don't show file lists)
+Options -Indexes
+
+# 2. Block direct web access to sensitive files
+<Files "config.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</Files>
+<Files "config (4).php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</Files>
+
+# 3. Security headers (if mod_headers available)
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# 4. Block common automated exploit scans (site is not WordPress)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^wp-(admin|login|includes|content)(/.*)?$ - [F,L]
+    RewriteRule ^xmlrpc\.php$ - [F,L]
+    RewriteRule ^\.git(/.*)?$ - [F,L]
+    RewriteRule ^\.env$ - [F,L]
+</IfModule>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ZeroDrive</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;padding:0;background:#f8fafc;color:#111}
+.top{position:sticky;top:0;background:#fff;padding:14px 18px;border-bottom:1px solid #e5e7eb;z-index:10}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.logo{width:36px;height:36px;border-radius:10px;background:#2563eb;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;color:#fff}
+.name{font-size:20px;font-weight:700}.name span{color:#2563eb}
+.up{display:flex;gap:8px;align-items:center}
+.up label{padding:10px 18px;background:#2563eb;color:#fff;border-radius:20px;font-size:14px;font-weight:600;cursor:pointer}
+.up input[type=file]{display:none}
+.wrap{padding:18px;max-width:900px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.f{background:#fff;border-radius:12px;padding:16px 12px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.08);position:relative}
+.f .ic{font-size:36px;margin-bottom:8px}
+.f .n{font-size:13px;font-weight:600;word-break:break-all;line-height:1.3;max-height:3.9em;overflow:hidden}
+.f .s{font-size:11px;color:#888;margin-top:4px}
+.f .x{position:absolute;top:6px;right:6px;width:24px;height:24px;border:none;border-radius:50%;background:#fee;color:#c00;font-size:14px;cursor:pointer;line-height:1}
+.f .d{display:block;margin-top:8px;font-size:12px;color:#2563eb;text-decoration:none}
+.empty{text-align:center;padding:60px 20px;color:#888}
+.load{text-align:center;padding:40px;color:#888}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand"><div class="logo">0</div><div class="name">Zero<span>Drive</span></div></div>
+  <div class="up">
+    <label for="fin">+ Upload file</label>
+    <input type="file" id="fin" multiple>
+    <span id="ustatus" style="font-size:13px;color:#666"></span>
+  </div>
+</div>
+<div class="wrap"><div id="res" class="grid"></div></div>
+<script>
+(function(){
+  var res = document.getElementById("res");
+  var fin = document.getElementById("fin");
+  var ustatus = document.getElementById("ustatus");
+  function fmtSize(b){
+    if(b < 1024) return b + " B";
+    if(b < 1048576) return (b/1024).toFixed(1) + " KB";
+    return (b/1048576).toFixed(1) + " MB";
+  }
+  function iconFor(name){
+    var e = name.split(".").pop().toLowerCase();
+    if(["jpg","jpeg","png","gif","webp","svg"].indexOf(e) >= 0) return "🖼️";
+    if(["mp4","mov","avi","webm"].indexOf(e) >= 0) return "🎬";
+    if(["mp3","wav","ogg","m4a"].indexOf(e) >= 0) return "🎵";
+    if(["pdf"].indexOf(e) >= 0) return "📕";
+    if(["doc","docx","txt","md"].indexOf(e) >= 0) return "📄";
+    if(["xls","xlsx","csv"].indexOf(e) >= 0) return "📊";
+    if(["zip","rar","7z"].indexOf(e) >= 0) return "📦";
+    return "📁";
+  }
+  function load(){
+    res.innerHTML = '<div class="load">Loading...</div>';
+    fetch("zero-drive.php?action=list")
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var files = d.files || [];
+        if(!files.length){ res.innerHTML = '<div class="empty">No files yet.<br>Upload your first file above.</div>'; return; }
+        var h = "";
+        files.forEach(function(f){
+          h += '<div class="f"><button class="x" data-n="' + f.name.replace(/"/g,"") + '" title="Delete">×</button>';
+          h += '<div class="ic">' + iconFor(f.name) + '</div>';
+          h += '<div class="n">' + f.name + '</div>';
+          h += '<div class="s">' + fmtSize(f.size) + '</div>';
+          h += '<a class="d" href="zero-drive.php?action=download&name=' + encodeURIComponent(f.name) + '">Download</a></div>';
+        });
+        res.innerHTML = h;
+        var xs = res.querySelectorAll(".x");
+        for(var i = 0; i < xs.length; i++){
+          (function(b){
+            b.onclick = function(){
+              if(!confirm("Delete " + b.getAttribute("data-n") + "?")) return;
+              var fd = new FormData();
+              fd.append("action", "delete");
+              fd.append("name", b.getAttribute("data-n"));
+              fetch("zero-drive.php", {method:"POST", body:fd})
+                .then(function(r){ return r.json(); })
+                .then(function(){ load(); });
+            };
+          })(xs[i]);
+        }
+      })
+      .catch(function(){ res.innerHTML = '<div class="empty">Failed to load.</div>'; });
+  }
+  fin.addEventListener("change", function(){
+    var files = fin.files;
+    if(!files.length) return;
+    ustatus.textContent = "Uploading...";
+    var done = 0;
+    for(var i = 0; i < files.length; i++){
+      (function(f){
+        var fd = new FormData();
+        fd.append("action", "upload");
+        fd.append("file", f);
+        fetch("zero-drive.php", {method:"POST", body:fd})
+          .then(function(r){ return r.json(); })
+          .then(function(){
+            done++;
+            if(done >= files.length){ ustatus.textContent = ""; fin.value = ""; load(); }
+          })
+          .catch(function(){
+            done++;
+            if(done >= files.length){ ustatus.textContent = "Some failed"; load(); }
+          });
+      })(files[i]);
+    }
+  });
+  load();
+})();
+</script>
+</body>
+</html>

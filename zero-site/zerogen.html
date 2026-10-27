@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zero Image Studio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#f7f7fa;--card:#fff;--ink:#1d1d1f;--sub:#6e6e73;--line:rgba(0,0,0,.08);--acc1:#7c3aed;--acc2:#ec4899}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0b0f;--card:#17171c;--ink:#f5f5f7;--sub:#98989d;--line:rgba(255,255,255,.1)}}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center}
+header{width:100%;max-width:860px;display:flex;align-items:center;gap:12px;padding:20px 20px 8px}
+header img{width:40px;height:40px;border-radius:11px;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+header h1{font-size:22px;font-weight:700}
+header p{font-size:13px;color:var(--sub)}
+main{width:100%;max-width:860px;padding:12px 20px 40px;display:flex;flex-direction:column;gap:16px}
+.promptbox{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+textarea{width:100%;border:0;background:transparent;color:var(--ink);font-size:16px;min-height:76px;resize:vertical;outline:none;font-family:inherit}
+textarea::placeholder{color:var(--sub)}
+.row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;align-items:center}
+select{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px}
+.genbtn{flex:1;min-width:160px;border:0;cursor:pointer;color:#fff;font-size:16px;font-weight:700;padding:13px 24px;border-radius:14px;background:linear-gradient(135deg,var(--acc1),var(--acc2));box-shadow:0 4px 16px rgba(124,58,237,.35);transition:transform .15s}
+.genbtn:active{transform:scale(.97)}
+.genbtn:disabled{opacity:.6;cursor:wait}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:20px;min-height:320px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.stage img{width:100%;height:auto;display:block;max-height:70vh;object-fit:contain}
+.stage .empty{color:var(--sub);text-align:center;padding:40px;line-height:1.7;font-size:15px}
+.stage .loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;background:var(--card)}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--acc1);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.actions{display:flex;gap:10px;justify-content:center}
+.actions[hidden]{display:none}
+.abtn{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:11px 22px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer}
+.abtn.primary{background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff;border:0}
+.hist{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.hist img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;cursor:pointer;border:1px solid var(--line)}
+.hist img:hover{transform:scale(1.03)}
+h2{font-size:15px;color:var(--sub);font-weight:600}
+.row2{display:flex;align-items:center;justify-content:space-between;margin-top:4px}
+.linkbtn{border:0;background:none;color:var(--acc1);font-size:14px;font-weight:600;cursor:pointer;padding:8px 4px;min-height:34px}
+/* toast */
+#gtoast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(16px);background:rgba(28,28,32,.94);color:#fff;padding:11px 20px;border-radius:22px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:70;max-width:88vw;text-align:center}
+#gtoast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-color-scheme:dark){#gtoast{background:rgba(240,240,245,.95);color:#111}}
+
+/* ============ PHONE FRIENDLY ============ */
+@media (max-width:768px){
+  body{padding:12px}
+  .controls{flex-direction:column}
+  input,select,button{font-size:16px !important;min-height:44px}
+  #out img{max-width:100%;height:auto}
+}
+
+
+/* ============ PHONE FIX 2 ============ */
+@media (max-width:768px){
+  #out{max-width:100%;overflow:hidden}
+  .genbtn{width:100%;max-width:100%}
+}
+
+
+/* ============ PREMIUM POLISH ============ */
+.promptbox{transition:box-shadow .2s, border-color .2s}
+.promptbox:focus-within{border-color:var(--acc1);box-shadow:0 4px 24px rgba(124,58,237,.18)}
+.genbtn{transition:transform .15s, box-shadow .2s, filter .2s}
+.genbtn.secondary{background:var(--card);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.genbtn.secondary:hover:not(:disabled){filter:none;border-color:var(--acc1);box-shadow:0 4px 14px rgba(124,58,237,.18)}
+.genbtn.secondary:active{transform:scale(.97)}
+.genbtn:hover:not(:disabled){filter:brightness(1.08);box-shadow:0 6px 22px rgba(124,58,237,.45)}
+.hist img{transition:transform .18s, box-shadow .18s}
+.hist img:hover{transform:scale(1.04);box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.stage{transition:box-shadow .2s}
+.abtn{transition:transform .12s, box-shadow .15s}
+.abtn:active{transform:scale(.96)}
+.abtn.primary:hover{filter:brightness(1.08)}
+select{cursor:pointer;transition:border-color .15s}
+select:focus{outline:none;border-color:var(--acc1)}
+header img{transition:transform .2s}
+header img:hover{transform:scale(1.06) rotate(-3deg)}
+
+
+.gen-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+.gen-cell{border:2px solid var(--line,#e5e5ea);border-radius:12px;overflow:hidden;cursor:pointer;transition:all .2s;position:relative;min-height:200px;display:flex;flex-direction:column}
+.gen-cell.ready:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.gen-label{font-size:12px;font-weight:600;padding:8px;background:var(--bg-soft,#f5f5f7);text-align:center}
+.gen-img{width:100%;height:auto;display:block;cursor:pointer}
+.gen-hint{text-align:center;color:var(--sub,#666);font-size:14px;margin:12px 0}
+.gen-winner{text-align:center}
+.gen-winner img{max-width:100%;border-radius:12px;margin-top:12px}
+
+
+/* ============ ZERO PREMIUM LAYER (2026-10-19) — additive, no layout overrides ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid #5a5ae6;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+input:focus,textarea:focus,select:focus{border-color:#5a5ae6;box-shadow:0 0 0 3px rgba(90,90,230,.15);outline:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<header>
+  <img src="icons/icon-imggen.webp" alt="">
+  <div><h1>Zero Image Studio</h1><p>Describe it — AI paints it. Free to use.</p></div>
+</header>
+<main>
+  <div class="promptbox">
+    <textarea id="prompt" placeholder="A cozy cabin in the snow at dusk, warm lights in the windows…" maxlength="500"></textarea>
+    <div class="row">
+      <select id="size" aria-label="Image size">
+        <option value="1024x1024">Square</option>
+        <option value="1280x720">Wide</option>
+        <option value="720x1280">Tall</option>
+      </select>
+      <select id="style" aria-label="Style">
+        <option value="">No style</option>
+        <option value="photorealistic, ultra detailed">Photorealistic</option>
+        <option value="digital art, vibrant">Digital art</option>
+        <option value="anime style">Anime</option>
+        <option value="oil painting">Oil painting</option>
+        <option value="3d render, pixar style">3D render</option>
+        <option value="watercolor painting">Watercolor</option>
+      </select>
+      <button class="genbtn" id="gen"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>Generate</button>
+      <button class="genbtn secondary" id="enhanceBtn" onclick="enhancePrompt()"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>Enhance</button>
+    </div>
+  </div>
+  <div class="stage" id="stage">
+    <div class="empty" id="stageEmpty">Your creation will appear here.<br>Try: "a dragon flying over a neon city"</div>
+  </div>
+  <div class="actions" id="actions" hidden>
+    <button class="abtn primary" id="dl">Download</button>
+    <button class="abtn" id="moreVar">New variations</button>
+    <button class="abtn" id="copyP">Copy prompt</button>
+    <button class="abtn" id="vary">Surprise me</button>
+  </div>
+  <div class="row2"><h2 id="histTitle" hidden>Recent</h2><button class="linkbtn" id="clearHist" hidden>Clear</button></div>
+  <div class="hist" id="hist"></div>
+</main>
+<div id="gtoast" role="status" aria-live="polite"></div>
+<script>
+var $=function(id){return document.getElementById(id);};
+var curUrl=null, seed=Math.floor(Math.random()*1e6);
+function gtoast(t){var el=$("gtoast");el.textContent=t;el.classList.add("show");clearTimeout(gtoast._t);gtoast._t=setTimeout(function(){el.classList.remove("show");},2400);}
+// AI prompt enhancer - makes prompts more detailed and accurate
+function enhancePrompt(){
+  var p=$("prompt").value.trim();
+  if(!p){ $("prompt").focus(); return; }
+  var btn=$("enhanceBtn");
+  btn.disabled=true; btn.textContent="Enhancing...";
+  // Use Zero AI to improve the prompt
+  fetch("api-single.php",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({model:"openai/gpt-oss-20b",messages:[
+      {role:"system",content:"You are an expert at writing image generation prompts. Rewrite the user's prompt to be highly detailed, specific, and accurate for an AI image generator. Include: subject details, setting, lighting, style, mood, composition. Keep it under 150 words. Output ONLY the improved prompt, nothing else."},
+      {role:"user",content:p}]})})
+  .then(function(r){return r.json();})
+  .then(function(d){
+    var improved=(d.text||d.content||"").trim();
+    if(improved) $("prompt").value=improved;
+    btn.disabled=false; btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>Enhance';
+  })
+  .catch(function(){
+    btn.disabled=false; btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:6px"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>Enhance';
+    gtoast("Enhance failed — check connection");
+  });
+}
+var lastPrompt="";
+var generating=false; /* guards overlapping generate() runs */
+// 5 image generators - different models/settings, user picks the strongest
+var GEN_MODELS=[
+  {name:"Flux Pro", model:"flux", extra:", ultra detailed, photorealistic"},
+  {name:"Flux Art", model:"flux", extra:", digital art, vibrant, highly detailed"},
+  {name:"Turbo Fast", model:"turbo", extra:", sharp, clear"},
+  {name:"Flux Cinematic", model:"flux", extra:", cinematic lighting, dramatic, 8k"},
+  {name:"Flux Creative", model:"flux", extra:", creative, artistic masterpiece, intricate details"}
+];
+function buildUrlFor(p, genIdx){
+  var st=$("style").value;
+  var gen=GEN_MODELS[genIdx];
+  var quality=", highly detailed, sharp focus, professional quality";
+  var full=p+(st?", "+st:"")+gen.extra+quality;
+  var sz=$("size").value.split("x");
+  var sd=Math.floor(Math.random()*1e6);
+  return {url:"https://image.pollinations.ai/prompt/"+encodeURIComponent(full)+
+    "?width="+sz[0]+"&height="+sz[1]+"&seed="+sd+"&nologo=true&model="+gen.model+"&enhance=true",
+    name:gen.name};
+}
+function generate(p){
+  p=(p||"").trim(); if(!p){$("prompt").focus();return;}
+  if(generating)return; /* ignore overlapping runs */
+  generating=true;
+  lastPrompt=p;
+  var genBtn=$("gen"); genBtn.disabled=true;
+  var st=$("stage");
+  // Show 5 generators working in parallel
+  var h='<div class="gen-grid">';
+  for(var i=0;i<5;i++){
+    h+='<div class="gen-cell" id="genCell'+i+'"><div class="gen-label">'+GEN_MODELS[i].name+'</div><div class="loading"><div class="spin"></div></div></div>';
+  }
+  h+='</div><div class="gen-hint">5 AI models working — click your favorite to select it</div>';
+  st.innerHTML=h;
+  $("actions").hidden=true;
+  var settled=0, wins=0;
+  var genGuard=setTimeout(function(){ /* safety net: never leave "generating" stuck on a hung request */
+    if(settled<5){settled=5;done();}
+  },60000);
+  var done=function(){
+    if(++settled>=5){
+      clearTimeout(genGuard);
+      genBtn.disabled=false; generating=false;
+      if(!wins){
+        st.innerHTML='<div class="empty">The image service didn\'t respond.<br><br><button class="abtn primary" id="retryGen">Try again</button></div>';
+        $("retryGen").onclick=function(){generate(lastPrompt);};
+      }
+    }
+  };
+  // Fire all 5 in parallel
+  for(var i=0;i<5;i++)(function(idx){
+    var g=buildUrlFor(p, idx);
+    var img=new Image();
+    img.onload=function(){
+      var cell=document.getElementById("genCell"+idx);
+      if(!cell){done();return;}
+      cell.innerHTML='<div class="gen-label">'+g.name+'</div>';
+      img.className="gen-img";
+      img.onclick=function(){ selectBest(g.url, p, g.name); };
+      cell.appendChild(img);
+      cell.classList.add("ready");
+      wins++;
+      done();
+    };
+    img.onerror=function(){
+      var cell=document.getElementById("genCell"+idx);
+      if(cell) cell.innerHTML='<div class="gen-label">'+g.name+'</div><div class="empty">Failed — tap a retry below</div>';
+      done();
+    };
+    img.src=g.url;
+  })(i);
+}
+function selectBest(url, prompt, modelName){
+  curUrl=url;
+  var st=$("stage");
+  st.innerHTML='<div class="gen-winner"><div class="gen-label">'+'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a1 1 0 0 0-1 1c0 2.5 2 4 4 4"/><path d="M17 6h3a1 1 0 0 1 1 1c0 2.5-2 4-4 4"/></svg>'+modelName+'</div></div>';
+  var img=new Image();
+  img.onload=function(){
+    st.querySelector(".gen-winner").appendChild(img);
+    $("actions").hidden=false;
+    addHist(url,prompt+" ["+modelName+"]");
+  };
+  img.src=url;
+  // (the stage is replaced by the winner card above, so no cell highlight survives — the winner header names the model instead)
+}
+var HIST_KEY="zerogen:hist";
+function getHist(){try{return JSON.parse(localStorage.getItem(HIST_KEY)||"[]");}catch(e){return[];}}
+function setHist(h){try{localStorage.setItem(HIST_KEY,JSON.stringify(h.slice(0,24)));}catch(e){}}
+function addHist(url,prompt){
+  var h=getHist();
+  h=h.filter(function(x){return x.url!==url;});
+  h.unshift({url:url,p:prompt||"",t:Date.now()});
+  setHist(h); renderHist();
+}
+function renderHist(){
+  var h=getHist(),box=$("hist");
+  $("histTitle").hidden=!h.length;
+  $("clearHist").hidden=!h.length;
+  box.innerHTML="";
+  h.forEach(function(x){
+    var im=document.createElement("img"); im.src=x.url; im.alt=""; im.loading="lazy";
+    im.title=x.p||"";
+    im.onerror=function(){this.style.display="none";};
+    im.onclick=function(){
+      curUrl=x.url;
+      if(x.p)$("prompt").value=x.p;
+      var st=$("stage");st.innerHTML="";var b=new Image();b.src=x.url;st.appendChild(b);
+      $("actions").hidden=false;
+    };
+    box.appendChild(im);
+  });
+}
+renderHist();
+$("gen").onclick=function(){generate($("prompt").value);};
+$("prompt").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){if(generating)return; /* ignore Enter mid-run */ e.preventDefault();generate($("prompt").value);}});
+$("vary").onclick=function(){
+  var ideas=["a floating island with waterfalls at sunset","a robot drinking coffee in a parisian cafe","an underwater city with glass domes","a phoenix rising over mountains at dawn","a cozy treehouse library in autumn"];
+  var p=ideas[Math.floor(Math.random()*ideas.length)];
+  $("prompt").value=p; generate(p);
+};
+$("moreVar").onclick=function(){
+  if(lastPrompt){$("prompt").value=lastPrompt;generate(lastPrompt);}
+};
+function copyTextFallback(t,done){ /* textarea fallback for no-clipboard-API contexts */
+  var ta=document.createElement("textarea");ta.value=t;
+  ta.style.position="fixed";ta.style.opacity="0";
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");}catch(e){}
+  ta.remove();done();
+}
+$("copyP").onclick=function(){
+  var p=$("prompt").value.trim(); if(!p)return;
+  var btn=$("copyP"),old=btn.textContent;
+  var ok=function(){btn.textContent="Copied!";setTimeout(function(){btn.textContent=old;},1500);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(p).then(ok).catch(function(){copyTextFallback(p,ok);});}
+  else copyTextFallback(p,ok);
+};
+$("clearHist").onclick=function(){
+  setHist([]); renderHist();
+  var st=$("stage"); st.innerHTML='<div class="empty" id="stageEmpty">Your creation will appear here.<br>Try: "a dragon flying over a neon city"</div>';
+  $("actions").hidden=true; curUrl=null;
+};
+$("dl").onclick=function(){
+  if(!curUrl)return;
+  var btn=$("dl"),old=btn.textContent; btn.textContent="Preparing…";
+  var done=function(){btn.textContent=old;};
+  fetch(curUrl).then(function(r){if(!r.ok)throw 0;return r.blob();}).then(function(b){
+    var u=URL.createObjectURL(b);
+    var a=document.createElement("a"); a.href=u; a.download="zero-image.jpg";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){URL.revokeObjectURL(u);},4000); done();
+  }).catch(function(){
+    done();
+    window.open(curUrl,"_blank","noopener");
+  });
+};
+</script>
+</body>
+</html>

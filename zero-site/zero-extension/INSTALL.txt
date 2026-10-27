@@ -1,0 +1,27 @@
+Zero Computer — install in 2 minutes (Chrome on your computer)
+
+WHAT IT DOES
+  Lets Zero AI drive YOUR Chrome browser by itself: open pages, click,
+  fill forms, read results, take screenshots. You just watch.
+
+INSTALL
+  1. On your computer, open Chrome and go to: chrome://extensions
+  2. Turn ON "Developer mode" (toggle, top-right).
+  3. Click "Load unpacked" and select the "zero-extension" folder
+     (the one containing manifest.json).
+  4. Click the puzzle-piece icon in Chrome's toolbar, then the pin
+     next to "Zero Computer" so it stays visible.
+  5. Click the "0" icon in the toolbar -> click your pairing key to copy it.
+  6. Go to https://zero.page.gd/zerocode.html -> Settings ->
+     paste the key into "Computer key" -> Save.
+
+USE
+  Keep this Chrome open. In Zero AI, say e.g.:
+    "computer: find the cheapest NYC to London flight on Skyscanner"
+  Zero AI drives the browser itself and reports back with a screenshot.
+  You don't touch anything — just watch.
+
+NOTES
+  - The AI will never touch password fields and never completes purchases.
+  - Your computer must be on with Chrome open for it to work.
+  - To stop it anytime: turn the extension off at chrome://extensions.

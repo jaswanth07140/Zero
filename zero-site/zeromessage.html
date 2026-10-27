@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zero Message</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#3a5fd9;--bg:#f6f4ef;--card:#fff;--ink:#1d1c19;--sub:#8a8880;--them:#e5e2d9;--red:#ff3b30}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--ink:#f6f4ef;--sub:#98989d;--them:#2c2c2e}}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);height:100vh;height:100dvh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 16px 10px;background:var(--card);border-bottom:1px solid rgba(128,128,128,.25);position:sticky;top:0;z-index:5}
+header h1{font-size:18px;font-weight:700}
+header p{font-size:12px;color:var(--sub)}
+header .spacer{flex:1}
+.hbtn{border:0;background:none;color:var(--blue);font-size:15px;cursor:pointer;text-decoration:none;min-width:44px;min-height:34px;display:flex;align-items:center;justify-content:center}
+.hbtn:active{opacity:.5}
+#view-list,#view-thread{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.mycode{margin:12px 16px 0;padding:12px 14px;background:var(--card);border-radius:14px;display:flex;align-items:center;gap:8px;font-size:14px;flex-wrap:wrap}
+.mycode b{font-size:16px;letter-spacing:1px}
+.mycode button{border:1px solid rgba(128,128,128,.4);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px 12px;font-size:13px;cursor:pointer;min-height:34px}
+.searchbar{margin:10px 16px 0;position:relative}
+.searchbar input{width:100%;padding:10px 14px 10px 38px;border:0;border-radius:12px;font-size:16px;background:rgba(128,128,128,.14);color:var(--ink);outline:none}
+.searchbar svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.45}
+.row{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--card);border-bottom:1px solid rgba(128,128,128,.18);cursor:pointer;min-height:64px}
+.row:active{background:rgba(128,128,128,.12)}
+.av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#3a5fd9,#5e5ce6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none}
+.row .nm{font-size:16px;font-weight:600}
+.row .pv{font-size:13px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60vw}
+.row .chev{margin-left:auto;color:var(--sub);font-size:18px;flex:none}
+.unread-n{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:auto;flex:none}
+.sec{padding:18px 16px 6px;font-size:13px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px}
+.abtn{display:block;width:calc(100% - 32px);margin:10px 16px;padding:13px;border:1px dashed rgba(128,128,128,.5);border-radius:12px;background:none;color:var(--blue);font-size:15px;cursor:pointer;min-height:44px}
+#msgs{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:8px;-webkit-overflow-scrolling:touch}
+.day{text-align:center;font-size:11px;color:var(--sub);margin:6px 0;font-weight:600;letter-spacing:.3px}
+.bub{max-width:78%;padding:9px 13px;border-radius:18px;font-size:16px;line-height:1.4;word-wrap:break-word;animation:pop .18s ease-out;position:relative;user-select:none;-webkit-user-select:none}
+@keyframes pop{from{transform:scale(.92);opacity:.4}}
+.me{align-self:flex-end;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
+.them{align-self:flex-start;background:var(--them);color:var(--ink);border-bottom-left-radius:6px}
+.bub.sel{outline:2px solid var(--blue);outline-offset:2px}
+.bub.locked{font-style:italic}
+.st{display:block;font-size:10px;opacity:.65;margin-top:3px}
+.st.err{opacity:1;color:#ffd0d0;text-decoration:underline;cursor:pointer}
+.empty{align-self:center;color:var(--sub);font-size:14px;margin-top:40px;text-align:center;line-height:1.7;padding:0 30px}
+.empty .big{font-size:46px;display:block;margin-bottom:10px}
+form{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid rgba(128,128,128,.25)}
+#inp{flex:1;border:1px solid rgba(128,128,128,.4);border-radius:20px;padding:10px 15px;font-size:16px;background:var(--bg);color:var(--ink);outline:none;min-height:42px}
+#inp:focus{border-color:var(--blue)}
+#inp:disabled{opacity:.5}
+#send{border:0;background:var(--blue);color:#fff;min-width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;flex:none;padding:0 10px}
+#send:active{transform:scale(.92)}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet .box{background:var(--card);border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:480px;max-height:92vh;max-height:92dvh;overflow-y:auto}
+.sheet h3{font-size:17px;margin-bottom:12px}
+.sheet input{width:100%;padding:11px 14px;border:1px solid rgba(128,128,128,.4);border-radius:10px;font-size:16px;margin-bottom:10px;background:var(--bg);color:var(--ink)}
+.sheet .row2{display:flex;gap:10px}
+.sheet .row2 button{flex:1;padding:13px;border-radius:10px;font-size:16px;cursor:pointer;border:0;min-height:44px}
+.sheet .ok{background:var(--blue);color:#fff;font-weight:600}
+.sheet .cancel{background:rgba(128,128,128,.2);color:var(--ink)}
+.sheet .del{display:block;width:100%;margin-top:10px;padding:13px;border-radius:10px;font-size:16px;cursor:pointer;border:0;background:none;color:var(--red);min-height:44px}
+.note{font-size:12px;color:var(--sub);text-align:center;padding:8px 30px 0;line-height:1.5}
+.pw-wrap{position:relative;margin-bottom:10px}
+.pw-wrap input{margin-bottom:0 !important;padding-right:46px !important}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:17px;cursor:pointer;padding:10px;color:var(--sub);min-width:44px;min-height:44px}
+/* toast */
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(16px);background:rgba(28,28,32,.94);color:#fff;padding:11px 20px;border-radius:22px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:70;max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-color-scheme:dark){#toast{background:rgba(240,240,245,.95);color:#1d1c19}}
+/* message context menu */
+#ctx{position:fixed;inset:0;z-index:50;display:none}
+#ctx .bg{position:absolute;inset:0;background:rgba(0,0,0,.35)}
+#ctx .menu{position:absolute;left:16px;right:16px;bottom:calc(20px + env(safe-area-inset-bottom));background:var(--card);border-radius:16px;overflow:hidden;max-width:480px;margin:0 auto;animation:sheetup .22s ease-out}
+#ctx .menu button{display:block;width:100%;padding:15px;border:0;background:none;color:var(--ink);font-size:16px;cursor:pointer;border-bottom:1px solid rgba(128,128,128,.15);min-height:48px}
+#ctx .menu button:last-child{border:0}
+#ctx .menu button.danger{color:var(--red);font-weight:600}
+#ctx .menu button:active{background:rgba(128,128,128,.12)}
+/* in-page confirm modal (replaces native confirm()) */
+#zc{position:fixed;inset:0;z-index:60;display:none}
+#zc .bg{position:absolute;inset:0;background:rgba(0,0,0,.4)}
+#zc .mbox{position:absolute;left:16px;right:16px;top:50%;transform:translateY(-50%);background:var(--card);border-radius:16px;padding:20px;max-width:420px;margin:0 auto;animation:sheetup .2s ease-out}
+#zc .zmsg{font-size:16px;line-height:1.5;margin-bottom:16px}
+#zc .zrow{display:flex;gap:10px}
+#zc .zrow button{flex:1;padding:13px;border-radius:10px;font-size:16px;cursor:pointer;border:0;min-height:44px}
+#zc .zno{background:rgba(128,128,128,.2);color:var(--ink)}
+#zc .zyes{background:var(--red);color:#fff;font-weight:600}
+/* offline indicator dot in the header */
+#netDot{display:none;width:8px;height:8px;border-radius:50%;background:#ff9f0a;margin-left:2px;flex:none}
+
+/* ============ PHONE FRIENDLY ============ */
+@media (max-width:768px){
+  body{font-size:15px}
+  header{padding:10px 14px}
+  #view-list,#view-thread{padding:10px}
+  .bub{max-width:88%;overflow-wrap:break-word;word-break:break-word}
+  input,textarea{font-size:16px !important}
+}
+
+/* ============ PREMIUM POLISH ============ */
+header{background:color-mix(in srgb, var(--card) 82%, transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.mycode{box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid rgba(128,128,128,.18)}
+.row{transition:background .15s}
+@media (hover:hover){.row:hover{background:rgba(128,128,128,.08)}}
+.bub{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.me{box-shadow:0 2px 8px rgba(10,132,255,.25)}
+.av{box-shadow:0 2px 8px rgba(10,132,255,.3)}
+#send{box-shadow:0 3px 10px rgba(10,132,255,.4);transition:transform .12s}
+#send:active{transform:scale(.9)}
+.sheet .box{animation:sheetup .25s ease-out}
+@keyframes sheetup{from{transform:translateY(40px);opacity:.5}}
+.abtn{transition:transform .12s}
+.abtn:active{transform:scale(.97)}
+.hbtn{font-weight:600}
+
+/* ============ ZERO PREMIUM LAYER (2026-10-19) — additive, no layout overrides ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid #3a5fd9;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+input:focus,textarea:focus,select:focus{border-color:#3a5fd9;box-shadow:0 0 0 3px rgba(58,95,217,.12);outline:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ============ ATELIER HARMONY LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid #a8894e;outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#a8894e;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<header>
+  <a class="hbtn" href="index.html" id="backBtn" style="display:none">&#8249; Back</a>
+  <div><h1 id="hTitle">Zero Message</h1><p id="hSub">Your conversations</p></div><span id="netDot" title="Connection issue"></span>
+  <div class="spacer"></div>
+  <button class="hbtn" id="callBtn" style="display:none" title="Voice call" aria-label="Voice call"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>
+  <button class="hbtn" id="editBtn" style="display:none" title="Edit contact" aria-label="Edit contact">✎</button>
+  <button class="hbtn" id="clearBtn" style="display:none">Clear</button>
+</header>
+
+<div id="view-list">
+  <div class="mycode"><span>My code:</span><b id="myCode">…</b><button id="copyCode">Copy</button><button id="shareCode">Share</button></div>
+  <div class="searchbar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg><input id="q" placeholder="Search conversations" autocomplete="off"></div>
+  <div class="sec">Conversations</div>
+  <div id="clist" style="overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
+  <button class="abtn" id="addBtn">+ Add contact</button>
+  <div class="note">Share your code + a secret word — messages are end-to-end encrypted.<br>Only you two can read them. No one else, not even Zero.<br>Chats live on this device only (last 200 messages per chat). The relay keeps only ciphertext and auto-deletes after 7 days.</div>
+</div>
+
+<div id="view-thread" style="display:none">
+  <div id="msgs"></div>
+  <form id="f">
+    <input id="inp" placeholder="Message" autocomplete="off" maxlength="1000" aria-label="Message">
+    <button id="send" type="submit" aria-label="Send">&#8593;</button>
+  </form>
+</div>
+
+<div id="sheet" style="display:none"><div class="sheet"><div class="box">
+  <h3>New contact</h3>
+  <input id="cName" placeholder="Name" maxlength="60" autocomplete="off">
+  <input id="cCode" placeholder="Their Zero code (e.g. ZM-AB12CD34)" maxlength="24" autocapitalize="characters" autocomplete="off" spellcheck="false">
+  <div class="pw-wrap"><input id="cSec" type="password" placeholder="Secret word (both of you use the same)" maxlength="64" autocomplete="new-password"><button type="button" class="pw-eye" id="cSecEye" aria-label="Show secret word">👁</button></div>
+  <input id="cPhone" placeholder="Phone number (optional, for calling)" maxlength="24" inputmode="tel" autocomplete="off">
+  <div class="note" style="padding:0 0 10px">Messages are end-to-end encrypted with this word.<br>No one else — not even Zero — can read them.<br>The word is stored only on this device.</div>
+  <div class="row2"><button class="cancel" id="cCancel" type="button">Cancel</button><button class="ok" id="cSave" type="button">Add</button></div>
+  <button class="del" id="cDel" type="button" style="display:none">Delete contact</button>
+</div></div></div>
+
+<div id="ctx"><div class="bg"></div><div class="menu">
+  <button id="ctxCopy">Copy</button>
+  <button id="ctxDel" class="danger">Delete</button>
+  <button id="ctxCancel">Cancel</button>
+</div></div>
+<div id="zc" role="alertdialog" aria-modal="true" aria-labelledby="zcMsg"><div class="bg"></div><div class="mbox">
+  <div class="zmsg" id="zcMsg"></div>
+  <div class="zrow"><button class="zno" id="zcNo">Cancel</button><button class="zyes" id="zcYes">Delete</button></div>
+</div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+var KEY='zeromessage:v3';
+var API='zero-msg.php';
+function rnd(n){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';var b=new Uint8Array(n);crypto.getRandomValues(b);for(var i=0;i<n;i++)s+=a[b[i]%a.length];return s;}
+function myId(){var id=null;try{id=localStorage.getItem('zeromessage:myid');}catch(e){}
+  if(!id){id='ZM-'+rnd(8);try{localStorage.setItem('zeromessage:myid',id);}catch(e){}}
+  return id;}
+var ME=myId();
+var S={contacts:[],threads:{},self:[],last:0};
+// migrate names from v2 (phone numbers don't carry over)
+try{var old=JSON.parse(localStorage.getItem('zeromessage:v2')||'null');
+  if(old&&old.contacts&&old.contacts.length&&!localStorage.getItem(KEY)){
+    S.contacts=old.contacts.map(function(c){return{id:'c'+Math.random().toString(36).slice(2,9),name:c.name||'Unknown',code:''};});
+  }}catch(e){}
+function trimCaps(){ /* keep last 200 messages per thread / notes */
+  try{
+    Object.keys(S.threads).forEach(function(k){var th=S.threads[k];if(th.length>200)th.splice(0,th.length-200);});
+    if(S.self.length>200)S.self.splice(0,S.self.length-200);
+  }catch(e){}
+}
+try{var raw=JSON.parse(localStorage.getItem(KEY)||'null');if(raw&&raw.contacts)S=raw;}catch(e){}
+trimCaps(); /* enforce 200-cap on load too, not just on save */
+if(S.last)var LAST=S.last;else var LAST=0;
+/* per-contact encryption salt (one PBKDF2 per contact, cached — fast sends on phones) */
+function ensureSalt(c){if(!c.esalt){c.esalt=b64e(crypto.getRandomValues(new Uint8Array(16)));}return c.esalt;}
+S.contacts.forEach(ensureSalt);
+function save(){S.last=LAST;
+  try{
+    trimCaps();
+    localStorage.setItem(KEY,JSON.stringify(S));
+  }catch(e){}
+}
+function uid(){return 'c'+Date.now().toString(36)+Math.floor(Math.random()*1e4);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(t){var el=document.getElementById('toast');el.textContent=t;el.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){el.classList.remove('show');},2200);}
+/* reusable in-page confirm modal (replaces native confirm()) */
+var zcCb=null;
+function zconfirm(msg,onYes){
+  document.getElementById('zcMsg').textContent=msg;
+  zcCb=onYes;
+  document.getElementById('zc').style.display='block';
+}
+function zcClose(){document.getElementById('zc').style.display='none';zcCb=null;}
+document.getElementById('zcYes').onclick=function(){var cb=zcCb;zcClose();if(cb)cb();};
+document.getElementById('zcNo').onclick=zcClose;
+document.querySelector('#zc .bg').onclick=zcClose;
+/* offline indicator: small dot in header + throttled toast */
+var netFailT=0;
+function netOk(){var d=document.getElementById('netDot');if(d)d.style.display='none';}
+function netFail(){
+  var d=document.getElementById('netDot');if(d)d.style.display='inline-block';
+  var now=Date.now();
+  if(now-netFailT>60000){netFailT=now;toast("Couldn't refresh — check connection");}
+}
+/* ---------- end-to-end encryption (AES-GCM, key from shared secret) ----------
+   Server relay sees only ciphertext + metadata; it auto-deletes after 7 days. */
+function b64e(bytes){var s="";for(var i=0;i<bytes.length;i++)s+=String.fromCharCode(bytes[i]);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");}
+function b64d(str){str=String(str).replace(/-/g,"+").replace(/_/g,"/");while(str.length%4)str+="=";var bin=atob(str);var b=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b;}
+function deriveKey(secret,salt){
+  return crypto.subtle.importKey("raw",new TextEncoder().encode(secret),"PBKDF2",false,["deriveKey"]).then(function(base){
+    return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:100000,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+  });
+}
+var keyCache={}; /* (secret|saltB64) -> CryptoKey, memory only */
+function deriveKeyCached(secret,saltB64,salt){
+  var ck=saltB64+'|'+secret;
+  if(keyCache[ck])return Promise.resolve(keyCache[ck]);
+  return deriveKey(secret,salt).then(function(k){keyCache[ck]=k;return k;});
+}
+function encMsg(secret,saltB64,plain){
+  var salt=b64d(saltB64);
+  var iv=crypto.getRandomValues(new Uint8Array(12));
+  return deriveKeyCached(secret,saltB64,salt).then(function(key){
+    return crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key,new TextEncoder().encode(plain));
+  }).then(function(ct){
+    var j=JSON.stringify({iv:b64e(iv),salt:saltB64,ct:b64e(new Uint8Array(ct))});
+    return "ENC1."+b64e(new TextEncoder().encode(j));
+  });
+}
+function decMsg(secret,payload){
+  try{
+    var j=JSON.parse(new TextDecoder().decode(b64d(payload.slice(5))));
+    var iv=b64d(j.iv),salt=b64d(j.salt),ct=b64d(j.ct);
+    return deriveKeyCached(secret,j.salt,salt).then(function(key){
+      return crypto.subtle.decrypt({name:"AES-GCM",iv:iv},key,ct);
+    }).then(function(pt){return new TextDecoder().decode(new Uint8Array(pt));})
+    .catch(function(){return null;});
+  }catch(e){return Promise.resolve(null);}
+}
+function initials(n){return n.trim().split(/\s+/).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase()||'?';}
+function fmt(t){var d=new Date(t),h=d.getHours(),m=('0'+d.getMinutes()).slice(-2),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m+' '+ap;}
+function dayStr(t){return new Date(t).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});}
+function lastMsg(id){var th=id==='self'?S.self:(S.threads[id]||[]);return th.length?th[th.length-1].x:'';}
+function unreadCount(id){var th=S.threads[id]||[],n=0;th.forEach(function(m){if(m.dir==='them'&&!m.seen)n++;});return n;}
+
+var viewList=document.getElementById('view-list'),viewThread=document.getElementById('view-thread');
+var clist=document.getElementById('clist'),msgs=document.getElementById('msgs'),inp=document.getElementById('inp');
+var backBtn=document.getElementById('backBtn'),clearBtn=document.getElementById('clearBtn'),editBtn=document.getElementById('editBtn'),callBtn=document.getElementById('callBtn');
+var hTitle=document.getElementById('hTitle'),hSub=document.getElementById('hSub');
+var cur=null,q='';
+
+/* drafts (this device only) */
+var drafts={};try{drafts=JSON.parse(localStorage.getItem('zeromessage:drafts')||'{}');}catch(e){drafts={};}
+function saveDrafts(){try{var ks=Object.keys(drafts);while(ks.length>20){delete drafts[ks.shift()];}localStorage.setItem('zeromessage:drafts',JSON.stringify(drafts));}catch(e){}}
+inp.addEventListener('input',function(){if(!cur)return;var v=inp.value;if(v)drafts[cur]=v;else delete drafts[cur];saveDrafts();});
+
+document.getElementById('myCode').textContent=ME;
+function copyText(t,msg){
+  var done=function(){toast(msg||'Copied');};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,done);}
+  else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();done();}
+}
+document.getElementById('copyCode').onclick=function(){copyText(ME,'Code copied — send it to anyone you want to message.');};
+document.getElementById('shareCode').onclick=function(){
+  if(navigator.share){navigator.share({title:'My Zero Message code',text:'Message me on Zero: '+ME}).catch(function(){});}
+  else{copyText(ME,'Code copied — send it to anyone you want to message.');}};
+
+function contactById(id){return S.contacts.filter(function(c){return c.id===id;})[0]||null;}
+function contactByCode(code){return S.contacts.filter(function(c){return c.code===code;})[0]||null;}
+
+document.getElementById('q').addEventListener('input',function(){q=this.value;renderList();});
+
+function renderList(){
+  viewList.style.display='flex';viewThread.style.display='none';
+  backBtn.style.display='none';clearBtn.style.display='none';editBtn.style.display='none';callBtn.style.display='none';
+  hTitle.textContent='Zero Message';hSub.textContent='Your conversations';
+  var st=clist.scrollTop; /* keep scroll position across refreshes */
+  var h='';
+  h+='<div class="row" data-id="self"><div class="av">✎</div><div style="min-width:0"><div class="nm">Notes to self</div><div class="pv">'+esc(lastMsg('self')).substring(0,60)+'</div></div><div class="chev">›</div></div>';
+  var ql=q.trim().toLowerCase();
+  var list=S.contacts.filter(function(c){
+    return !ql||c.name.toLowerCase().indexOf(ql)>=0||(c.code||'').toLowerCase().indexOf(ql)>=0;
+  });
+  if(ql&&!list.length){h+='<div class="empty"><span class="big">🔍</span>No matches for “'+esc(q)+'”.<br>Try a different name or code.</div>';}
+  list.forEach(function(c){
+    var n=unreadCount(c.id);
+    h+='<div class="row" data-id="'+c.id+'"><div class="av">'+esc(initials(c.name))+'</div><div style="min-width:0"><div class="nm">'+esc(c.name)+' 🔒</div><div class="pv">'+esc(c.code?lastMsg(c.id).substring(0,60):'Tap ✎ to set secret word')+'</div></div>'+(n?'<div class="unread-n">'+n+'</div>':'<div class="chev">›</div>')+'</div>';
+  });
+  clist.innerHTML=h;
+  var rows=clist.querySelectorAll('.row');
+  for(var i=0;i<rows.length;i++){rows[i].onclick=function(){openThread(this.getAttribute('data-id'));};rows[i].onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openThread(this.getAttribute('data-id'));};};rows[i].tabIndex=0;rows[i].setAttribute('role','button');}
+  clist.scrollTop=st;
+}
+function openThread(id){
+  cur=id;
+  var c=id==='self'?null:contactById(id);
+  viewList.style.display='none';viewThread.style.display='flex';
+  backBtn.style.display='block';
+  hTitle.textContent=c?c.name:'Notes to self';
+  hSub.textContent=c?(c.code||'No code yet'):'Private';
+  clearBtn.style.display='block';
+  editBtn.style.display=c?'block':'none';
+  callBtn.style.display=c?'block':'none';
+  if(c)editBtn.onclick=function(){openEditSheet(c);};
+  callBtn.onclick=function(){location.href='zerocall.html#voice';};
+  inp.placeholder=c?(c.code?'Message '+c.name+'…':'Add their code first'):'Note to self…';
+  inp.disabled=!!(c&&!c.code);
+  inp.value=drafts[cur]||'';
+  renderMsgs();
+  markSeen();
+}
+function threadArr(){return cur==='self'?S.self:(S.threads[cur]=S.threads[cur]||[]);}
+function renderMsgs(){
+  var stick=msgs.scrollHeight-msgs.scrollTop-msgs.clientHeight<100; /* only auto-scroll if user was already near bottom */
+  var th=threadArr();msgs.innerHTML='';
+  if(!th.length){msgs.innerHTML='<div class="empty"><span class="big">💬</span>No messages yet.<br>Say hello!<br><br><span style="font-size:12px">🔒 End-to-end encrypted — only you two can read this.</span></div>';return;}
+  var ld='';
+  th.forEach(function(m,idx){
+    var d=dayStr(m.t);
+    if(d!==ld){ld=d;var de=document.createElement('div');de.className='day';de.textContent=d;msgs.appendChild(de);}
+    var b=document.createElement('div');b.className='bub '+(m.dir==='them'?'them':'me')+(m.locked?' locked':'');b.dataset.i=idx;
+    b.appendChild(document.createTextNode(m.x));
+    var s=document.createElement('span');
+    if(m.dir==='them'){s.className='st';s.textContent=fmt(m.t);}
+    else if(m.st==='err'){s.className='st err';s.textContent='Not sent — tap to retry';
+      (function(mm){s.onclick=function(){retrySend(mm);};})(m);}
+    else{s.className='st';s.textContent=(m.st==='sending'?'Sending… ':'✓ ')+fmt(m.t);}
+    b.appendChild(s);msgs.appendChild(b);
+  });
+  if(stick)msgs.scrollTop=msgs.scrollHeight; /* otherwise keep scrollTop as-is */
+}
+function markSeen(){var th=threadArr();var ch=false;th.forEach(function(m){if(m.dir==='them'&&!m.seen){m.seen=true;ch=true;}});if(ch)save();}
+
+/* message context menu: long-press (touch) or right-click (desktop) */
+var ctxEl=document.getElementById('ctx'),ctxIdx=-1;
+function showCtx(i){ctxIdx=i;ctxEl.style.display='block';}
+function hideCtx(){ctxEl.style.display='none';ctxIdx=-1;var s=msgs.querySelector('.bub.sel');if(s)s.classList.remove('sel');}
+ctxEl.querySelector('.bg').onclick=hideCtx;
+document.getElementById('ctxCancel').onclick=hideCtx;
+document.getElementById('ctxCopy').onclick=function(){var th=threadArr();if(ctxIdx>=0&&th[ctxIdx])copyText(th[ctxIdx].x,'Copied');hideCtx();};
+document.getElementById('ctxDel').onclick=function(){
+  var th=threadArr();
+  if(ctxIdx<0||!th[ctxIdx]){hideCtx();return;}
+  var i=ctxIdx; /* capture before hideCtx resets it */
+  hideCtx();
+  zconfirm('Delete this message?',function(){th.splice(i,1);save();renderMsgs();});
+};
+var lpT=null;
+msgs.addEventListener('pointerdown',function(e){
+  var b=e.target.closest?e.target.closest('.bub'):null;if(!b)return;
+  var sx=e.clientX,sy=e.clientY;clearTimeout(lpT);
+  var moved=false;
+  var mv=function(ev){if(Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy)>14){moved=true;clearTimeout(lpT);msgs.removeEventListener('pointermove',mv);}};
+  msgs.addEventListener('pointermove',mv);
+  lpT=setTimeout(function(){if(!moved){b.classList.add('sel');showCtx(+b.dataset.i);}},550);
+});
+['pointerup','pointercancel','pointerleave'].forEach(function(ev){msgs.addEventListener(ev,function(){clearTimeout(lpT);});});
+msgs.addEventListener('contextmenu',function(e){var b=e.target.closest?e.target.closest('.bub'):null;if(!b)return;e.preventDefault();b.classList.add('sel');showCtx(+b.dataset.i);});
+
+function apiSend(to,text,cb){
+  var fd=new FormData();fd.append('action','send');fd.append('from',ME);fd.append('to',to);fd.append('text',text);
+  fetch(API,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){cb(d&&d.ok);}).catch(function(){cb(false);});
+}
+function doSend(text){
+  var c=contactById(cur);
+  if(!c||!c.code||!c.sec){toast('Set the secret word for this contact first.');return;}
+  var m={x:text,t:Date.now(),dir:'me',st:'sending'};
+  threadArr().push(m);save();renderMsgs();
+  delete drafts[cur];saveDrafts();
+  encMsg(c.sec,ensureSalt(c),text).then(function(wire){
+    apiSend(c.code,wire,function(ok){
+      m.st=ok?'sent':'err';save();
+      if(cur)renderMsgs();
+    });
+  }).catch(function(){
+    m.st='err';save();if(cur)renderMsgs();
+  });
+}
+function retrySend(m){
+  var c=contactById(cur);if(!c||!c.code||!c.sec){toast('Set the secret word for this contact first.');return;}
+  m.st='sending';save();renderMsgs();
+  encMsg(c.sec,ensureSalt(c),m.x).then(function(wire){
+    apiSend(c.code,wire,function(ok){m.st=ok?'sent':'err';save();if(cur)renderMsgs();});
+  }).catch(function(){m.st='err';save();if(cur)renderMsgs();});
+}
+document.getElementById('f').addEventListener('submit',function(e){
+  e.preventDefault();
+  var x=inp.value.trim();if(!x||!cur)return;
+  if(cur==='self'){threadArr().push({x:x,t:Date.now(),dir:'me',st:'sent'});save();inp.value='';delete drafts[cur];saveDrafts();renderMsgs();return;}
+  inp.value='';doSend(x);
+});
+backBtn.onclick=function(e){if(e&&e.preventDefault)e.preventDefault();markSeen();cur=null;renderList();poll();};
+clearBtn.onclick=function(){
+  if(!cur)return;
+  zconfirm('Delete this conversation?',function(){
+    if(cur==='self')S.self=[];else S.threads[cur]=[];
+    delete drafts[cur];saveDrafts();
+    save();renderMsgs();
+  });
+};
+// add / edit contact sheet
+var sheet=document.getElementById('sheet'),cName=document.getElementById('cName'),cCode=document.getElementById('cCode');
+function closeSheet(){sheet.style.display='none';cCode.disabled=false;editTarget=null;document.getElementById('cDel').style.display='none';}
+document.getElementById('addBtn').onclick=function(){cName.value='';cCode.value='';document.getElementById('cSec').value='';document.getElementById('cPhone').value='';sheet.querySelector('h3').textContent='New contact';document.getElementById('cDel').style.display='none';sheet.style.display='block';cName.focus();};
+var editTarget=null;
+function openEditSheet(c){
+  editTarget=c;
+  cName.value=c.name;cCode.value=c.code||'';cCode.disabled=true;
+  document.getElementById('cSec').value=c.sec||'';
+  document.getElementById('cSec').type='password';document.getElementById('cSecEye').textContent='👁';
+  document.getElementById('cPhone').value=c.phone||'';
+  sheet.querySelector('h3').textContent='Edit contact';
+  document.getElementById('cDel').style.display='block';
+  sheet.style.display='block';cName.focus();
+}
+document.getElementById('cCancel').onclick=closeSheet;
+document.getElementById('cDel').onclick=function(){
+  if(!editTarget)return;
+  var t=editTarget; /* capture before closeSheet clears it */
+  zconfirm('Delete '+t.name+' and this conversation?',function(){
+    S.contacts=S.contacts.filter(function(c){return c.id!==t.id;});
+    delete S.threads[t.id];
+    delete drafts[t.id];saveDrafts();
+    keyCache={}; /* secret changed/removed — drop cached keys */
+    save();closeSheet();cur=null;renderList();
+  });
+};
+document.getElementById('cSecEye').onclick=function(){
+  var i=document.getElementById('cSec');
+  var show=i.type==='password';
+  i.type=show?'text':'password';this.textContent=show?'🙈':'👁';
+};
+document.getElementById('sheet').addEventListener('click',function(e){
+  if(e.target===this||e.target.classList.contains('sheet'))closeSheet();
+});
+document.getElementById('cSave').onclick=function(){
+  var n=cName.value.trim();if(!n){cName.focus();return;}
+  var cd=cCode.value.trim().toUpperCase().replace(/[^A-Z0-9-]/g,'');
+  if(!/^ZM-[A-Z0-9]{8}$/.test(cd)){toast('Enter their Zero code — it looks like ZM-AB12CD34.');cCode.focus();return;}
+  if(cd===ME){toast("That's your own code!");return;}
+  var sec=document.getElementById('cSec').value.trim();
+  if(!sec){toast('Set a secret word — both of you must use the same one.');document.getElementById('cSec').focus();return;}
+  var ph=document.getElementById('cPhone').value.replace(/[^0-9+]/g,'').slice(0,24);
+  var ex=contactByCode(cd);
+  if(ex&&(!editTarget||editTarget.id!==ex.id)){ex.name=n;ex.sec=sec;ex.phone=ph;ensureSalt(ex);keyCache={};save();closeSheet();renderList();openThread(ex.id);return;}
+  if(editTarget){
+    editTarget.name=n;editTarget.sec=sec;editTarget.phone=ph;ensureSalt(editTarget);
+    keyCache={};editTarget=null;
+    save();closeSheet();renderList();if(cur)openThread(cur);return;
+  }
+  var c={id:uid(),name:n,code:cd,sec:sec,phone:ph};
+  ensureSalt(c);
+  S.contacts.push(c);save();closeSheet();renderList();openThread(c.id);
+};
+// incoming
+var polling=false;
+function poll(){
+  if(polling)return;polling=true;
+  fetch(API+'?action=fetch&user='+encodeURIComponent(ME)+'&since='+LAST)
+    .then(function(r){return r.json();}).then(function(d){
+      polling=false;
+      netOk(); /* refresh reached the server — clear offline indicator */
+      if(!d||!d.ok||!d.messages)return;
+      var pend=[];
+      d.messages.forEach(function(m){
+        if(m.t>LAST)LAST=m.t;
+        var c=contactByCode(m.from);
+        if(!c){c={id:uid(),name:m.from,code:m.from,sec:''};ensureSalt(c);S.contacts.push(c);}
+        var th=S.threads[c.id]=S.threads[c.id]||[];
+        if(th.some(function(x){return x.mid===m.id;}))return;
+        pend.push({m:m,c:c,th:th});
+      });
+      if(!pend.length){save();renderListDots();return;}
+      var done=0;
+      pend.forEach(function(p){
+        var finish=function(txt,locked){
+          p.th.push({x:txt,t:p.m.t*1000,dir:'them',seen:(cur===p.c.id),mid:p.m.id,locked:!!locked});
+          if(++done===pend.length){save();if(cur&&cur!=='self')renderMsgs();renderListDots();}
+        };
+        if(p.m.text.indexOf('ENC1.')===0&&p.c.sec){
+          decMsg(p.c.sec,p.m.text).then(function(pt){
+            if(pt===null)finish('🔒 Couldn’t decrypt — wrong secret word?',true);
+            else finish(pt,false);
+          });
+        }else if(p.m.text.indexOf('ENC1.')===0){
+          finish('🔒 Encrypted message — tap ✎ above to set your secret word.',true);
+        }else{finish(p.m.text,false);}
+      });
+    }).catch(function(){polling=false;netFail();});
+}
+function renderListDots(){
+  if(viewList.style.display==='none')return;
+  renderList();
+}
+setInterval(poll,5000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)poll();});
+/* Escape: close confirm → close menu → close sheet → back to list */
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Escape')return;
+  if(document.getElementById('zc').style.display==='block'){zcClose();return;}
+  if(ctxEl.style.display==='block'){hideCtx();return;}
+  if(sheet.style.display==='block'){closeSheet();return;}
+  if(viewThread.style.display!=='none'){backBtn.onclick(e);}
+});
+renderList();
+</script>
+</body>
+</html>

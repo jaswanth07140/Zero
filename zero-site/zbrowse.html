@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero Browser</title>
+<meta name="theme-color" content="#1a73e8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--acc:#1a73e8;--ink:#1a1a1a;--mut:#5f6368;--line:#dadce0;--bg:#f8f9fa}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.wrap{width:100%;max-width:560px;text-align:center}
+.logo{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#4a90f5,#1a73e8);color:#fff;font-size:38px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 20px rgba(26,115,232,.35)}
+h1{font-size:25px;letter-spacing:-.02em;margin-bottom:6px}
+p.sub{color:var(--mut);font-size:15px;margin-bottom:20px}
+form{display:flex;gap:8px;margin-bottom:18px}
+input{flex:1;min-width:0;padding:13px 16px;border:1px solid var(--line);border-radius:14px;font-size:16px;outline:none;font-family:inherit;background:#fff}
+input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(26,115,232,.15)}
+button.go{padding:13px 24px;border:0;border-radius:14px;background:var(--acc);color:#fff;font-size:16px;font-weight:700;cursor:pointer;min-height:50px;white-space:nowrap}
+button.go:hover{background:#1765cc}
+.sec{margin-bottom:16px}
+.sec h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:10px;font-weight:700}
+.quick{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.quick button{padding:10px 16px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px;cursor:pointer;color:var(--ink);min-height:38px;font-family:inherit}
+.quick button:hover{background:#f1f3f4;border-color:#c6c9ce}
+.recents{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:9px 8px 9px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;min-height:36px}
+.chip .u{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.chip .rx{border:0;background:transparent;color:var(--mut);font-size:15px;cursor:pointer;padding:4px 8px;border-radius:50%;min-width:32px;min-height:32px}
+.clearlink{border:0;background:none;color:var(--acc);font-size:13px;cursor:pointer;margin-top:8px;padding:8px;font-family:inherit;font-weight:600}
+details.limits{text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:20px;font-size:14px}
+details.limits summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none;display:flex;align-items:center;gap:8px;min-height:36px}
+details.limits summary::-webkit-details-marker{display:none}
+details.limits ul{margin:10px 0 2px;padding-left:20px;color:var(--mut);line-height:1.65}
+details.limits li{margin-bottom:6px}
+details.limits b{color:var(--ink)}
+.tip{margin-top:16px;font-size:12px;color:#9aa0a6;line-height:1.6}
+/* ============ ZERO PREMIUM LAYER (2026-10-19) ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">0</div>
+  <h1>Zero Browser</h1>
+  <p class="sub">Type a URL to browse it right here in Zero.</p>
+  <form id="f" role="search">
+    <input id="u" type="text" inputmode="url" placeholder="Enter URL or search…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="URL or search">
+    <button class="go" type="submit">Go</button>
+  </form>
+
+  <div class="sec" id="recentSec" hidden>
+    <h2>Recent</h2>
+    <div class="recents" id="recents"></div>
+    <button class="clearlink" id="clearRecent">Clear recents</button>
+  </div>
+
+  <div class="sec">
+    <h2>Quick links</h2>
+    <div class="quick">
+      <button id="gBtn">Search Google</button>
+      <button data-u="https://en.wikipedia.org">Wikipedia</button>
+      <button data-u="https://www.youtube.com">YouTube</button>
+      <button data-u="https://www.skyscanner.com">Skyscanner</button>
+      <button data-u="https://www.kayak.com">Kayak</button>
+      <button data-u="https://www.expedia.com">Expedia</button>
+    </div>
+  </div>
+
+  <details class="limits">
+    <summary>ⓘ&nbsp;What Zero can and can't open here</summary>
+    <ul>
+      <li><b>Works here:</b> most articles, docs, wikis, stores, and search results open right inside Zero.</li>
+      <li><b>Opens in a new tab instead:</b> sites that block embedding (Google, YouTube, many banks and logins — they send an <i>X-Frame-Options</i> header). Zero detects this and hands you a real tab.</li>
+      <li><b>Won't play here:</b> DRM-protected video (Netflix, Hulu, Disney+) needs the real app or browser — no embedded viewer can play it.</li>
+      <li><b>Broken-looking page?</b> Use <b>Reader view</b> or <b>Open in new tab</b> — you'll always get a way through, never a dead page.</li>
+    </ul>
+  </details>
+  <p class="tip">Recents stay in this browser only — nothing leaves your device.</p>
+</div>
+<script>
+(function(){
+"use strict";
+var RKEY="zb_recent";
+function getR(){try{return JSON.parse(localStorage.getItem(RKEY)||"[]")}catch(e){return[]}}
+function setR(r){try{localStorage.setItem(RKEY,JSON.stringify(r.slice(0,8)))}catch(e){}}
+function shortHost(u){
+  try{return new URL(u).hostname.replace(/^www\./,"")}catch(e){return u}
+}
+function renderRecent(){
+  var r=getR().slice(0,8),sec=document.getElementById("recentSec"),box=document.getElementById("recents");
+  box.innerHTML="";
+  sec.hidden=!r.length;
+  r.forEach(function(item){
+    var c=document.createElement("button");
+    c.className="chip";
+    var label=document.createElement("span");label.className="u";label.textContent=shortHost(item.u);
+    var x=document.createElement("span");x.className="rx";x.textContent="×";x.setAttribute("aria-label","Remove");
+    x.setAttribute("role","button");x.tabIndex=0;
+    function rm(ev){ev.stopPropagation();setR(getR().filter(function(o){return o.u!==item.u}));renderRecent()}
+    x.addEventListener("click",rm);
+    x.addEventListener("keydown",function(ev){if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();rm(ev)}});
+    c.appendChild(label);c.appendChild(x);
+    c.addEventListener("click",function(){zGo(item.u)});
+    box.appendChild(c);
+  });
+}
+document.getElementById("clearRecent").addEventListener("click",function(){setR([]);renderRecent()});
+function remember(u){
+  var r=getR().filter(function(o){return o.u!==u});
+  r.unshift({u:u,t:Date.now()});
+  setR(r);renderRecent();
+}
+function zGo(u){
+  remember(u);
+  try{
+    var p=window.parent;
+    if(p&&p!==window&&typeof p.navigateBrowse==="function"){
+      var inp=p.document.getElementById("browseUrl");
+      if(inp)inp.value=u;
+      p.navigateBrowse();return;
+    }
+    var fr=p.document.getElementById("browseFrame");
+    if(fr){fr.src=u;return;}
+  }catch(e){}
+  window.location.href=u;
+}
+document.getElementById("f").addEventListener("submit",function(e){
+  e.preventDefault();
+  var v=document.getElementById("u").value.trim();
+  if(!v)return;
+  var u;
+  if(/^https?:\/\//i.test(v))u=v;
+  else if(v.indexOf(" ")===-1&&v.indexOf(".")!==-1)u="https://"+v;
+  else u="https://www.bing.com/search?q="+encodeURIComponent(v);
+  zGo(u);
+});
+document.getElementById("gBtn").addEventListener("click",function(){
+  window.open("https://www.google.com","_blank","noopener");
+});
+var qs=document.querySelectorAll('.quick button[data-u]');
+for(var i=0;i<qs.length;i++){
+  (function(b){b.addEventListener("click",function(){zGo(b.getAttribute("data-u"))})})(qs[i]);
+}
+renderRecent();
+})();
+</script>
+</body>
+</html>

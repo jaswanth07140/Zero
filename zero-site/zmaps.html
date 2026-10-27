@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZMaps</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23007AFF'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold'>0</text></svg>">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Arial,sans-serif; }
+  #map { position:absolute; inset:0; z-index:1; }
+  #map .leaflet-top.leaflet-left { top:76px; }
+  /* Maps-unavailable fallback card (shown when the Leaflet CDN fails) */
+  #mapDown { position:absolute; inset:0; z-index:999; display:none; align-items:center; justify-content:center; background:#eef0f4; padding:24px; }
+  #mapDown .card { background:#fbfaf7; border-radius:20px; padding:28px 24px; max-width:360px; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,.15); }
+  #mapDown h2 { font-size:20px; margin:10px 0 8px; }
+  #mapDown p { font-size:14px; color:#6b6a63; line-height:1.5; margin-bottom:16px; }
+  /* Top search bar */
+  #topbar { position:absolute; top:14px; left:50%; transform:translateX(-50%); z-index:1001; width:min(560px,calc(100% - 28px)); }
+  #searchbox { display:flex; align-items:center; gap:8px; background:rgba(251,250,247,.94); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:28px; padding:8px 8px 8px 18px; box-shadow:0 8px 30px rgba(0,0,0,.18); border:1px solid rgba(0,0,0,.06); }
+  #searchbox input { flex:1; border:0; outline:0; font-size:16px; background:transparent; color:#1d1c19; min-width:0; }
+  #searchbox input::placeholder { color:#8a8880; }
+  .sbtn { border:0; cursor:pointer; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:18px; background:#f6f4ef; color:#1d1c19; flex-shrink:0; }
+  .sbtn.primary { background:#3a5fd9; color:#fff; }
+  .sbtn:active { transform:scale(.94); }
+  #suggest { margin-top:8px; background:rgba(251,250,247,.96); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:18px; box-shadow:0 8px 30px rgba(0,0,0,.18); overflow:hidden; display:none; max-height:320px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .sug { padding:12px 18px; font-size:15px; cursor:pointer; border-bottom:1px solid #f0f0f0; display:flex; gap:10px; align-items:center; }
+  .sug:last-child { border-bottom:0; }
+  .sug:hover { background:#f6f4ef; }
+  .sug.hint { cursor:default; color:#8a8880; }
+  .sug.hint:hover { background:none; }
+  .sug .pin { font-size:16px; }
+  .sug small { display:block; color:#8a8880; font-size:12px; margin-top:2px; }
+  .slabel { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:#8a8880; padding:10px 18px 2px; }
+  /* Brand */
+  #brand { position:absolute; top:16px; left:16px; z-index:1000; display:flex; align-items:center; gap:10px; background:rgba(251,250,247,.94); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:8px 16px 8px 8px; border-radius:24px; box-shadow:0 8px 30px rgba(0,0,0,.14); font-weight:700; font-size:17px; }
+  #brand .logo { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#3a5fd9,#00C6FF); color:#fff; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800; flex-shrink:0; }
+  /* Basemap segmented pill (replaces stock layers control) */
+  #basemap { position:absolute; top:14px; right:16px; z-index:1000; display:flex; background:rgba(251,250,247,.94); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:14px; padding:3px; box-shadow:0 8px 24px rgba(0,0,0,.16); border:1px solid rgba(0,0,0,.06); }
+  #basemap button { border:0; background:transparent; padding:8px 14px; font-size:13px; font-weight:600; border-radius:11px; cursor:pointer; color:#3a3a3c; }
+  #basemap button.on { background:#3a5fd9; color:#fff; box-shadow:0 2px 8px rgba(58,95,217,.4); }
+  /* Side panel (desktop results list) */
+  #panel { position:absolute; top:0; left:0; bottom:0; width:min(360px,88vw); z-index:1001; background:rgba(251,250,247,.97); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); box-shadow:8px 0 30px rgba(0,0,0,.15); transform:translateX(-105%); transition:transform .3s cubic-bezier(.32,.72,.35,1); display:flex; flex-direction:column; }
+  #panel.open { transform:translateX(0); }
+  #panelHead { padding:16px 16px 10px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:10px; }
+  #panelHead h2 { font-size:18px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #panelX { border:0; background:#f6f4ef; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; flex-shrink:0; }
+  #panelBody { flex:1; overflow-y:auto; padding:12px 16px 24px; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  .place-card { padding:14px; border-radius:16px; background:#f7f7f9; margin-bottom:10px; cursor:pointer; border:1px solid transparent; }
+  .place-card:hover { border-color:#3a5fd9; }
+  .place-card .nm { font-weight:600; font-size:15px; }
+  .place-card .ad { color:#6b6a63; font-size:13px; margin-top:4px; }
+  .place-card .go { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .numchip { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; border-radius:11px; background:#3a5fd9; color:#fff; font-size:12px; font-weight:700; padding:0 6px; flex-shrink:0; }
+  .pill { border:0; border-radius:20px; padding:9px 16px; font-size:14px; font-weight:600; cursor:pointer; }
+  .pill.blue { background:#3a5fd9; color:#fff; }
+  .pill.gray { background:#e9e9ee; color:#1d1c19; }
+  /* Directions form */
+  .dir-wrap { position:relative; }
+  .dir-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .dir-row .dot { width:12px; height:12px; border-radius:50%; flex-shrink:0; }
+  .dir-row input { flex:1; border:1px solid #e5e2d9; border-radius:14px; padding:11px 14px; font-size:16px; outline:none; min-width:0; }
+  .dir-row input:focus { border-color:#3a5fd9; }
+  .dir-wrap .dir-row input { padding-right:54px; }
+  #swapBtn { position:absolute; right:8px; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; border:1px solid #e5e2d9; background:#fbfaf7; color:#3a5fd9; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:2; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  #swapBtn:active { transform:translateY(-50%) scale(.92); }
+  .avoid-row { display:flex; gap:8px; margin:2px 0 4px; flex-wrap:wrap; }
+  .avoid { border:1px solid #e5e2d9; background:#f7f7f9; border-radius:18px; padding:8px 13px; font-size:13px; font-weight:600; color:#3a3a3c; cursor:pointer; }
+  .avoid.on { background:#e9ecf8; border-color:#3a5fd9; color:#3a5fd9; }
+  .avoid.nosup { opacity:.45; }
+  .avoid-note { font-size:12px; color:#8a8880; margin:0 0 10px; }
+  #routeSummary { background:#e9ecf8; border-radius:16px; padding:14px; margin:12px 0; font-size:14px; }
+  #routeSummary b { font-size:17px; }
+  #routeSummary .honest { color:#6b6a63; font-size:12px; margin-top:6px; display:block; }
+  #altHint { font-size:12px; color:#8a8880; margin:8px 2px 0; }
+  .step { display:flex; gap:12px; padding:11px 4px; border-bottom:1px solid #f0f0f0; font-size:14px; }
+  .step .ic { flex-shrink:0; width:26px; height:26px; display:flex; align-items:center; justify-content:center; color:#3a5fd9; background:#e9ecf8; border-radius:8px; }
+  .step .dist { color:#8a8880; font-size:12px; margin-top:2px; }
+  /* Bottom sheet */
+  #sheet { position:absolute; left:0; right:0; bottom:0; z-index:1002; background:rgba(251,250,247,.98); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:20px 20px 0 0; box-shadow:0 -10px 40px rgba(0,0,0,.25); transform:translateY(105%); transition:transform .34s cubic-bezier(.32,.72,.35,1); max-height:74vh; display:flex; flex-direction:column; }
+  #sheet.open { transform:translateY(0); }
+  #sheet.dragging { transition:none; }
+  #sheetHandle { position:absolute; top:7px; left:50%; transform:translateX(-50%); width:40px; height:5px; border-radius:3px; background:#d1d1d6; }
+  #sheetHead { padding:20px 16px 10px; border-bottom:1px solid #eee; display:flex; align-items:center; gap:10px; touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; }
+  #sheetHead h2 { font-size:17px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #sheetX { border:0; background:#f6f4ef; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; flex-shrink:0; }
+  #sheetBody { flex:1; overflow-y:auto; padding:12px 16px 28px; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  @media (min-width:601px) {
+    #sheet{transform:translateY(calc(105% + 30px));}
+    #sheet { left:auto; right:24px; bottom:24px; width:384px; border-radius:20px; max-height:72vh; }
+  }
+  /* Custom teardrop pins */
+  .zpin-wrap { background:none !important; border:none !important; }
+  .zpin { width:30px; height:30px; background:#3a5fd9; border:3px solid #fff; border-radius:50% 50% 50% 5px; transform:rotate(-45deg); box-shadow:0 4px 12px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
+  .zpin span { transform:rotate(45deg); color:#fff; font-size:12px; font-weight:800; line-height:1; }
+  .zpin.green { background:#34C759; }
+  .zpin.red { background:#FF3B30; }
+  .zpin.sel { animation:zmPulse 1.3s ease-in-out infinite; }
+  /* Floating buttons */
+  #locBtn { position:absolute; right:16px; bottom:24px; z-index:1000; width:52px; height:52px; border-radius:50%; border:0; background:#fbfaf7; box-shadow:0 6px 20px rgba(0,0,0,.2); font-size:22px; cursor:pointer; }
+  #locBtn:active { transform:scale(.93); }
+  #dirBtn { position:absolute; right:16px; bottom:88px; z-index:1000; width:52px; height:52px; border-radius:50%; border:0; background:#3a5fd9; color:#fff; box-shadow:0 6px 20px rgba(58,95,217,.4); font-size:22px; cursor:pointer; }
+  #dirBtn:active { transform:scale(.93); }
+  #homeBtn { position:absolute; left:16px; bottom:24px; z-index:1000; border:0; background:rgba(251,250,247,.95); box-shadow:0 6px 20px rgba(0,0,0,.16); border-radius:24px; padding:12px 18px; font-size:15px; font-weight:600; cursor:pointer; color:#3a5fd9; display:flex; align-items:center; gap:7px; }
+  .toast { position:absolute; left:50%; bottom:96px; transform:translateX(-50%) translateY(20px); background:rgba(20,20,22,.92); color:#fff; padding:12px 20px; border-radius:24px; font-size:14px; z-index:2000; opacity:0; transition:all .3s; pointer-events:none; white-space:nowrap; max-width:92vw; overflow:hidden; text-overflow:ellipsis; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .loading { text-align:center; padding:24px; color:#8a8880; }
+  #mapLoader{position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:#eef0f2;transition:opacity .4s;pointer-events:none}
+  #mapLoader.hide{opacity:0}
+  .spinner { width:28px; height:28px; border:3px solid #e5e2d9; border-top-color:#3a5fd9; border-radius:50%; margin:0 auto 10px; animation:spin 0.8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (max-width:600px){
+    #brand { width:44px; height:44px; padding:0; border-radius:50%; justify-content:center; gap:0; }
+    #brand .bname { display:none; }
+    #topbar { left:68px; right:14px; transform:none; width:auto; }
+  }
+  @media (max-width:900px){
+    #basemap { top:78px; }
+  }
+  /* ============ ZMAPS PREMIUM LAYER (2026-10-19) ============ */
+  @keyframes zmIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes zmPulse{0%,100%{transform:scale(1) rotate(-45deg)}50%{transform:scale(1.12) rotate(-45deg)}}
+  #topbar{animation:zmIn .4s cubic-bezier(0.32,0.72,0,1)}
+  #brand{animation:zmIn .4s cubic-bezier(0.32,0.72,0,1) .05s both}
+  .sbtn{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s}
+  .sbtn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(58,95,217,.3)}
+  .sbtn:active{transform:scale(.92)}
+  .sbtn svg{display:block}
+  .sug{animation:zmIn .25s ease;transition:background .15s}
+  .sug .pin{display:inline-flex;align-items:center;color:#3a5fd9;flex-shrink:0}
+  .sug .pin svg{display:block}
+  .place-card{animation:zmIn .35s cubic-bezier(0.32,0.72,0,1);box-shadow:0 12px 36px rgba(0,0,0,.2)}
+  .nm{display:flex;align-items:center;gap:8px}
+  .nm svg{flex-shrink:0;color:#3a5fd9}
+  #dirBtn,#locBtn{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s}
+  #dirBtn:hover,#locBtn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.2)}
+  #locBtn svg{display:block}
+  #dirBtn:active,#locBtn:active{transform:scale(.92)}
+  #dirBtn svg{display:block}
+  .leaflet-popup-content-wrapper{border-radius:14px !important;box-shadow:0 10px 30px rgba(0,0,0,.2) !important}
+  ::-webkit-scrollbar{width:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+  :focus-visible{outline:2px solid #3a5fd9;outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ============ ATELIER HARMONY LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid #a8894e;outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#a8894e;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div id="map"></div><div id="mapLoader"><div class="spinner"></div></div>
+<div id="mapDown"><div class="card">
+  <div style="display:flex;justify-content:center;color:#8e8e93"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></div>
+  <h2>Maps unavailable</h2>
+  <p>The map library couldn't load (check your connection). Search results and directions still work as lists below — pins and the map view need the library.</p>
+  <button class="pill blue" onclick="location.reload()">Retry</button>
+</div></div>
+
+<div id="brand"><div class="logo">0</div><span class="bname">ZMaps</span></div>
+
+<div id="topbar">
+  <div id="searchbox">
+    <input id="q" type="text" placeholder="Search places..." autocomplete="off" enterkeyhint="search">
+    <button class="sbtn" id="clearBtn" title="Clear" style="display:none">✕</button>
+    <button class="sbtn primary" id="searchBtn" title="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+  </div>
+  <div id="suggest"></div>
+</div>
+
+<div id="basemap"><button class="on" data-bm="streets">Streets</button><button data-bm="sat">Satellite</button></div>
+
+<div id="panel">
+  <div id="panelHead"><h2 id="panelTitle">Results</h2><button id="panelX">✕</button></div>
+  <div id="panelBody"></div>
+</div>
+
+<div id="sheet">
+  <div id="sheetHandle"></div>
+  <div id="sheetHead"><h2 id="sheetTitle">Details</h2><button id="sheetX">✕</button></div>
+  <div id="sheetBody"></div>
+</div>
+
+<button id="dirBtn" title="Directions"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill="currentColor" stroke="none"/></svg></button>
+<button id="locBtn" title="My location"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></button>
+<button id="homeBtn" onclick="location.href='index.html'"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Zero</span></button>
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>window.L||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"><\/script>')</script>
+<script>
+// ---------- Icons ----------
+var ZM_SVG_PIN='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+function zmSvg(inner){ return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>'; }
+// Category icons (12 types + pin fallback), same stroke style
+var ZM_CAT = {
+  pin: ZM_SVG_PIN,
+  restaurant: zmSvg('<path d="M4 18h16"/><path d="M5 18a7 7 0 0 1 14 0"/><line x1="12" y1="11" x2="12" y2="9"/><circle cx="12" cy="7.5" r="1.2"/>'),
+  cafe: zmSvg('<path d="M4 10h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h2a2.5 2.5 0 0 1 0 5h-2"/><line x1="8" y1="3" x2="8" y2="5"/><line x1="12" y1="3" x2="12" y2="5"/>'),
+  hotel: zmSvg('<path d="M3 18v-7"/><path d="M3 14h18v4"/><path d="M21 14v-2a3 3 0 0 0-3-3h-8v5"/><circle cx="7.5" cy="10.5" r="1.4"/>'),
+  hospital: zmSvg('<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>'),
+  school: zmSvg('<path d="M4 19V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h13"/>'),
+  fuel: zmSvg('<path d="M5 21V6a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15"/><line x1="4" y1="21" x2="20" y2="21"/><path d="M15 9h2a2 2 0 0 1 2 2v6"/><rect x="7" y="8" width="4" height="5"/>'),
+  park: zmSvg('<path d="M12 3l5 7h-3l4 6H6l4-6H7z"/><line x1="12" y1="16" x2="12" y2="21"/>'),
+  shop: zmSvg('<path d="M6 8h12l1 12H5z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>'),
+  transit: zmSvg('<rect x="5" y="3" width="14" height="13" rx="3"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="9" cy="13.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13.5" r="1" fill="currentColor" stroke="none"/><path d="M7 16l-2 5M17 16l2 5"/>'),
+  bank: zmSvg('<line x1="12" y1="3" x2="12" y2="21"/><path d="M16.5 7.5h-6a2.8 2.8 0 0 0 0 5.6h5a2.8 2.8 0 0 1 0 5.6H7.5"/>'),
+  fun: zmSvg('<path d="M12 3l2.7 5.6 6.1.8-4.5 4.2 1.1 6-5.4-3-5.4 3 1.1-6L3.2 9.4l6.1-.8z"/>')
+};
+var ZM_SVG_CLOCK=zmSvg('<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/>');
+var ZM_SVG_LINK=zmSvg('<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>');
+var ZM_SVG_SWAP='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>';
+// Maneuver icons
+var ZM_ARR='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+function zmRot(svg,deg){ return svg.replace("<svg ", "<svg style=\"transform:rotate("+deg+"deg)\" "); }
+var ZM_SVG_NEW='<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"/></svg>';
+var ZM_SVG_FLAG='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>';
+var ZM_SVG_FLAGCHK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5" fill="currentColor" stroke="none" opacity=".85"/></svg>';
+var ZM_SVG_SHUFFLE='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>';
+var ZM_SVG_ROAD='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19L10 5"/><path d="M19 19L14 5"/><line x1="12" y1="8" x2="12" y2="11"/><line x1="12" y1="14" x2="12" y2="17"/></svg>';
+var ZM_SVG_ROTATE='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>';
+var ZM_SVG_UTURN='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>';
+var ZM_SVG_NOENTRY='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+// Human phrasing for raw OSRM maneuver types (e.g. "new name" -> "Continue")
+var ZM_MAN = {
+  'new name':'Continue', 'turn':'Turn', 'depart':'Start', 'arrive':'Arrive',
+  'merge':'Merge', 'fork':'Keep', 'on ramp':'Take the on ramp', 'off ramp':'Take the off ramp',
+  'end of road':'Turn', 'roundabout':'At the roundabout', 'rotary':'At the rotary',
+  'exit roundabout':'Take the exit', 'exit rotary':'Take the exit',
+  'continue':'Continue', 'notification':'Continue'
+};
+function zmInstr(man, name){
+  var t = String((man && man.type) || '').trim();
+  var mod = String((man && man.modifier) || '').trim();
+  var base = ZM_MAN[t] || (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Continue');
+  if(mod && /^(turn|fork|continue|merge|notification|end of road)$/.test(t)) base += ' ' + mod;
+  if(name){
+    if(t === 'arrive') return base + ' at ' + name;
+    return base + ' onto ' + name;
+  }
+  return base;
+}
+
+// ---------- Loader safety net: registered FIRST, so the spinner can never stick even if init throws ----------
+setTimeout(function(){ var ml=document.getElementById('mapLoader'); if(ml) ml.classList.add('hide'); }, 9000);
+// ---------- Leaflet availability: a CDN failure must degrade honestly, never kill the app ----------
+// (cdnjs document.write fallback above covers unpkg failing; this covers BOTH failing)
+var LEAFLET_OK = (typeof L !== 'undefined');
+function showMapDown(){
+  var ml = document.getElementById('mapLoader');
+  if(ml) ml.classList.add('hide');
+  var d = document.getElementById('mapDown');
+  if(d) d.style.display = 'flex';
+}
+if(!LEAFLET_OK) showMapDown();
+
+// ---------- Map setup ----------
+var map = null;
+if(LEAFLET_OK){
+  try{
+    map = L.map('map', { zoomControl:false }).setView([40.7128,-74.006], 12);
+    if(!('ontouchstart' in window)){ L.control.zoom({ position:'topleft' }).addTo(map); }
+    var osmTiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    });
+    var satTiles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, attribution: 'Imagery &copy; Esri'
+    });
+    osmTiles.addTo(map);
+    osmTiles.on('load', function(){ var ml=document.getElementById('mapLoader'); if(ml) ml.classList.add('hide'); });
+  }catch(e){ LEAFLET_OK = false; map = null; showMapDown(); }
+}
+// Custom Streets/Satellite segmented pill (replaces stock layers control)
+document.querySelectorAll('#basemap button').forEach(function(b){
+  b.onclick = function(){
+    if(!LEAFLET_OK){ toast('Map tiles unavailable — the map library failed to load'); return; }
+    document.querySelectorAll('#basemap button').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    if(b.dataset.bm === 'sat'){ map.removeLayer(osmTiles); satTiles.addTo(map); }
+    else { map.removeLayer(satTiles); osmTiles.addTo(map); }
+  };
+});
+
+var markers = LEAFLET_OK ? L.layerGroup().addTo(map) : null;
+var routeLayer = LEAFLET_OK ? L.layerGroup().addTo(map) : null;
+var userMarker = null, userPos = null, userPosTs = 0, userPosPending = null;
+var routeData = null;             // { routes, fc, tc } for the shown route
+var avoid = { highway:false, toll:false, ferry:false };
+var avoidUnsupported = false;   // set true once OSRM rejects ?exclude= (400) — we then never send it again
+var ZM_EX_NAME = { motorway:'highways', toll:'tolls', ferry:'ferries' };
+function markAvoidUnsupported(){
+  document.querySelectorAll('.avoid').forEach(function(b){
+    b.classList.add('nosup');
+    b.title = 'Not supported by routing server';
+  });
+}
+var queryCache = new Map();       // in-memory query cache
+var resultMarkers = [];           // { marker, p } for numbered pins
+
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function isMobile(){ return window.matchMedia('(max-width:600px)').matches; }
+function haversineKm(a,b){
+  var R=6371, dLa=(b.lat-a.lat)*Math.PI/180, dLo=(b.lon-a.lon)*Math.PI/180;
+  var h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLo/2)*Math.sin(dLo/2);
+  return 2*R*Math.asin(Math.sqrt(h));
+}
+function fmtAway(p){
+  if(!userPos || !p.lat || !p.lon) return '';
+  var km = haversineKm(userPos, p);
+  return km < 1 ? Math.round(km*1000)+' m away' : km.toFixed(1)+' km away';
+}
+
+// ---------- Centralized geolocation (one request, 2-min cache) ----------
+function updateUserMarker(){
+  if(!LEAFLET_OK || !userPos) return;
+  if(userMarker) map.removeLayer(userMarker);
+  userMarker = L.circleMarker([userPos.lat, userPos.lon], { radius:9, color:'#fff', weight:3, fillColor:'#3a5fd9', fillOpacity:1 }).addTo(map);
+}
+function getUserPos(cb){
+  var now = Date.now();
+  if(userPos && now - userPosTs < 120000){ cb(userPos); return; }
+  if(userPosPending){ userPosPending.push(cb); return; }
+  if(!navigator.geolocation){ toast('Location not supported'); cb(null); return; }
+  userPosPending = [cb];
+  navigator.geolocation.getCurrentPosition(function(p){
+    userPos = { lat:p.coords.latitude, lon:p.coords.longitude };
+    userPosTs = Date.now();
+    updateUserMarker();
+    var q = userPosPending; userPosPending = null;
+    q.forEach(function(f){ f(userPos); });
+  }, function(){
+    var q = userPosPending; userPosPending = null;
+    q.forEach(function(f){ f(null); });
+  }, { timeout:10000, maximumAge:60000 });
+}
+document.getElementById('locBtn').onclick = function(){
+  if(!LEAFLET_OK){ toast('Map unavailable — location needs the map library'); return; }
+  toast('Finding your location...');
+  getUserPos(function(pos){
+    if(pos){ map.setView([pos.lat, pos.lon], 14); toast('Location found'); }
+    else toast('Could not get location');
+  });
+};
+
+// ---------- Panel + bottom sheet ----------
+function openPanel(title){
+  closeSheet();
+  document.getElementById('suggest').style.display='none';
+  document.getElementById('panelTitle').textContent = title;
+  document.getElementById('panel').classList.add('open');
+}
+function closePanel(){ document.getElementById('panel').classList.remove('open'); }
+function openSheet(title, html){
+  document.getElementById('suggest').style.display='none';
+  if(isMobile()) closePanel();
+  document.getElementById('sheetTitle').textContent = title;
+  document.getElementById('sheetBody').innerHTML = html || '';
+  document.getElementById('sheetBody').scrollTop = 0;
+  document.getElementById('sheet').classList.add('open');
+}
+function closeSheet(){
+  var s = document.getElementById('sheet');
+  s.classList.remove('open');
+  s.style.transform = '';
+}
+document.getElementById('panelX').onclick = closePanel;
+document.getElementById('sheetX').onclick = closeSheet;
+// Drag-to-dismiss sheet (pointer events: touch + mouse)
+(function(){
+  var head = document.getElementById('sheetHead'), sheet = document.getElementById('sheet');
+  var dragging = false, startY = 0, curY = 0;
+  head.addEventListener('pointerdown', function(e){
+    if(!sheet.classList.contains('open')) return;
+    dragging = true; startY = e.clientY; curY = 0;
+    sheet.classList.add('dragging');
+    try{ head.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  head.addEventListener('pointermove', function(e){
+    if(!dragging) return;
+    curY = Math.max(0, e.clientY - startY);
+    sheet.style.transform = 'translateY(' + curY + 'px)';
+  });
+  function end(){
+    if(!dragging) return;
+    dragging = false;
+    sheet.classList.remove('dragging');
+    if(curY > 120) closeSheet();
+    else sheet.style.transform = '';
+  }
+  head.addEventListener('pointerup', end);
+  head.addEventListener('pointercancel', end);
+})();
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){
+    document.getElementById('suggest').style.display = 'none';
+    closePanel(); closeSheet();
+  }
+});
+
+// ---------- Polite fetching: in-memory cache + exponential backoff on 429 ----------
+function fetchJSON(url){
+  var tries = 0;
+  function attempt(){
+    return fetch(url).then(function(r){
+      if(r.status === 429 && tries < 3){
+        tries++;
+        return new Promise(function(res){ setTimeout(function(){ res(attempt()); }, 500 * Math.pow(2, tries)); });
+      }
+      if(!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+  }
+  return attempt().catch(function(e){
+    if(/http 429/.test(String(e && e.message))) toast('Search is busy — try again in a moment');
+    throw e;
+  });
+}
+function nomPlace(p){
+  var ad = p.address || {};
+  return {
+    name: (p.display_name || '').split(',')[0],
+    display: p.display_name || '',
+    city: ad.city || ad.town || ad.village || ad.county || ad.state || '',
+    lat: parseFloat(p.lat), lon: parseFloat(p.lon),
+    cls: p.class || '', type: p.type || ''
+  };
+}
+function photonPlace(f){
+  var pr = f.properties || {}, co = (f.geometry && f.geometry.coordinates) || [0,0];
+  var parts = [pr.name, pr.street, pr.city, pr.country].filter(Boolean);
+  return {
+    name: pr.name || parts[0] || '',
+    display: parts.join(', '),
+    city: pr.city || pr.county || pr.country || '',
+    lat: co[1], lon: co[0],
+    osm_key: pr.osm_key || '', osm_value: pr.osm_value || ''
+  };
+}
+// Category from carried-through type info
+function catOf(p){
+  var s = ((p.cls||'') + ' ' + (p.type||'') + ' ' + (p.osm_key||'') + ' ' + (p.osm_value||'')).toLowerCase();
+  if(/restaurant|fast_food|food_court|ice_cream|food/.test(s)) return 'restaurant';
+  if(/cafe|coffee|bubble_tea|juice|bar|pub/.test(s)) return 'cafe';
+  if(/hotel|motel|hostel|guest_house|apartment|bed_and_breakfast/.test(s)) return 'hotel';
+  if(/hospital|clinic|doctors|dentist|pharmacy|veterinary/.test(s)) return 'hospital';
+  if(/school|university|college|kindergarten|library|music_school|language_school/.test(s)) return 'school';
+  if(/fuel|gas|charging/.test(s)) return 'fuel';
+  if(/park|garden|playground|beach|forest|nature_reserve|leisure/.test(s)) return 'park';
+  if(/shop|supermarket|mall|convenience|department_store|clothes|bakery|retail/.test(s)) return 'shop';
+  if(/station|railway|subway|bus_station|airport|aerodrome|tram|ferry_terminal|public_transport|halt/.test(s)) return 'transit';
+  if(/bank|atm|bureau_de_change/.test(s)) return 'bank';
+  if(/cinema|theatre|museum|attraction|viewpoint|zoo|aquarium|arts_centre|gallery/.test(s)) return 'fun';
+  return 'pin';
+}
+// Full search: Nominatim + Photon, dedup on 4-decimal coords + normalized name
+function searchPlaces(v, limit){
+  limit = limit || 8;
+  var key = 'full|' + v.toLowerCase() + '|' + limit;
+  if(queryCache.has(key)) return Promise.resolve(queryCache.get(key));
+  var nom = fetchJSON('https://nominatim.openstreetmap.org/search?format=json&limit=' + limit + '&addressdetails=1&q=' + encodeURIComponent(v))
+    .then(function(list){ return (list || []).map(nomPlace); })
+    .catch(function(){ return []; });
+  var pho = fetchJSON('https://photon.komoot.io/api/?q=' + encodeURIComponent(v) + '&limit=' + limit)
+    .then(function(d){ return ((d && d.features) || []).map(photonPlace); })
+    .catch(function(){ return []; });
+  return Promise.all([nom, pho]).then(function(arr){
+    var seen = {}, out = [];
+    arr[0].concat(arr[1]).forEach(function(p){
+      if(!p.lat || !p.lon) return;
+      var k = p.lat.toFixed(4) + ',' + p.lon.toFixed(4) + '|' + String(p.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if(seen[k]) return; seen[k] = 1; out.push(p);
+    });
+    var res = out.slice(0, limit);
+    queryCache.set(key, res);
+    return res;
+  });
+}
+// Suggest: Photon-first (fast, generous limits), single source keeps it polite
+function searchSuggest(v){
+  var key = 'sug|' + v.toLowerCase();
+  if(queryCache.has(key)) return Promise.resolve(queryCache.get(key));
+  return fetchJSON('https://photon.komoot.io/api/?q=' + encodeURIComponent(v) + '&limit=6')
+    .then(function(d){
+      var list = ((d && d.features) || []).map(photonPlace);
+      queryCache.set(key, list);
+      return list;
+    }).catch(function(){ return []; });
+}
+// ---------- Custom teardrop pins ----------
+function pinIcon(n, sel, color){
+  var inner = n ? '<span>' + n + '</span>' : '';
+  return L.divIcon({
+    className: 'zpin-wrap',
+    html: '<div class="zpin' + (sel ? ' sel' : '') + (color ? ' ' + color : '') + '">' + inner + '</div>',
+    iconSize: [30, 30], iconAnchor: [15, 28], popupAnchor: [0, -26]
+  });
+}
+function clearMarkers(){ if(markers) markers.clearLayers(); resultMarkers = []; }
+
+// ---------- Search UI ----------
+var q = document.getElementById('q'), sug = document.getElementById('suggest');
+var searchTimer = null;
+q.addEventListener('input', function(){
+  document.getElementById('clearBtn').style.display = q.value ? 'flex' : 'none';
+  clearTimeout(searchTimer);
+  var v = q.value.trim();
+  if(v.length < 3){ sug.style.display = 'none'; return; }
+  searchTimer = setTimeout(function(){ suggest(v); }, 500);
+});
+q.addEventListener('focus', function(){ if(!q.value.trim()) showRecents(); });
+q.addEventListener('keydown', function(e){ if(e.key === 'Enter') doSearch(q.value.trim()); });
+document.getElementById('searchBtn').onclick = function(){ doSearch(q.value.trim()); };
+document.getElementById('clearBtn').onclick = function(){ q.value=''; sug.style.display='none'; document.getElementById('clearBtn').style.display='none'; q.focus(); };
+
+function sugSub(p){
+  var bits = [];
+  if(p.city) bits.push(p.city);
+  var away = fmtAway(p);
+  if(away) bits.push(away);
+  return bits.join(' · ');
+}
+function suggest(v){
+  searchSuggest(v).then(function(list){
+    sug.innerHTML = '';
+    if(!list.length){
+      sug.innerHTML = '<div class="sug hint">No results — try a nearby landmark</div>';
+      sug.style.display = 'block';
+      return;
+    }
+    list.forEach(function(p){
+      var d = document.createElement('div');
+      d.className = 'sug';
+      d.innerHTML = '<span class="pin">' + ZM_CAT[catOf(p)] + '</span><div><div>' + esc(p.name) + '</div><small>' + esc(sugSub(p)) + '</small></div>';
+      d.onclick = function(){ sug.style.display = 'none'; q.value = p.name; showPlace(p); };
+      sug.appendChild(d);
+    });
+    sug.style.display = 'block';
+  }).catch(function(){
+      sug.innerHTML = '<div class="sug hint">Couldn\'t search — check your connection</div>';
+      sug.style.display = 'block';
+    });
+}
+// Recents: last 8 searches/places, local only
+function getRecents(){ try{ return JSON.parse(localStorage.getItem('zm_recents') || '[]'); }catch(e){ return []; } }
+function pushRecent(r){
+  var a = getRecents().filter(function(x){ return x.name !== r.name; });
+  a.unshift(r);
+  try{ localStorage.setItem('zm_recents', JSON.stringify(a.slice(0, 8))); }catch(e){}
+}
+function showRecents(){
+  var a = getRecents();
+  if(!a.length){ sug.style.display = 'none'; return; }
+  sug.innerHTML = '<div class="slabel">Recent</div>';
+  a.forEach(function(r){
+    var d = document.createElement('div');
+    d.className = 'sug';
+    d.innerHTML = '<span class="pin">' + ZM_SVG_CLOCK + '</span><div><div>' + esc(r.name) + '</div>' + (r.display ? '<small>' + esc(r.display.split(',').slice(0,2).join(',')) + '</small>' : '') + '</div>';
+    d.onclick = function(){
+      sug.style.display = 'none';
+      if(r.kind === 'place' && r.lat) showPlace(r);
+      else { q.value = r.name; doSearch(r.name); }
+    };
+    sug.appendChild(d);
+  });
+  sug.style.display = 'block';
+}
+
+function selectPin(i){
+  if(!LEAFLET_OK) return;
+  resultMarkers.forEach(function(rm, j){
+    rm.marker.setIcon(pinIcon(j + 1, j === i));
+  });
+  var rm = resultMarkers[i];
+  if(rm){ rm.marker.openPopup(); map.setView([rm.p.lat, rm.p.lon], 15); }
+}
+
+function resultCards(list, host){
+  host.innerHTML = '';
+  list.forEach(function(p, i){
+    var card = document.createElement('div');
+    card.className = 'place-card';
+    card.innerHTML = '<div class="nm"><span class="numchip">' + (i + 1) + '</span><span class="pin" style="color:#3a5fd9;display:inline-flex">' + ZM_CAT[catOf(p)] + '</span><span>' + esc(p.name) + '</span></div>' +
+      '<div class="ad">' + esc(sugSub(p) || p.display) + '</div>' +
+      '<div class="go"><button class="pill blue">Directions</button><button class="pill gray">View</button></div>';
+    var btns = card.querySelectorAll('button');
+    btns[0].onclick = function(e){ e.stopPropagation(); openDirections(null, { lat:p.lat, lon:p.lon, name:p.name }); };
+    btns[1].onclick = function(e){ e.stopPropagation(); selectPin(i); };
+    card.onclick = function(){ selectPin(i); };
+    host.appendChild(card);
+  });
+}
+
+function doSearch(v){
+  clearTimeout(searchTimer);
+  if(!v){ toast('Type a place to search'); return; }
+  sug.style.display = 'none';
+  pushRecent({ kind:'search', name:v });
+  var show = function(body, title){
+    if(isMobile()) openSheet(title); else openPanel(title);
+    body.innerHTML = '<div class="loading"><div class="spinner"></div>Searching...</div>';
+  };
+  var body = isMobile() ? document.getElementById('sheetBody') : document.getElementById('panelBody');
+  show(body, 'Results for "' + v + '"');
+  searchPlaces(v, 8)
+    .then(function(list){
+      clearMarkers(); if(routeLayer) routeLayer.clearLayers(); routeData = null;
+      if(!list.length){ body.innerHTML = '<div class="loading">No places found. Try another search.</div>'; return; }
+      if(LEAFLET_OK){
+        var bounds = [];
+        list.forEach(function(p){
+          bounds.push([p.lat, p.lon]);
+          var m = L.marker([p.lat, p.lon], { icon: pinIcon(resultMarkers.length + 1, false) }).addTo(markers);
+          m.bindPopup('<b>' + esc(p.name) + '</b><br>' + esc(sugSub(p) || ''));
+          resultMarkers.push({ marker:m, p:p });
+        });
+        resultCards(list, body);
+        map.fitBounds(bounds, { padding:[60, 60] });
+      } else {
+        // Map library down: results still work as a list, pins are skipped honestly
+        body.innerHTML = '<div class="loading" style="text-align:left">Map unavailable — showing results as a list (pins need the map library).</div>';
+        resultCards(list, body);
+      }
+    })
+    .catch(function(){ body.innerHTML = '<div class="loading">Search failed. Check connection and retry.</div>'; });
+}
+
+function showPlace(p){
+  pushRecent({ kind:'place', name:p.name, display:p.display || '', lat:p.lat, lon:p.lon });
+  clearMarkers(); if(routeLayer) routeLayer.clearLayers(); routeData = null;
+  if(LEAFLET_OK){
+    map.setView([p.lat, p.lon], 15);
+    L.marker([p.lat, p.lon], { icon: pinIcon(null, false) }).addTo(markers)
+      .bindPopup('<b>' + esc(p.name) + '</b>').openPopup();
+  }
+  var sub = sugSub(p) || p.display || '';
+  openSheet(p.name,
+    '<div class="place-card" style="cursor:default"><div class="nm"><span class="pin" style="color:#3a5fd9;display:inline-flex">' + ZM_CAT[catOf(p)] + '</span><span>' + esc(p.name) + '</span></div>' +
+    '<div class="ad">' + esc(sub) + '</div>' +
+    '<div class="go"><button class="pill blue" id="pcDir">Directions</button><button class="pill gray" id="pcShare">' + ZM_SVG_LINK + ' Copy link</button></div></div>');
+  document.getElementById('pcDir').onclick = function(){ openDirections(null, { lat:p.lat, lon:p.lon, name:p.name }); };
+  document.getElementById('pcShare').onclick = function(){ copyPlaceLink(p); };
+}
+// Share: #place=lat,lon,name in location.hash, parsed on load
+function copyPlaceLink(p){
+  var url = location.origin + location.pathname + '#place=' + p.lat.toFixed(5) + ',' + p.lon.toFixed(5) + ',' + encodeURIComponent(p.name);
+  function done(){ toast('Link copied'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done, function(){ fallbackCopy(url); done(); });
+  } else { fallbackCopy(url); done(); }
+}
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+// ---------- Directions ----------
+document.getElementById('dirBtn').onclick = function(){ openDirections(null, null); };
+
+function setDs(input, c){
+  if(c && c.lat){
+    input.dataset.lat = c.lat; input.dataset.lon = c.lon; input.dataset.name = c.name || '';
+  } else { delete input.dataset.lat; delete input.dataset.lon; delete input.dataset.name; }
+}
+function clearDsOnType(input){
+  input.addEventListener('input', function(){ setDs(input, null); });
+}
+
+function openDirections(from, to){
+  routeData = null;
+  var startPreset = from || (userPos ? { lat:userPos.lat, lon:userPos.lon, name:'My location' } : null);
+  openSheet('Directions',
+    '<div class="dir-wrap">' +
+    '<div class="dir-row"><span class="dot" style="background:#34C759"></span><input id="fromIn" placeholder="Start location"></div>' +
+    '<button id="swapBtn" title="Swap start and destination">' + ZM_SVG_SWAP + '</button>' +
+    '<div class="dir-row"><span class="dot" style="background:#FF3B30"></span><input id="toIn" placeholder="Destination"></div>' +
+    '</div>' +
+    '<div class="avoid-row">' +
+    '<button class="avoid" data-av="highway">Avoid highways</button>' +
+    '<button class="avoid" data-av="toll">Avoid tolls</button>' +
+    '<button class="avoid" data-av="ferry">Avoid ferries</button>' +
+    '</div>' +
+    '<div class="avoid-note">Avoids road types — not live traffic.</div>' +
+    '<button class="pill blue" id="goBtn" style="width:100%;padding:13px">Get directions</button>' +
+    '<div style="margin-top:10px"><button class="pill gray" id="useLoc" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px"><span style="display:inline-flex;color:#3a5fd9">' + ZM_SVG_PIN + '</span>Use my location as start</button></div>' +
+    '<div id="routeOut"></div>');
+  var fi = document.getElementById('fromIn'), ti = document.getElementById('toIn');
+  if(startPreset){ fi.value = startPreset.name; setDs(fi, startPreset); }
+  if(to){ ti.value = to.name; setDs(ti, to); }
+  clearDsOnType(fi); clearDsOnType(ti);
+  document.querySelectorAll('.avoid').forEach(function(b){
+    if(avoid[b.dataset.av]) b.classList.add('on');
+    b.onclick = function(){
+      var k = b.dataset.av;
+      avoid[k] = !avoid[k];
+      b.classList.toggle('on', avoid[k]);
+      if(routeData) goRoute();   // re-fetch with new exclusions while a route is showing
+    };
+  });
+  document.getElementById('swapBtn').onclick = function(){
+    var fv = fi.value, fd = { lat:fi.dataset.lat, lon:fi.dataset.lon, name:fi.dataset.name };
+    fi.value = ti.value; setDs(fi, { lat:ti.dataset.lat, lon:ti.dataset.lon, name:ti.dataset.name });
+    ti.value = fv; setDs(ti, fd.lat ? fd : null);
+    if(routeData) goRoute();
+  };
+  document.getElementById('useLoc').onclick = function(){
+    getUserPos(function(pos){
+      if(!pos){ toast('Could not get location'); return; }
+      fi.value = 'My location';
+      setDs(fi, { lat:pos.lat, lon:pos.lon, name:'My location' });
+      toast('Start set to your location');
+    });
+  };
+  document.getElementById('goBtn').onclick = goRoute;
+}
+function resolvePlace(input, cb){
+  if(input.dataset.lat){
+    cb({ lat:parseFloat(input.dataset.lat), lon:parseFloat(input.dataset.lon), name:input.dataset.name || input.value.trim() });
+    return;
+  }
+  var t = input.value.trim();
+  if(!t){ cb(null); return; }
+  searchPlaces(t, 1).then(function(list){
+    if(!list.length){ cb(null); return; }
+    cb({ lat:list[0].lat, lon:list[0].lon, name:list[0].name });
+  }).catch(function(){ cb(null); });
+}
+function goRoute(){
+  var fi = document.getElementById('fromIn'), ti = document.getElementById('toIn');
+  if(!fi || !ti) return;
+  resolvePlace(fi, function(fc){
+    resolvePlace(ti, function(tc){
+      if(!fc){ toast('Choose a start location'); return; }
+      if(!tc){ toast('Choose a destination'); return; }
+      fetchRoute(fc, tc);
+    });
+  });
+}
+function fetchRoute(fc, tc){
+  var out = document.getElementById('routeOut');
+  if(!out) return;
+  out.innerHTML = '<div class="loading"><div class="spinner"></div>Finding best route...</div>';
+  var ex = [];
+  if(!avoidUnsupported){
+    if(avoid.highway) ex.push('motorway');
+    if(avoid.toll) ex.push('toll');
+    if(avoid.ferry) ex.push('ferry');
+  }
+  var coords = fc.lon + ',' + fc.lat + ';' + tc.lon + ',' + tc.lat;
+  var url = 'https://router.project-osrm.org/route/v1/driving/' + coords +
+    '?overview=full&geometries=geojson&steps=true&alternatives=2' + (ex.length ? '&exclude=' + ex.join(',') : '');
+  var retried = false;
+  function attempt(u){
+    return fetch(u).then(function(r){
+      if(r.status === 400 && ex.length && !retried){
+        // OSRM rejects EVERY ?exclude= combo: 400 {"code":"InvalidValue","message":"Exclude flag combination is not supported."}
+        // Remember it and retry once WITHOUT excludes. routeData + polylines are untouched until the
+        // retry draws — the existing route is never wiped, and the message is honest (not "No route found").
+        retried = true;
+        avoidUnsupported = true;
+        markAvoidUnsupported();
+        var names = ex.map(function(e){ return ZM_EX_NAME[e] || e; });
+        toast('Avoiding ' + names.join(', ') + ' isn\'t supported by the routing server');
+        return attempt(url.split('&exclude=')[0]);
+      }
+      if(!r.ok) throw new Error('http ' + r.status);
+      return r.json();
+    });
+  }
+  attempt(url).then(function(d){
+    if(!d || (d.code && d.code !== 'Ok') || !d.routes || !d.routes.length){
+      // Keep whatever route is currently displayed; only say "no route" when there is none.
+      out.innerHTML = '<div class="loading">' + (routeData ? 'Couldn\'t update the route — keeping the current one.' : 'No route found.') + '</div>';
+      return;
+    }
+    var ignored = retried ? ex.map(function(e){ return ZM_EX_NAME[e] || e; }) : [];
+    var applied = retried ? [] : ex.map(function(e){ return ZM_EX_NAME[e] || e; });
+    routeData = { routes:d.routes, fc:fc, tc:tc, avoids:applied, ignored:ignored };
+    drawRoutes(0);
+  }).catch(function(){ out.innerHTML = '<div class="loading">Route failed. Try again.</div>'; });
+}
+function drawRoutes(primaryIdx){
+  if(!routeData) return;
+  var fc = routeData.fc, tc = routeData.tc, routes = routeData.routes;
+  var out = document.getElementById('routeOut');
+  if(routeLayer) routeLayer.clearLayers();
+  clearMarkers();
+  var rt = routes[primaryIdx];
+  if(LEAFLET_OK){
+    // Alternatives first: thin gray, tappable to promote
+    routes.forEach(function(r2, i){
+      if(i === primaryIdx) return;
+      var l = L.geoJSON(r2.geometry, { style:{ color:'#9a9aa0', weight:4, opacity:.75 } }).addTo(routeLayer);
+      l.on('click', function(){ drawRoutes(i); });
+    });
+    var line = L.geoJSON(rt.geometry, { style:{ color:'#3a5fd9', weight:6, opacity:.9 } }).addTo(routeLayer);
+    L.marker([fc.lat, fc.lon], { icon:pinIcon(null, false, 'green') }).addTo(markers).bindPopup('<b>Start</b><br>' + esc(fc.name));
+    L.marker([tc.lat, tc.lon], { icon:pinIcon(null, false, 'red') }).addTo(markers).bindPopup('<b>Destination</b><br>' + esc(tc.name));
+    var padBR = isMobile() ? [70, 320] : [70, 70];
+    map.fitBounds(line.getBounds(), { paddingTopLeft:[70, 70], paddingBottomRight:padBR });
+  }
+  var km = rt.distance / 1000, mins = Math.round(rt.duration / 60);
+  var timeStr = mins >= 60 ? Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm' : mins + ' min';
+  var arrives = new Date(Date.now() + rt.duration * 1000).toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+  var av = routeData.avoids || [];
+  var ig = routeData.ignored || [];
+  var honestNote = 'Fastest route · typical road speeds, no live traffic';
+  if(av.length) honestNote += ' · avoiding ' + av.join(', ');
+  if(ig.length) honestNote += ' · avoiding ' + ig.join(', ') + ' not supported by routing server';
+  if(!LEAFLET_OK) honestNote += ' · map view unavailable';
+  var html = '<div id="routeSummary"><b>' + km.toFixed(1) + ' km</b> · ' + timeStr + ' · arrives ~' + arrives +
+    '<br><span style="color:#6e6e73">' + esc(fc.name) + ' → ' + esc(tc.name) + '</span>' +
+    '<span class="honest">' + honestNote + '</span></div>';
+  if(routes.length > 1) html += '<div id="altHint">Tap a gray route to switch.</div>';
+  var icons = { turn:zmRot(ZM_ARR,-90), new:ZM_SVG_NEW, depart:ZM_SVG_FLAG, arrive:ZM_SVG_FLAGCHK, merge:ZM_SVG_SHUFFLE, 'on ramp':ZM_SVG_ROAD, 'off ramp':ZM_SVG_ROAD, roundabout:ZM_SVG_ROTATE, rotary:ZM_SVG_ROTATE, fork:zmRot(ZM_ARR,-45), 'end of road':ZM_SVG_NOENTRY, continue:ZM_ARR, 'slight right':zmRot(ZM_ARR,45), 'slight left':zmRot(ZM_ARR,-45), 'sharp right':zmRot(ZM_ARR,135), 'sharp left':zmRot(ZM_ARR,-135), uturn:ZM_SVG_UTURN };
+  (rt.legs[0].steps || []).forEach(function(s){
+    var man = s.maneuver || {};
+    var type = (man.type || '') + ' ' + (man.modifier || '');
+    var ic = ZM_ARR;
+    for(var k in icons){ if(type.indexOf(k) !== -1){ ic = icons[k]; break; } }
+    if(man.type === 'arrive') ic = ZM_SVG_FLAGCHK;
+    if(man.type === 'depart') ic = ZM_SVG_FLAG;
+    var instr = esc(zmInstr(man, s.name));
+    var sd = s.distance >= 1000 ? (s.distance / 1000).toFixed(1) + ' km' : Math.round(s.distance) + ' m';
+    html += '<div class="step"><div class="ic">' + ic + '</div><div><div>' + instr + '</div><div class="dist">' + sd + '</div></div></div>';
+  });
+  out.innerHTML = html;
+  document.getElementById('sheetBody').scrollTop = 0;
+}
+
+// ---------- Misc events ----------
+// Tap map to dismiss suggestions
+if(LEAFLET_OK) map.on('click', function(){ sug.style.display = 'none'; });
+// Shared-place link: #place=lat,lon,name
+(function(){
+  var m = location.hash.match(/^#place=(-?\d+\.?\d*),(-?\d+\.?\d*),?(.*)$/);
+  if(m){
+    showPlace({ lat:parseFloat(m[1]), lon:parseFloat(m[2]), name:decodeURIComponent(m[3] || 'Shared place'), display:decodeURIComponent(m[3] || '') });
+  }
+})();
+// Try to center on user at load (non-blocking, cached + single request)
+if(navigator.geolocation){
+  getUserPos(function(pos){
+    if(pos && LEAFLET_OK) map.setView([pos.lat, pos.lon], 13);
+  });
+}
+</script>
+</body>
+</html>

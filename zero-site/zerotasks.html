@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero Tasks</title>
+<meta name="theme-color" content="#10b981">
+<style>
+*{box-sizing:border-box}
+:root{--acc:#10b981;--acc-d:#059669;--acc-soft:#d1fae5;--ink:#1d1c19;--mut:#6b6a63;--line:#e5e2d9;--bg:#f6f4ef;--card:#fff;--red:#dc2626}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh}
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px 16px}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#34d399,#10b981);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(16,185,129,.35)}
+.name{font-size:19px;font-weight:800;letter-spacing:-.02em}.name span{color:var(--acc)}
+.add{display:flex;gap:8px}
+.add input{flex:1;min-width:0;padding:12px 16px;border:1px solid #dcd8cd;border-radius:14px;font-size:16px;outline:none;font-family:inherit;background:#fbfaf7}
+.add input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+.addbtn{padding:12px 22px;border:0;border-radius:14px;background:var(--acc);color:#fff;font-size:15px;font-weight:700;cursor:pointer;min-height:46px;white-space:nowrap}
+.addbtn:hover{background:var(--acc-d)}
+.wrap{padding:14px 16px;max-width:640px;margin:0 auto}
+.bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;background:#efece4;border-radius:12px;padding:4px}
+.chip{border:0;background:transparent;border-radius:9px;padding:9px 14px;font-size:14px;font-weight:600;color:var(--mut);cursor:pointer;min-height:38px;font-family:inherit}
+.chip.active{background:#fbfaf7;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.counts{font-size:13px;color:var(--mut);margin-left:auto}
+.clear{margin-left:0;border:1px solid var(--line);background:#fbfaf7;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;min-height:38px}
+.task{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;box-shadow:0 1px 2px rgba(0,0,0,.04);min-height:56px}
+.task.done{opacity:.55}
+.task.done .t{text-decoration:line-through;color:var(--mut)}
+.task input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;cursor:pointer;accent-color:var(--acc);margin:0}
+.task .t{flex:1;min-width:0;font-size:16px;line-height:1.4;word-break:break-word;cursor:text;padding:6px 2px}
+.task .edit{flex:1;min-width:0;font-size:16px;font-family:inherit;padding:8px 10px;border:1px solid var(--acc);border-radius:10px;outline:none}
+.task .x{flex:0 0 auto;border:0;background:#fef2f2;color:var(--red);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center}
+.empty{text-align:center;padding:48px 20px;color:var(--mut);font-size:14px;line-height:1.7}
+.empty .big{font-size:44px;margin-bottom:12px}
+/* ============ ZERO PREMIUM LAYER (2026-10-19) ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ============ ATELIER HARMONY LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid #a8894e;outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#a8894e;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand"><div class="logo">0</div><div class="name">Zero<span>Tasks</span></div></div>
+  <div class="add">
+    <input id="tin" placeholder="Add a task… (Enter to save)" autocomplete="off" aria-label="New task">
+    <button class="addbtn" id="tbtn">Add</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="bar">
+    <div class="chips" role="group" aria-label="Filter tasks">
+      <button class="chip active" data-f="all" role="button">All</button>
+      <button class="chip" data-f="active" role="button">Active</button>
+      <button class="chip" data-f="done" role="button">Done</button>
+    </div>
+    <span class="counts" id="counts"></span>
+    <button class="clear" id="clearBtn" hidden>Clear done</button>
+  </div>
+  <div id="res" aria-live="polite"></div>
+</div>
+<script>
+(function(){
+"use strict";
+var KEY="zt_tasks";
+function get(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function set(t){try{localStorage.setItem(KEY,JSON.stringify(t))}catch(e){}}
+function uid(){return "t"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+var tasks=get(),dirty=false;
+tasks.forEach(function(t){if(!t.id){t.id=uid();dirty=true}if(typeof t.done!=="boolean"){t.done=!!t.done;dirty=true}});
+if(dirty)set(tasks);
+var filter="all";
+var res=document.getElementById("res"),tin=document.getElementById("tin"),
+    countsEl=document.getElementById("counts"),clearBtn=document.getElementById("clearBtn");
+function byId(id){for(var i=0;i<tasks.length;i++)if(tasks[i].id===id)return tasks[i];return null}
+function visible(){
+  if(filter==="active")return tasks.filter(function(t){return !t.done});
+  if(filter==="done")return tasks.filter(function(t){return t.done});
+  return tasks;
+}
+function render(){
+  var done=tasks.filter(function(t){return t.done}).length;
+  countsEl.textContent=tasks.length?(tasks.length-done)+" left · "+done+" done":"";
+  clearBtn.hidden=!done;
+  var items=visible();
+  res.innerHTML="";
+  if(!tasks.length){
+    res.innerHTML='<div class="empty"><div class="big">✅</div><b>All clear.</b><br>Add your first task above.<br>Tap a task to rename it — everything stays in this browser.</div>';
+    return;
+  }
+  if(!items.length){
+    var label=filter==="active"?"active":"completed";
+    res.innerHTML='<div class="empty"><div class="big">🎉</div><b>No '+label+' tasks.</b><br>'+(filter==="active"?"Everything is done. Nice.":"Nothing completed yet.")+'</div>';
+    return;
+  }
+  items.forEach(function(t){
+    var row=document.createElement("div");
+    row.className="task"+(t.done?" done":"");
+    var cb=document.createElement("input");
+    cb.type="checkbox";cb.checked=!!t.done;
+    cb.setAttribute("aria-label","Mark done: "+t.text);
+    cb.addEventListener("change",function(){t.done=cb.checked;set(tasks);render()});
+    var span=document.createElement("span");
+    span.className="t";span.textContent=t.text;span.title="Tap to edit";
+    span.addEventListener("click",function(){startEdit(row,t,span)});
+    var x=document.createElement("button");
+    x.className="x";x.textContent="×";x.setAttribute("aria-label","Delete task");
+    x.addEventListener("click",function(){
+      tasks=tasks.filter(function(o){return o.id!==t.id});
+      set(tasks);render();
+    });
+    row.appendChild(cb);row.appendChild(span);row.appendChild(x);
+    res.appendChild(row);
+  });
+}
+function startEdit(row,t,span){
+  var inp=document.createElement("input");
+  inp.className="edit";inp.value=t.text;inp.setAttribute("aria-label","Edit task");
+  var done=false;
+  function commit(saveIt){
+    if(done)return;done=true;
+    if(saveIt&&inp.value.trim()){t.text=inp.value.trim();set(tasks)}
+    render();
+  }
+  inp.addEventListener("keydown",function(e){
+    if(e.key==="Enter")commit(true);
+    else if(e.key==="Escape")commit(false);
+    e.stopPropagation();
+  });
+  inp.addEventListener("blur",function(){commit(true)});
+  row.replaceChild(inp,span);
+  inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);
+}
+function add(){
+  var v=tin.value.trim();
+  if(!v)return;
+  tasks.unshift({id:uid(),text:v,done:false});
+  set(tasks);tin.value="";tin.focus();
+  if(filter==="done"){filter="all";syncChips()}
+  render();
+}
+function syncChips(){
+  var chips=document.querySelectorAll(".chip");
+  for(var i=0;i<chips.length;i++)chips[i].classList.toggle("active",chips[i].getAttribute("data-f")===filter);
+}
+var chips=document.querySelectorAll(".chip");
+for(var i=0;i<chips.length;i++){
+  chips[i].addEventListener("click",function(){filter=this.getAttribute("data-f");syncChips();render()});
+}
+clearBtn.addEventListener("click",function(){
+  tasks=tasks.filter(function(t){return !t.done});
+  set(tasks);render();
+});
+document.getElementById("tbtn").addEventListener("click",add);
+tin.addEventListener("keydown",function(e){if(e.key==="Enter")add()});
+render();
+})();
+</script>
+</body>
+</html>

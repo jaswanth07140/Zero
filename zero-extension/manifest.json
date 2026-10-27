@@ -1,0 +1,37 @@
+{
+  "action": {
+    "default_icon": {
+      "128": "icons/icon128.png",
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "Open Zero Sidekick"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "description": "Zero AI in your side panel \u2014 chat, see your tabs, and do browser tasks while you watch. Private: everything stays between you and Zero.",
+  "host_permissions": [
+    "https://zero.page.gd/*",
+    "<all_urls>"
+  ],
+  "icons": {
+    "128": "icons/icon128.png",
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png"
+  },
+  "manifest_version": 3,
+  "name": "Zero Sidekick",
+  "permissions": [
+    "sidePanel",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "version": "3.4.1"
+}

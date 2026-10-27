@@ -1,0 +1,6 @@
+# Upload queue for zero.page.gd
+# [2026-10-10 08:39 EDT] QUEUE CLEARED — all 5 files uploaded live via webftp.phpwebhosting.com:
+# api-ensemble.php (404 stub — legacy AI endpoint exposure CLOSED),
+# zero-drive.php (5002B hardened), reader.php (SSRF redirect-hop fix),
+# zero-search.php + zero-search-v35.php (neutralized to 404 stubs).
+# [2026-10-10 21:48 EDT] zero-hourly-harden: uploaded preview.php (2417B, guard.php required — closes unguarded public file-write endpoint); verified byte-exact in htdocs + 403 on direct request.

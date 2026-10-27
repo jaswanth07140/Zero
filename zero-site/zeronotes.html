@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Zero Notes</title>
+<meta name="theme-color" content="#f59e0b">
+<style>
+*{box-sizing:border-box}
+:root{--acc:#f59e0b;--acc-soft:#fef3c7;--ink:#1d1c19;--mut:#6b6a63;--line:#e5e2d9;--bg:#f6f4ef;--card:#fff}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;margin:0;background:var(--bg);color:var(--ink);min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+/* ---------- header ---------- */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#fbbf24,#f59e0b);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(245,158,11,.35)}
+.name{font-size:19px;font-weight:800;letter-spacing:-.02em}.name span{color:var(--acc)}
+.search{flex:1;display:flex;align-items:center;background:#f6f4ef;border-radius:12px;padding:0 12px;max-width:340px;margin-left:auto}
+.search svg{flex:0 0 auto;opacity:.45}
+.search input{flex:1;min-width:0;border:0;background:transparent;padding:10px 8px;font-size:16px;outline:none;font-family:inherit;color:var(--ink)}
+.newbtn{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;background:var(--acc);color:#fff;border:0;border-radius:12px;padding:11px 16px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(245,158,11,.35)}
+.newbtn:active{transform:scale(.96)}
+/* ---------- layout ---------- */
+.wrap{flex:1;display:grid;grid-template-columns:300px 1fr;gap:14px;padding:14px 16px;max-width:1000px;width:100%;margin:0 auto;min-height:0}
+.pane{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.pane-head{padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:center}
+.list{overflow-y:auto;padding:8px;flex:1}
+.note-row{width:100%;text-align:left;border:0;background:transparent;border-radius:12px;padding:11px 12px;cursor:pointer;display:block;margin-bottom:2px;min-height:56px}
+.note-row:hover{background:#f6f4ef}
+.note-row.active{background:var(--acc-soft)}
+.note-row .t{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-row .s{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.note-row .d{font-size:11px;color:#a8a29e;margin-top:3px}
+.empty{padding:36px 20px;text-align:center;color:var(--mut);font-size:14px;line-height:1.6}
+.empty .big{font-size:40px;margin-bottom:10px}
+/* ---------- editor ---------- */
+.ed-head{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.backbtn{display:none;border:1px solid var(--line);background:#fbfaf7;border-radius:10px;padding:9px 14px;font-size:15px;cursor:pointer;font-weight:600}
+.saved{font-size:12px;color:var(--mut);margin-left:auto;opacity:0;transition:opacity .3s}
+.saved.show{opacity:1}
+.ed-body{flex:1;display:flex;flex-direction:column;padding:16px;overflow-y:auto;min-height:0}
+#nTitle{width:100%;border:0;outline:none;font-size:22px;font-weight:800;letter-spacing:-.02em;font-family:inherit;color:var(--ink);padding:4px 0 10px;margin-bottom:6px;border-bottom:1px solid var(--line);background:transparent}
+#nBody{flex:1;min-height:220px;width:100%;border:0;outline:none;resize:none;font-size:16px;line-height:1.65;font-family:inherit;color:var(--ink);background:transparent;padding:6px 0}
+.ed-foot{display:flex;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+.words{font-size:12px;color:var(--mut)}
+.toolbtn{border:1px solid var(--line);background:#fbfaf7;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);min-height:38px}
+.del{margin-left:auto;background:#fef2f2;color:#dc2626;border-color:#fecaca}
+/* ---------- modal ---------- */
+.scrim{position:fixed;inset:0;background:rgba(28,25,23,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+.scrim.open{display:flex}
+.modal{background:#fbfaf7;border-radius:18px;padding:24px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:zpIn .25s ease}
+.modal h3{margin:0 0 8px;font-size:18px}
+.modal p{margin:0 0 20px;color:var(--mut);font-size:14px}
+.modal .row{display:flex;gap:10px;justify-content:flex-end}
+.mbtn{border:1px solid var(--line);background:#fbfaf7;border-radius:12px;padding:11px 20px;font-size:15px;font-weight:600;cursor:pointer;min-height:44px}
+.mbtn.danger{background:#dc2626;border-color:#dc2626;color:#fff}
+/* ---------- phone: one pane at a time ---------- */
+@media(max-width:640px){
+  .wrap{grid-template-columns:1fr;padding:10px}
+  .pane.editor-pane{display:none}
+  body.view-editor .pane.list-pane{display:none}
+  body.view-editor .pane.editor-pane{display:flex}
+  .backbtn{display:inline-block}
+  .newbtn .lbl{display:none}
+  .newbtn{padding:11px 13px;font-size:18px}
+  .search{max-width:none;min-width:0}
+  .top{gap:8px;padding:12px 10px}
+}
+/* ============ ZERO PREMIUM LAYER (2026-10-19) ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid #f59e0b;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+/* ============ ATELIER HARMONY LAYER ============ */
+::selection{background:rgba(168,137,78,.3)}
+:focus-visible{outline:2px solid #a8894e;outline-offset:2px;border-radius:6px}
+html{-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#dcd8cd;border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:#a8894e;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="brand"><div class="logo">0</div><div class="name">Zero<span>Notes</span></div></div>
+  <label class="search" aria-label="Search notes">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#78716c" stroke-width="2"/><path d="M11 11l3 3" stroke="#78716c" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="q" type="search" placeholder="Search notes" autocomplete="off" aria-label="Search notes">
+  </label>
+  <button class="newbtn" id="newBtn" aria-label="New note">+ <span class="lbl">New</span></button>
+</div>
+<div class="wrap">
+  <section class="pane list-pane" aria-label="Notes list">
+    <div class="pane-head"><span>Notes</span><span id="count"></span></div>
+    <div class="list" id="noteList" role="listbox" aria-label="Notes"></div>
+  </section>
+  <section class="pane editor-pane" aria-label="Note editor">
+    <div class="ed-head">
+      <button class="backbtn" id="backBtn">‹ Notes</button>
+      <span class="saved" id="savedTag">Saved</span>
+    </div>
+    <div class="ed-body">
+      <input id="nTitle" placeholder="Title" autocomplete="off" aria-label="Note title">
+      <textarea id="nBody" placeholder="Start writing…" aria-label="Note body"></textarea>
+    </div>
+    <div class="ed-foot">
+      <span class="words" id="wordCount">0 words</span>
+      <button class="toolbtn" id="dlBtn" title="Download as text file">⤓ Text</button>
+      <button class="toolbtn del" id="delBtn">Delete</button>
+    </div>
+  </section>
+</div>
+<div class="scrim" id="scrim">
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="mTitle">
+    <h3 id="mTitle">Delete this note?</h3>
+    <p>This can't be undone.</p>
+    <div class="row">
+      <button class="mbtn" id="cancelBtn">Cancel</button>
+      <button class="mbtn danger" id="confirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var KEY="zn_notes";
+function get(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function set(n){try{localStorage.setItem(KEY,JSON.stringify(n))}catch(e){}}
+function uid(){return "n"+Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
+var notes=get();
+var dirty=false;
+notes.forEach(function(n){if(!n.id){n.id=uid();dirty=true}});
+if(dirty)set(notes);
+var activeId=notes.length?notes[0].id:null;
+var query="";
+var list=document.getElementById("noteList"),
+    titleEl=document.getElementById("nTitle"),
+    bodyEl=document.getElementById("nBody"),
+    qEl=document.getElementById("q"),
+    countEl=document.getElementById("count"),
+    savedTag=document.getElementById("savedTag"),
+    wordEl=document.getElementById("wordCount");
+function esc(s){return String(s==null?"":s)}
+function rel(t){
+  var s=Math.floor((Date.now()-t)/1000);
+  if(s<60)return "just now";
+  var m=Math.floor(s/60);if(m<60)return m+"m ago";
+  var h=Math.floor(m/60);if(h<24)return h+"h ago";
+  var d=Math.floor(h/24);if(d<7)return d+"d ago";
+  return new Date(t).toLocaleDateString();
+}
+function activeNote(){for(var i=0;i<notes.length;i++)if(notes[i].id===activeId)return notes[i];return null}
+function filtered(){
+  if(!query)return notes.slice();
+  var q=query.toLowerCase();
+  return notes.filter(function(n){return (n.title+" "+n.body).toLowerCase().indexOf(q)>-1});
+}
+function snippet(n){
+  var b=(n.body||"").trim().split("\n")[0]||"";
+  return b.length>64?b.slice(0,64)+"…":b;
+}
+function render(){
+  var items=filtered();
+  countEl.textContent=notes.length?(notes.length+" total"):"";
+  list.innerHTML="";
+  if(!notes.length){
+    list.innerHTML='<div class="empty"><div class="big">📝</div><b>No notes yet.</b><br>Tap <b>+ New</b> to capture your first thought.<br>Everything stays in this browser.</div>';
+    return;
+  }
+  if(!items.length){
+    var em=document.createElement("div");em.className="empty";
+    var big=document.createElement("div");big.className="big";big.textContent="🔍";
+    var msg=document.createElement("div");
+    msg.appendChild(document.createTextNode("No notes match “"));
+    var qq=document.createElement("b");qq.textContent=query;
+    msg.appendChild(qq);
+    msg.appendChild(document.createTextNode("”. Try a different word."));
+    em.appendChild(big);em.appendChild(msg);
+    list.appendChild(em);
+    return;
+  }
+  items.forEach(function(n){
+    var b=document.createElement("button");
+    b.className="note-row"+(n.id===activeId?" active":"");
+    b.setAttribute("role","option");
+    var t=document.createElement("div");t.className="t";t.textContent=n.title||"Untitled";
+    var s=document.createElement("div");s.className="s";s.textContent=snippet(n);
+    var d=document.createElement("div");d.className="d";d.textContent=rel(n.mtime||Date.now());
+    b.appendChild(t);b.appendChild(s);b.appendChild(d);
+    b.addEventListener("click",function(){select(n.id)});
+    list.appendChild(b);
+  });
+}
+function select(id){
+  saveNow();
+  activeId=id;render();loadActive();
+  document.body.classList.add("view-editor");
+}
+function loadActive(){
+  var n=activeNote();
+  titleEl.value=n?n.title:"";
+  bodyEl.value=n?n.body:"";
+  updateWords();
+  titleEl.disabled=bodyEl.disabled=!n;
+  document.getElementById("delBtn").disabled=!n;
+  document.getElementById("dlBtn").disabled=!n;
+}
+function saveNow(){
+  var n=activeNote();
+  if(!n)return;
+  n.title=titleEl.value;n.body=bodyEl.value;n.mtime=Date.now();
+  set(notes);
+}
+var saveT=null;
+function scheduleSave(){
+  clearTimeout(saveT);
+  saveT=setTimeout(function(){saveNow();flashSaved();render()},450);
+}
+function flashSaved(){
+  savedTag.classList.add("show");
+  clearTimeout(flashSaved.t);
+  flashSaved.t=setTimeout(function(){savedTag.classList.remove("show")},1200);
+}
+function updateWords(){
+  var w=bodyEl.value.trim().split(/\s+/).filter(Boolean).length;
+  wordEl.textContent=w+(w===1?" word":" words");
+}
+document.getElementById("newBtn").addEventListener("click",function(){
+  saveNow();
+  var n={id:uid(),title:"",body:"",mtime:Date.now()};
+  notes.unshift(n);set(notes);
+  activeId=n.id;query="";qEl.value="";
+  render();loadActive();
+  document.body.classList.add("view-editor");
+  titleEl.focus();
+});
+document.getElementById("backBtn").addEventListener("click",function(){
+  saveNow();render();
+  document.body.classList.remove("view-editor");
+});
+titleEl.addEventListener("input",scheduleSave);
+bodyEl.addEventListener("input",function(){updateWords();scheduleSave()});
+qEl.addEventListener("input",function(){query=qEl.value.trim();render()});
+document.getElementById("dlBtn").addEventListener("click",function(){
+  var n=activeNote();if(!n)return;
+  var blob=new Blob([(n.title||"Untitled")+"\n\n"+(n.body||"")],{type:"text/plain"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=((n.title||"note").replace(/[^\w\- ]+/g,"").trim()||"note")+".txt";
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500);
+});
+/* delete modal */
+var scrim=document.getElementById("scrim");
+function openModal(){scrim.classList.add("open");document.getElementById("cancelBtn").focus()}
+function closeModal(){scrim.classList.remove("open")}
+document.getElementById("delBtn").addEventListener("click",function(){if(activeNote())openModal()});
+document.getElementById("cancelBtn").addEventListener("click",closeModal);
+scrim.addEventListener("click",function(e){if(e.target===scrim)closeModal()});
+document.getElementById("confirmBtn").addEventListener("click",function(){
+  for(var i=0;i<notes.length;i++)if(notes[i].id===activeId){notes.splice(i,1);break}
+  set(notes);
+  activeId=notes.length?notes[0].id:null;
+  closeModal();render();loadActive();
+  document.body.classList.remove("view-editor");
+});
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"&&scrim.classList.contains("open"))closeModal();
+});
+window.addEventListener("beforeunload",saveNow);
+render();loadActive();
+})();
+</script>
+</body>
+</html>

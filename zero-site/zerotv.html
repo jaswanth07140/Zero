@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b0612">
+<title>ZeroTV — Free Movies, Shows & Live TV</title>
+<style>
+:root{
+  --bg:#0b0612; --bg2:#120a1e; --panel:#170d28; --line:#2a1b45;
+  --txt:#f5f3ff; --mut:#a79fb8; --acc:#8b5cf6; --acc2:#a78bfa;
+  --yel:#ffd60a; --yel-d:#eab308;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:10px;height:8px}
+::-webkit-scrollbar-track{background:#0b0612}
+::-webkit-scrollbar-thumb{background:#3b2563;border-radius:8px}
+/* ---------- NAV ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;gap:22px;
+  padding:14px 4vw;transition:background .3s;background:linear-gradient(180deg,rgba(5,2,10,.85),transparent)}
+.nav.solid{background:rgba(11,6,18,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:8px;font-size:24px;font-weight:800;letter-spacing:.5px;cursor:pointer;color:var(--txt);text-decoration:none}
+.logo .mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 18px rgba(139,92,246,.5)}
+.logo .mark svg{width:18px;height:18px;fill:#fff}
+.logo em{font-style:normal;color:var(--acc2)}
+.nav-links{display:flex;align-items:center;gap:4px}
+.nav-links button{background:none;border:none;color:#d9d2ec;font-size:15px;font-weight:500;padding:9px 14px;border-radius:8px;cursor:pointer;transition:.2s}
+.nav-links button:hover{color:#fff;background:rgba(139,92,246,.18)}
+.nav-links button.active{color:#fff;background:rgba(139,92,246,.28)}
+.dd{position:relative}
+.dd-menu{position:absolute;top:110%;left:0;min-width:220px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px;display:none;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.dd.open .dd-menu{display:block}
+.dd-menu button{display:flex;width:100%;text-align:left;align-items:center;gap:10px}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.search-wrap{display:flex;align-items:center;background:rgba(255,255,255,.08);border:1px solid transparent;border-radius:24px;padding:7px 12px;transition:.25s}
+.search-wrap:focus-within{background:rgba(0,0,0,.5);border-color:var(--acc)}
+.search-wrap svg{width:17px;height:17px;stroke:#cfc6e6;flex:none}
+.search-wrap input{background:none;border:none;outline:none;color:#fff;font-size:16px;width:150px;padding-left:8px;transition:width .25s}
+.search-wrap input:focus{width:220px}
+.icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.06);color:#e9e2f7;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+.icon-btn:hover{background:rgba(139,92,246,.3);border-color:var(--acc)}
+.icon-btn svg{width:18px;height:18px;fill:currentColor}
+/* ---------- HERO ---------- */
+.hero{position:relative;height:92vh;height:92dvh;min-height:560px;max-height:900px;overflow:hidden}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity 1s}
+.slide.on{opacity:1}
+.slide img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 20%}
+.slide .shade{position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,6,18,.95) 0%,rgba(11,6,18,.55) 45%,transparent 75%),linear-gradient(0deg,var(--bg) 2%,transparent 40%),linear-gradient(180deg,rgba(11,6,18,.6),transparent 30%)}
+.hero-inner{position:absolute;left:4vw;bottom:14%;max-width:620px;z-index:2}
+.eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.eyebrow .foryou{font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--acc2)}
+.badge{font-size:11.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:rgba(255,214,10,.14);color:var(--yel);border:1px solid rgba(255,214,10,.45);padding:5px 11px;border-radius:6px}
+.badge.free{background:rgba(139,92,246,.16);color:#c4b5fd;border-color:rgba(139,92,246,.5)}
+.hero-title{font-size:clamp(38px,6vw,72px);font-weight:800;line-height:1.02;margin-bottom:14px;text-shadow:0 4px 30px rgba(0,0,0,.7)}
+.hero-meta{display:flex;align-items:center;gap:14px;margin-bottom:14px;font-size:15px;color:#d9d2ec;flex-wrap:wrap}
+.hero-meta .rate{display:flex;align-items:center;gap:6px;color:var(--yel);font-weight:700}
+.hero-meta .rate svg{width:15px;height:15px;fill:var(--yel)}
+.hero-meta .mat{border:1px solid #6d6390;padding:2px 8px;border-radius:5px;font-size:12px;color:#cfc6e6}
+.hero-desc{font-size:16px;line-height:1.55;color:#cfc6e6;margin-bottom:26px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;max-width:560px}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:10px;border:none;cursor:pointer;font-size:16px;font-weight:700;padding:14px 30px;border-radius:10px;transition:.2s;text-decoration:none}
+.btn svg{width:20px;height:20px;fill:currentColor}
+.btn-play{background:var(--yel);color:#1a1200;box-shadow:0 8px 28px rgba(255,214,10,.35)}
+.btn-play:hover{background:#ffe14d;transform:translateY(-2px)}
+.btn-info{background:rgba(255,255,255,.14);color:#fff;backdrop-filter:blur(6px)}
+.btn-info:hover{background:rgba(255,255,255,.24)}
+.hero-dots{position:absolute;bottom:26px;right:4vw;display:flex;gap:8px;z-index:3}
+.hero-dots button{width:38px;height:34px;border:none;background:none;cursor:pointer;padding:0}
+.hero-dots button::after{content:"";display:block;width:26px;height:4px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto;transition:.3s}
+.hero-dots button.on::after{background:var(--yel);width:40px}
+.hero-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:46px;height:70px;background:rgba(0,0,0,.35);border:none;border-radius:10px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:.25s}
+.hero:hover .hero-arrow{opacity:1}
+.hero-arrow:hover{background:rgba(139,92,246,.5)}
+.hero-arrow svg{width:24px;height:24px;fill:#fff}
+.hero-arrow.prev{left:12px}.hero-arrow.next{right:12px}
+/* ---------- ROWS ---------- */
+.rows{position:relative;z-index:5;margin-top:-90px;padding-bottom:60px}
+.row{margin:26px 0;padding-left:4vw}
+.row-head{display:flex;align-items:baseline;gap:14px;margin-bottom:12px;padding-right:4vw}
+.row-title{font-size:21px;font-weight:700}
+.row-sub{font-size:13px;color:var(--mut)}
+.row-link{margin-left:auto;font-size:13.5px;color:var(--acc2);background:none;border:none;cursor:pointer;font-weight:600}
+.row-link:hover{text-decoration:underline}
+.rail{display:flex;gap:12px;overflow-x:auto;padding:14px 4vw 22px 0;scrollbar-width:thin}
+.rail::-webkit-scrollbar{height:6px}
+/* ---------- CARD ---------- */
+.card{position:relative;flex:0 0 auto;width:172px;cursor:pointer;transition:transform .25s;border-radius:12px}
+.card .poster{position:relative;width:172px;height:258px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#241536,#160b28);border:1px solid rgba(255,255,255,.07);transition:.25s}
+.card .poster img{width:100%;height:100%;object-fit:cover;display:block}
+.card:hover{transform:scale(1.22);z-index:20}
+.card:hover .poster{box-shadow:0 18px 44px rgba(0,0,0,.65);border-color:var(--acc)}
+.card .free-tag{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;letter-spacing:.8px;background:rgba(11,6,18,.82);color:var(--acc2);border:1px solid rgba(139,92,246,.55);padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px)}
+.card .live-tag{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;letter-spacing:1px;background:#e11d48;color:#fff;padding:4px 9px;border-radius:6px;display:flex;align-items:center;gap:5px}
+.card .live-tag i{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.25}}
+.card .cinfo{padding:9px 2px 0}
+.card .ct{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .cm{font-size:11.5px;color:var(--mut);margin-top:3px;display:flex;gap:7px;align-items:center}
+.card .cm .r{color:var(--yel);font-weight:700}
+.card .hover{position:absolute;inset:-6px -14px auto -14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;opacity:0;pointer-events:none;transform:translateY(8px);transition:.22s;box-shadow:0 24px 60px rgba(0,0,0,.7);z-index:30}
+.card:hover .hover{opacity:1;pointer-events:auto;transform:translateY(0)}
+.hover .hbtns{display:flex;gap:8px;margin-bottom:10px}
+.hbtn{width:36px;height:36px;border-radius:50%;border:1px solid #4c3a75;background:rgba(255,255,255,.07);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.2s}
+.hbtn:hover{background:var(--acc);border-color:var(--acc)}
+.hbtn svg{width:15px;height:15px;fill:#fff}
+.hbtn.big{background:#fff;border-color:#fff;color:#000;width:42px;height:42px}
+.hbtn.big svg{fill:#000;width:17px;height:17px}
+.hbtn.big:hover{background:var(--yel);border-color:var(--yel)}
+.hover .ht{font-size:14px;font-weight:700;margin-bottom:5px}
+.hover .hm{font-size:11.5px;color:var(--mut);margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.hover .hm .r{color:var(--yel);font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.hover .hm .r svg{width:12px;height:12px;fill:var(--yel);flex:none}
+.hover .hd{font-size:12px;color:#c9c1dd;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* channel card (landscape) */
+.card.ch{width:250px}
+.card.ch .poster{width:250px;height:141px;display:flex;align-items:center;justify-content:center;background:#0e0918;padding:18px}
+.card.ch .poster img{width:auto;max-width:80%;max-height:80%;object-fit:contain}
+.card.ch .cinfo .ct{white-space:normal;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical}
+/* top10 */
+.top10{display:flex;gap:6px;overflow-x:auto;padding:10px 4vw 20px 0}
+.t10{position:relative;flex:0 0 auto;display:flex;align-items:flex-end;cursor:pointer}
+.t10 .num{font-size:150px;font-weight:900;line-height:.78;color:transparent;-webkit-text-stroke:3px #4c3a75;margin-right:-22px;letter-spacing:-8px;transition:.25s}
+.t10:hover .num{-webkit-text-stroke:3px var(--acc2)}
+.t10 .card{width:150px}
+.t10 .card .poster{width:150px;height:225px}
+/* ---------- GRIDS (views) ---------- */
+.view{display:none;padding:110px 4vw 70px;min-height:100vh;min-height:100dvh}
+.view.on{display:block}
+.view h1{font-size:30px;font-weight:800;margin-bottom:6px}
+.view .vsub{color:var(--mut);margin-bottom:26px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px}
+.grid .card{width:100%}
+.grid .card .poster{width:100%;height:auto;aspect-ratio:2/3}
+.grid .card.ch .poster{aspect-ratio:16/9;height:auto}
+.cat-chips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.cat-chips button{background:var(--panel);border:1px solid var(--line);color:#d9d2ec;padding:9px 18px;border-radius:20px;font-size:14px;cursor:pointer;transition:.2s}
+.cat-chips button:hover,.cat-chips button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+/* ---------- MODALS ---------- */
+.overlay{position:fixed;inset:0;background:rgba(4,2,8,.88);backdrop-filter:blur(8px);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.player-box{position:relative;width:min(1020px,96vw);background:#000;border-radius:16px;overflow:hidden;border:1px solid var(--line);box-shadow:0 30px 90px rgba(0,0,0,.8)}
+.player-head{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--panel)}
+.player-head .pt{font-size:16px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-head .livepill{font-size:11px;font-weight:800;letter-spacing:1px;background:#e11d48;color:#fff;padding:4px 10px;border-radius:6px}
+.player-box video{width:100%;aspect-ratio:16/9;background:#000;display:block}
+/* player failure card + next-episode */
+.player-err{position:absolute;inset:0;background:rgba(4,2,8,.94);display:flex;align-items:center;justify-content:center;z-index:6;padding:24px;text-align:center}
+.pe-card{max-width:440px}
+.pe-card>svg{width:52px;height:52px;fill:#3b2a5e;margin-bottom:12px}
+.pe-card h3{font-size:20px;margin-bottom:8px}
+.pe-card p{color:var(--mut);font-size:14px;line-height:1.55;margin-bottom:22px}
+.pe-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.pe-btns .btn{padding:12px 20px;font-size:14.5px}
+.next-ep{position:absolute;right:14px;bottom:70px;z-index:5;display:flex;align-items:center;gap:8px;background:var(--yel);color:#1a1200;border:none;font-weight:800;font-size:14px;padding:12px 18px;border-radius:10px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.next-ep svg{width:16px;height:16px;fill:#1a1200}
+/* generic failure card (grids) */
+.fail-card{grid-column:1/-1;text-align:center;padding:64px 20px;color:var(--mut)}
+.fail-card svg{width:52px;height:52px;fill:#3b2a5e;margin-bottom:14px}
+.fail-card h3{color:var(--txt);font-size:20px;margin-bottom:8px}
+.fail-card p{font-size:14.5px;line-height:1.55;margin-bottom:20px}
+/* services row (opens in new tab) */
+.card.svc{text-decoration:none;color:inherit;display:block}
+.card.svc .poster{height:120px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1b1030,#0e0918)}
+.card.svc .svc-name{font-size:26px;font-weight:800;color:var(--acc2);letter-spacing:.5px}
+.card.svc .ext-tag{position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;letter-spacing:.6px;background:rgba(11,6,18,.85);color:#cfc6e6;border:1px solid var(--line);padding:4px 8px;border-radius:6px}
+.info-box{width:min(760px,96vw);max-height:90vh;overflow-y:auto;background:var(--panel);border-radius:18px;border:1px solid var(--line);position:relative}
+.info-hero{position:relative;height:340px}
+.info-hero img{width:100%;height:100%;object-fit:cover;object-position:center 25%}
+.info-hero .shade{position:absolute;inset:0;background:linear-gradient(0deg,var(--panel) 4%,transparent 60%)}
+.info-close{position:absolute;top:14px;right:14px;z-index:2}
+.info-body{padding:6px 30px 30px}
+.info-body h2{font-size:32px;font-weight:800;margin-bottom:10px}
+.info-meta{display:flex;gap:14px;align-items:center;color:#cfc6e6;font-size:14.5px;margin-bottom:14px;flex-wrap:wrap}
+.info-meta .r{color:var(--yel);font-weight:700;display:flex;align-items:center;gap:5px}
+.info-meta .r svg{width:14px;height:14px;fill:var(--yel)}
+.info-desc{color:#c9c1dd;line-height:1.6;font-size:15px;margin-bottom:22px}
+.info-btns{display:flex;gap:12px;margin-bottom:26px;flex-wrap:wrap}
+.ep-list{border-top:1px solid var(--line);padding-top:18px}
+.ep-list h3{font-size:18px;margin-bottom:12px}
+.ep{display:flex;align-items:center;gap:14px;padding:12px;border-radius:10px;cursor:pointer;transition:.2s;border:1px solid transparent}
+.ep:hover{background:rgba(139,92,246,.1);border-color:var(--line)}
+.ep .n{font-size:20px;font-weight:800;color:#5b4a80;width:30px;text-align:center;flex:none}
+.ep .et{flex:1;font-size:14.5px;font-weight:600}
+.ep .playmini{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;flex:none}
+.ep .playmini svg{width:13px;height:13px;fill:#fff}
+.ep:hover .playmini{background:var(--yel);border-color:var(--yel)}
+.ep:hover .playmini svg{fill:#000}
+/* search results */
+.search-results{position:fixed;top:66px;left:0;right:0;bottom:0;background:rgba(8,4,14,.97);z-index:300;display:none;overflow-y:auto;padding:30px 4vw 60px}
+.search-results.on{display:block}
+.search-results h2{font-size:22px;margin-bottom:20px}
+.search-results h2 span{color:var(--acc2)}
+/* toast */
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--acc);color:#fff;padding:13px 26px;border-radius:12px;font-size:14.5px;font-weight:600;opacity:0;transition:.3s;z-index:900;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.empty{padding:60px 20px;text-align:center;color:var(--mut)}
+.empty svg{width:54px;height:54px;fill:#3b2a5e;margin-bottom:14px}
+.prog{height:3px;background:rgba(255,255,255,.15);border-radius:2px;margin-top:7px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--yel);border-radius:2px}
+@media(max-width:760px){
+  .nav-links{display:none}
+  .nav{gap:12px}
+  .search-wrap input{width:90px;font-size:16px}
+  .search-wrap input:focus{width:130px}
+  .hero{height:78vh;height:78dvh;min-height:480px}
+  .hero-desc{-webkit-line-clamp:2;font-size:14px}
+  .card{width:128px}.card .poster{width:128px;height:192px}
+  .card.ch{width:200px}.card.ch .poster{width:200px;height:113px}
+  .t10 .num{font-size:100px}
+  .t10 .card{width:112px}.t10 .card .poster{width:112px;height:168px}
+  .card:hover{transform:scale(1.1)}
+  .btn{padding:12px 22px;font-size:14.5px}
+  .hero .hero-arrow{opacity:1;width:40px;height:56px}
+  body{padding-bottom:72px}
+  .search-results{bottom:72px}
+  .toast{bottom:88px}
+}
+/* ---------- MOBILE BOTTOM TABS ---------- */
+.mtabs{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(11,6,18,.96);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px))}
+.mtabs button{flex:1;background:none;border:none;color:#a79fb8;font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 2px;cursor:pointer;min-height:54px}
+.mtabs button svg{width:21px;height:21px;fill:currentColor}
+.mtabs button.active{color:#fff}
+@media(max-width:760px){.mtabs{display:flex}}
+</style>
+</head>
+<body>
+<!-- SVG DEFS -->
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M9 16.2l-3.5-3.5L4 14.2 9 19.2 20 8.2l-1.4-1.4z"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="M19 6.4L17.6 5 12 10.6 6.4 5 5 6.4 10.6 12 5 17.6 6.4 19 12 13.4 17.6 19 19 17.6 13.4 12z"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M7.4 8.6L12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 17.3l-6.2 3.7 1.7-7-5.5-4.7 7.2-.6L12 2l2.8 6.7 7.2.6-5.5 4.7 1.7 7z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></symbol>
+<symbol id="i-tv" viewBox="0 0 24 24"><path d="M21 6H3a1 1 0 00-1 1v10a1 1 0 001 1h6v2H7v1h10v-1h-2v-2h6a1 1 0 001-1V7a1 1 0 00-1-1zm-1 10H4V8h16v8z"/></symbol>
+<symbol id="i-film" viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4zM2 18v-8h2v8H2zm20 0h-2v-8h2v8z"/></symbol>
+<symbol id="i-left" viewBox="0 0 24 24"><path d="M15.4 7.4L14 6l-6 6 6 6 1.4-1.4L10.8 12z"/></symbol>
+<symbol id="i-right" viewBox="0 0 24 24"><path d="M8.6 16.6L10 18l6-6-6-6-1.4 1.4 4.6 4.6z"/></symbol>
+<symbol id="i-book" viewBox="0 0 24 24"><path d="M18 2H8a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2zM9 4h9v16H9V4z"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-4v-6h-4v6H6v-9H3l9-8z"/></symbol>
+</defs></svg>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <a class="logo" onclick="go('home')"><span class="mark"><svg><use href="#i-play"/></svg></span>Zero<em>TV</em></a>
+  <div class="nav-links">
+    <div class="dd" id="browseDD">
+      <button onclick="document.getElementById('browseDD').classList.toggle('open')">Browse <svg style="width:14px;height:14px;fill:currentColor;vertical-align:-2px"><use href="#i-chev"/></svg></button>
+      <div class="dd-menu" id="browseMenu"></div>
+    </div>
+    <button data-nav="movies" onclick="go('movies')">Movies</button>
+    <button data-nav="shows" onclick="go('shows')">TV Shows</button>
+    <button data-nav="live" onclick="go('live')">Live TV</button>
+    <button data-nav="mylist" onclick="go('mylist')">My List</button>
+  </div>
+  <div class="nav-right">
+    <div class="search-wrap">
+      <svg><use href="#i-search"/></svg>
+      <input id="searchInput" placeholder="Search movies, shows, channels..." oninput="onSearch(this.value)">
+    </div>
+  </div>
+</nav>
+
+<!-- HOME -->
+<div class="view on" id="view-home">
+  <section class="hero" id="hero">
+    <button class="hero-arrow prev" onclick="heroGo(heroIdx-1)"><svg><use href="#i-left"/></svg></button>
+    <button class="hero-arrow next" onclick="heroGo(heroIdx+1)"><svg><use href="#i-right"/></svg></button>
+    <div class="hero-dots" id="heroDots"></div>
+  </section>
+  <div class="rows" id="homeRows"></div>
+</div>
+
+<!-- MOVIES -->
+<div class="view" id="view-movies">
+  <h1>Movies</h1><div class="vsub">Free forever. No subscription, no sign-up.</div>
+  <div class="cat-chips" id="movieChips"></div>
+  <div class="grid" id="movieGrid"></div>
+</div>
+
+<!-- SHOWS -->
+<div class="view" id="view-shows">
+  <h1>TV Shows</h1><div class="vsub">Classic series, cartoons and timeless television — free.</div>
+  <div class="grid" id="showGrid"></div>
+</div>
+
+<!-- LIVE -->
+<div class="view" id="view-live">
+  <h1>Live TV</h1><div class="vsub">Hundreds of free live channels, streaming now.</div>
+  <div class="cat-chips" id="liveChips"></div>
+  <div class="grid" id="liveGrid"></div>
+</div>
+
+<!-- MY LIST -->
+<div class="view" id="view-mylist">
+  <h1>My List</h1><div class="vsub">Everything you've saved, on this device.</div>
+  <div class="grid" id="listGrid"></div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-results" id="searchResults">
+  <h2>Results for <span id="searchQ"></span></h2>
+  <div class="grid" id="searchGrid"></div>
+</div>
+
+<!-- MOBILE TABS -->
+<nav class="mtabs">
+  <button data-nav="home" class="active" onclick="go('home')"><svg><use href="#i-home"/></svg><span>Home</span></button>
+  <button data-nav="movies" onclick="go('movies')"><svg><use href="#i-film"/></svg><span>Movies</span></button>
+  <button data-nav="shows" onclick="go('shows')"><svg><use href="#i-play"/></svg><span>Shows</span></button>
+  <button data-nav="live" onclick="go('live')"><svg><use href="#i-tv"/></svg><span>Live</span></button>
+  <button data-nav="mylist" onclick="go('mylist')"><svg><use href="#i-book"/></svg><span>My List</span></button>
+</nav>
+
+<!-- PLAYER -->
+<div class="overlay" id="playerOv">
+  <div class="player-box">
+    <div class="player-head">
+      <span class="pt" id="playerTitle"></span>
+      <span class="livepill" id="playerLive" style="display:none">LIVE</span>
+      <button class="icon-btn" onclick="closePlayer()"><svg><use href="#i-close"/></svg></button>
+    </div>
+    <video id="player" controls playsinline></video>
+    <button class="next-ep" id="nextEp" style="display:none" onclick="playNextEp()"><svg><use href="#i-play"/></svg> Next episode</button>
+    <div class="player-err" id="playerErr" style="display:none">
+      <div class="pe-card">
+        <svg><use href="#i-tv"/></svg>
+        <h3>This video couldn't play</h3>
+        <p id="playerErrMsg">The stream didn't load.</p>
+        <div class="pe-btns">
+          <button class="btn btn-play" id="playerRetry"><svg><use href="#i-play"/></svg> Try again</button>
+          <a class="btn btn-info" id="playerExt" href="#" target="_blank" rel="noopener">Open in new tab</a>
+          <button class="btn btn-info" onclick="closePlayer()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INFO -->
+<div class="overlay" id="infoOv">
+  <div class="info-box">
+    <button class="icon-btn info-close" onclick="closeInfo()"><svg><use href="#i-close"/></svg></button>
+    <div class="info-hero"><img id="infoImg" alt=""><div class="shade"></div></div>
+    <div class="info-body">
+      <h2 id="infoTitle"></h2>
+      <div class="info-meta" id="infoMeta"></div>
+      <div class="info-desc" id="infoDesc"></div>
+      <div class="info-btns">
+        <button class="btn btn-play" id="infoPlay"><svg><use href="#i-play"/></svg> Play</button>
+        <button class="btn btn-info" id="infoList"><svg><use href="#i-plus"/></svg> My List</button>
+      </div>
+      <div class="ep-list" id="epList" style="display:none"><h3>Episodes</h3><div id="epItems"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script>
+/* ================= DATA ================= */
+const AIMG = id => "https://archive.org/services/img/" + id;
+const MOVIES = [
+{id:"metropolis-lang",t:"Metropolis",y:1927,g:["Sci-Fi","Drama"],r:8.3,d:"2h 33m",desc:"Fritz Lang's visionary epic of a divided future city."},
+{id:"NosferatuLeVampire",t:"Nosferatu",y:1922,g:["Horror"],r:7.9,d:"1h 34m",desc:"F.W. Murnau's unauthorized Dracula."},
+{id:"TheGeneral1926BusterKeatonProductionUsa",t:"The General",y:1926,g:["Comedy","Action"],r:8.1,d:"1h 18m",desc:"Buster Keaton's Civil War locomotive chase."},
+{id:"his_girl_friday",t:"His Girl Friday",y:1940,g:["Comedy"],r:7.8,d:"1h 32m",desc:"Rapid-fire newspaper comedy with Cary Grant."},
+{id:"detour_1945",t:"Detour",y:1945,g:["Crime","Noir"],r:7.3,d:"1h 8m",desc:"Classic film noir about a drifter's bad luck."},
+{id:"scarlet_street",t:"Scarlet Street",y:1945,g:["Crime","Drama"],r:7.8,d:"1h 43m",desc:"Fritz Lang noir about obsession and betrayal."},
+{id:"carnival_of_souls",t:"Carnival of Souls",y:1962,g:["Horror"],r:7.0,d:"1h 24m",desc:"Eerie cult horror about a church organist."},
+{id:"sita_sings_the_blues",t:"Sita Sings the Blues",y:2008,g:["Animation"],r:7.5,d:"1h 22m",desc:"Animated retelling of the Ramayana."},
+{id:"charade_1963",t:"Charade",y:1963,g:["Comedy","Thriller"],r:7.9,d:"1h 53m",desc:"Audrey Hepburn and Cary Grant in Paris."},
+{id:"night_of_the_living_dead",t:"Night of the Living Dead",y:1968,g:["Horror"],r:7.8,d:"1h 36m",desc:"Romero's zombie classic that started it all."}
+];
+MOVIES.forEach(function(m){m.curated=true});
+// Dynamic catalog: loads 1000+ movies from Archive.org API at runtime (zero hosting storage)
+async function loadMovieCatalog(){
+  const queries=[
+    'mediatype:movies AND collection:feature_films AND year:[1930 TO 1970]',
+    'mediatype:movies AND collection:opensource_movies'
+  ];
+  let all=[];
+  for(const q of queries){
+    try{
+      const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,year,description&rows=400&sort[]=downloads+desc&output=json';
+      const r=await fetch(url);
+      const d=await r.json();
+      const docs=(d.response&&d.response.docs)||[];
+      docs.forEach(doc=>{
+        var title=doc.title||"", desc=doc.description||"";
+        var txt=(title+" "+desc).toLowerCase();
+        // SafeSearch: block adult/inappropriate/junk content
+        var bad=/\b(sex|porn|xxx|nude|naked|erotic|adult|hentai|japanese mom|download \d|ssscap|episode \d+ download)\b/i;
+        if(bad.test(txt)) return;
+        // Block junk titles (downloads, episodes, cspan, etc)
+        if(/download|cspan|senate|episode.*\d{4}/i.test(title)) return;
+        if(doc.identifier && title && title.length>2 && title.length<100){
+          all.push({
+            id:doc.identifier,
+            t:title,
+            y:doc.year||'',
+            g:['Classic'],
+            d:'',
+            desc:desc.substring(0,150)
+          });
+        }
+      });
+    }catch(e){ console.warn('Catalog load failed for',q,e); }
+  }
+  // Deduplicate (also against the static catalog, so fetched items can't duplicate it)
+  const seen=new Set(MOVIES.map(function(m){return m.id}));
+  const unique=all.filter(m=>{ if(seen.has(m.id)) return false; seen.add(m.id); return true; });
+  MOVIES.push(...unique);
+  console.log('Loaded '+MOVIES.length+' movies dynamically');
+  // Rebuild the home UI with the loaded movies
+  if(typeof buildHome==='function'){ try{ buildHome(); }catch(e){} }
+  if(typeof buildHero==='function'){ try{ buildHero(); }catch(e){} }
+  if(typeof renderMovieChips==='function'){ try{ renderMovieChips(); filterMovies("All"); }catch(e){} }
+}
+
+// Dynamic TV shows: loads from Archive.org API at runtime
+async function loadShowCatalog(){
+  const queries=[
+    'mediatype:movies AND collection:classic_tv',
+    'mediatype:movies AND (description:"tv series" OR description:"television series")',
+    'mediatype:movies AND collection:tv'
+  ];
+  let all=[];
+  for(const q of queries){
+    try{
+      const url='https://archive.org/advancedsearch.php?q='+encodeURIComponent(q)+'&fl[]=identifier,title,year,description&rows=300&sort[]=downloads+desc&output=json';
+      const r=await fetch(url);
+      const d=await r.json();
+      const docs=(d.response&&d.response.docs)||[];
+      docs.forEach(function(doc){
+        if(doc.identifier && doc.title){
+          all.push({
+            id:doc.identifier,
+            t:doc.title,
+            y:doc.year||'',
+            g:['Classic TV'],
+            desc:(doc.description||'').substring(0,120)
+          });
+        }
+      });
+    }catch(e){}
+  }
+  const seen=new Set(SHOWS.map(function(s){return s.id}));
+  const unique=all.filter(function(m){ if(seen.has(m.id)) return false; seen.add(m.id); return true; });
+  SHOWS.push(...unique);
+  console.log('Loaded '+SHOWS.length+' shows dynamically');
+  if(typeof renderShows==='function'){ try{ renderShows(); }catch(e){} }
+  if(typeof buildHome==='function'){ try{ buildHome(); }catch(e){} }
+}
+const SHOWS = [
+{id:"Dragnet1951",t:"Dragnet",y:1951,g:["Crime"],r:7.3,desc:"Jack Webb's deadpan procedural that invented the TV cop show. Just the facts."},
+{id:"SherlockHolmes1954",t:"The Adventures of Sherlock Holmes",y:1954,g:["Mystery"],r:7.0,desc:"Ronald Howard is Holmes in this classic TV take on Conan Doyle's detective."},
+{id:"The_Beverly_Hillbillies",t:"The Beverly Hillbillies",y:1962,g:["Comedy"],r:7.5,desc:"Oil-rich hillbillies move to Beverly Hills. Y'all come back now!"},
+{id:"Bonanza_pd",t:"Bonanza",y:1959,g:["Western"],r:7.4,desc:"The Cartwrights ride the Ponderosa in TV's beloved western saga."},
+{id:"theloneranger_201705",t:"The Lone Ranger",y:1949,g:["Western"],r:7.2,desc:"Hi-Yo, Silver! The masked rider and Tonto right wrongs in the Old West."},
+{id:"You_Bet_Your_Life_Groucho",t:"You Bet Your Life",y:1950,g:["Comedy"],r:8.0,desc:"Groucho Marx's legendary quiz show — the comedy was the real prize."},
+{id:"tales_of_tomorrow_09_the_crystal_egg",t:"Tales of Tomorrow",y:1951,g:["Sci-Fi"],r:7.4,desc:"Pioneering live sci-fi anthology — the Twilight Zone before the Twilight Zone."},
+{id:"Ed_the_Beneficiary",t:"Mister Ed",y:1962,g:["Comedy","Family"],r:6.9,desc:"A horse is a horse, of course — Wilbur's talking palomino."},
+{id:"superman_1941",t:"Superman Cartoons",y:1941,g:["Animation"],r:7.8,desc:"Fleischer Studios' gorgeous Superman shorts — animation history."},
+{id:"BettyBoopCartoons",t:"Betty Boop Cartoons",y:1932,g:["Animation","Comedy"],r:7.3,desc:"Boop-oop-a-doop! The flapper icon's classic Fleischer cartoons."},
+{id:"popeye_shuteye_popeye",t:"Popeye: Shuteye Popeye",y:1952,g:["Animation","Family"],r:6.8,desc:"Popeye battles insomnia — spinach may help."},
+{id:"Popeye_meetsSinbadtheSailor",t:"Popeye Meets Sinbad",y:1936,g:["Animation","Family"],r:7.7,desc:"Fleischer's two-reel Technicolor triumph: Popeye vs. Sinbad the Sailor."},
+{id:"FLIP_FROG-FIDDLESTICKS",t:"Flip the Frog",y:1930,g:["Animation"],r:6.5,desc:"Ub Iwerks' early cartoon star in musical misadventures."},
+{id:"Bonanza_-_The_Trail_Gang",t:"Bonanza: The Trail Gang",y:1960,g:["Western"],r:7.2,desc:"A Bonanza episode: the Cartwrights face a ruthless gang."}
+];
+</script>
+<script>
+/* ================= HELPERS ================= */
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v))}catch(e){return v===undefined?null:null}}
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("on")},2200)}
+function starSVG(){return '<svg><use href="#i-star"/></svg>'}
+function jq(s){return String(s==null?"":s).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}
+function cleanName(n){return n.replace(/\.[^.]+$/,"").replace(/[_+]+/g," ").replace(/\s+/g," ").trim()}
+
+/* ================= HERO ================= */
+var HEROES=[
+ {id:"metropolis-lang",kind:"movie",eyebrow:"Sci-Fi"},
+ {id:"NosferatuLeVampire",kind:"movie",eyebrow:"Horror"},
+ {id:"TheGeneral1926BusterKeatonProductionUsa",kind:"movie",eyebrow:"Comedy"},
+ {id:"his_girl_friday",kind:"movie",eyebrow:"Comedy"},
+ {id:"Dragnet1951",kind:"show",eyebrow:"Crime"}
+];
+var heroIdx=0,heroTimer=null;
+function heroData(h){
+  var m=MOVIES.find(function(x){return x.id===h.id})||SHOWS.find(function(x){return x.id===h.id});
+  return {m:m,h:h,thumb:AIMG(h.id)};
+}
+function buildHero(){
+  var hero=document.getElementById("hero");
+  hero.querySelectorAll(".slide").forEach(function(s){s.remove()});
+  document.getElementById("heroDots").innerHTML="";
+  HEROES.forEach(function(h,i){
+    var d=heroData(h),m=d.m;if(!m)return;
+    var s=document.createElement("div");s.className="slide"+(i===0?" on":"");
+    s.innerHTML='<img class="bg" src="'+d.thumb+'" alt="" onerror="this.style.display=\'none\'">'+
+      '<div class="shade"></div><div class="hero-inner">'+
+      '<div class="eyebrow"><span class="foryou">'+esc(h.eyebrow)+'</span>'+
+      '<span class="badge free">Included Free</span></div>'+
+      '<div class="hero-title">'+esc(m.t)+'</div>'+
+      '<div class="hero-meta"><span class="rate">'+starSVG()+m.r.toFixed(1)+'</span>'+
+      '<span>'+m.y+'</span><span>'+esc(m.d||"Series")+'</span><span>'+esc(m.g.join(" · "))+'</span></div>'+
+      '<div class="hero-desc">'+esc(m.desc)+'</div>'+
+      '<div class="hero-btns"><button class="btn btn-play" onclick="playHero('+i+')"><svg><use href="#i-play"/></svg> Play</button>'+
+      '<button class="btn btn-info" onclick="openInfo(\''+h.kind+'\',\''+h.id+'\')"><svg><use href="#i-info"/></svg> More Info</button></div>'+
+      '</div>';
+    hero.insertBefore(s,hero.querySelector(".hero-arrow"));
+  });
+  var dots=document.getElementById("heroDots");
+  HEROES.forEach(function(_,i){var b=document.createElement("button");if(i===0)b.className="on";b.onclick=function(){heroGo(i)};dots.appendChild(b)});
+  heroAuto();
+}
+function heroGo(i){
+  heroIdx=(i+HEROES.length)%HEROES.length;
+  var slides=document.querySelectorAll(".slide"),dots=document.querySelectorAll("#heroDots button");
+  slides.forEach(function(s,j){s.classList.toggle("on",j===heroIdx)});
+  dots.forEach(function(d,j){d.classList.toggle("on",j===heroIdx)});
+  heroAuto();
+}
+function heroAuto(){clearInterval(heroTimer);heroTimer=setInterval(function(){heroGo(heroIdx+1)},9000)}
+function playHero(i){var h=HEROES[i];if(h.kind==="show")openInfo("show",h.id);else playMovie(h.id)}
+
+/* ================= CARDS ================= */
+function cardHTML(kind,it,extra){
+  var thumb=extra&&extra.thumb?extra.thumb:AIMG(it.id);
+  var live=extra&&extra.live;
+  return '<div class="card'+(live?" ch":"")+'" onclick="'+(live?("playChannel('"+jq(it._id)+"')"):("openInfo('"+kind+"','"+jq(it.id)+"')"))+'">'+
+    '<div class="poster"><img loading="lazy" src="'+thumb+'" alt="" onerror="this.parentNode.classList.add(\'noimg\');this.remove()">'+
+    (live?'<span class="live-tag"><i></i>LIVE</span>':'<span class="free-tag">INCLUDED FREE</span>')+'</div>'+
+    '<div class="hover"><div class="hbtns">'+
+    '<button class="hbtn big" onclick="event.stopPropagation();'+(live?("playChannel('"+jq(it._id)+"')"):kind==="show"?("openInfo('show','"+jq(it.id)+"')"):("playMovie('"+jq(it.id)+"')"))+'"><svg><use href="#i-play"/></svg></button>'+
+    '<button class="hbtn" onclick="event.stopPropagation();toggleList(\''+kind+'\',\''+jq(live?it._id:it.id)+'\')"><svg><use href="#i-plus"/></svg></button>'+
+    (live?"":'<button class="hbtn" onclick="event.stopPropagation();openInfo(\''+kind+'\',\''+jq(it.id)+'\')"><svg><use href="#i-info"/></svg></button>')+
+    '</div><div class="ht">'+esc(live?it.name:it.t)+'</div>'+
+    '<div class="hm">'+(it.r?'<span class="r">'+starSVG()+' '+it.r.toFixed(1)+'</span>':"")+
+    (it.y?'<span>'+it.y+'</span>':"")+(it.d?'<span>'+esc(it.d)+'</span>':"")+
+    (it.g?'<span>'+esc(it.g.slice(0,2).join(" · "))+'</span>':"")+(live&&it.category?'<span>'+esc(it.category)+'</span>':"")+'</div>'+
+    (it.desc?'<div class="hd">'+esc(it.desc)+'</div>':"")+'</div>'+
+    '<div class="cinfo"><div class="ct">'+esc(live?it.name:it.t)+'</div>'+
+    '<div class="cm">'+(it.r?'<span class="r">'+it.r.toFixed(1)+'</span>':"")+(it.y?'<span>'+it.y+'</span>':"")+(live?'<span style="color:#fb7185;font-weight:700">LIVE</span>':"")+'</div></div></div>';
+}
+function rowHTML(title,sub,cards,linkFn){
+  return '<section class="row"><div class="row-head"><div><div class="row-title">'+esc(title)+'</div>'+
+    (sub?'<div class="row-sub">'+esc(sub)+'</div>':"")+'</div>'+
+    (linkFn?'<button class="row-link" onclick="'+linkFn+'">See all</button>':"")+'</div>'+
+    '<div class="rail">'+cards+'</div></section>';
+}
+function top10HTML(items){
+  var h='<section class="row"><div class="row-head"><div class="row-title">Top 10 Classics</div></div></div><div class="top10" style="padding-left:4vw">';
+  items.slice(0,10).forEach(function(it,i){
+    h+='<div class="t10"><div class="num">'+(i+1)+'</div>'+cardHTML("movie",it)+'</div>';
+  });
+  return h+'</div>';
+}
+
+/* ================= HOME ROWS ================= */
+function hasGenre(m,g){return m.g&&m.g.indexOf(g)!==-1}
+function buildHome(){
+  var cont=document.getElementById("homeRows"),h="";
+  var cw=store("zerotv_cw")||[];
+  if(cw.length){
+    h+=rowHTML("Continue Watching","Pick up where you left off",cw.map(function(c){
+      var pct=c.dur&&c.pos?Math.min(100,Math.round(c.pos/c.dur*100)):0;
+      return '<div class="card" onclick="resumeCW(\''+jq(c.key)+'\')"><div class="poster"><img loading="lazy" src="'+esc(c.thumb)+'" alt="" onerror="this.remove()"><span class="free-tag">INCLUDED FREE</span></div>'+
+      '<div class="cinfo"><div class="ct">'+esc(c.title)+'</div><div class="prog"><i style="width:'+pct+'%"></i></div></div></div>';
+    }).join(""));
+  }
+  var list=store("zerotv_list")||[];
+  if(list.length)h+=rowHTML("My List","Saved on this device",list.map(function(e){return cardHTML(e.kind,e.ref)}).join(""),"go('mylist')");
+  var top10=MOVIES.filter(function(m){return m.curated&&m.r}).sort(function(a,b){return b.r-a.r}).slice(0,10);
+  h+=top10HTML(top10);
+  h+='<section class="row" id="liveRow"><div class="row-head"><div><div class="row-title">Live TV</div><div class="row-sub">Free live channels streaming now</div></div><button class="row-link" onclick="go(\'live\')">See all</button></div><div class="rail" id="liveRail"></div></section>';
+  var SVCS=[["Netflix","https://www.netflix.com","N"],["YouTube","https://www.youtube.com","▶"],["Tubi","https://tubitv.com","tubi"],["Prime Video","https://www.primevideo.com","prime"],["Hulu","https://www.hulu.com","hulu"],["Disney+","https://www.disneyplus.com","D+"]];
+  h+=rowHTML("More Ways to Watch","These open in a new tab \u2014 some need their own sign-in",SVCS.map(function(s){
+    return '<a class="card svc" href="'+s[1]+'" target="_blank" rel="noopener"><div class="poster"><span class="svc-name">'+esc(s[2])+'</span><span class="ext-tag">NEW TAB \u2197</span></div><div class="cinfo"><div class="ct">'+esc(s[0])+'</div><div class="cm"><span>Opens in new tab</span></div></div></a>';
+  }).join(""));
+  var picks=["NosferatuLeVampire","TheGeneral1926BusterKeatonProductionUsa","metropolis-lang","the-last-man-on-earth-1964_20251031","white-zombie-bluray-pnm","Horror_Express","ScarletStreet","suddenly","meet_john_doe","Sita_Sings_the_Blues","gullivers_travels1939","royal_wedding"].map(function(id){return MOVIES.find(function(m){return m.id===id})}).filter(Boolean);
+  h+=rowHTML("Archive.org Picks","Free classics from the Internet Archive",picks.map(function(m){return cardHTML("movie",m)}).join(""));
+  var rec=MOVIES.slice().sort(function(){return .5-Math.random()}).slice(0,14);
+  h+=rowHTML("More Classics","Free films you might enjoy",rec.map(function(m){return cardHTML("movie",m)}).join(""));
+  var fresh=["metropolis-lang","NosferatuLeVampire","TheGeneral1926BusterKeatonProductionUsa","battleship-potemkin-1925_202607","le-voyage-dans-la-lune-1902-georges-melies","white-zombie-bluray-pnm","the-last-man-on-earth-1964_20251031","the-little-shop-of-horrors-1960_202310","1945-detour-el-desvio-edgar-g-ulmer_202005","abraham_lincoln","my_favorite_brunette","VoyagetothePlanetofPrehistoricWomen"].map(function(id){return MOVIES.find(function(m){return m.id===id})}).filter(Boolean);
+  h+=rowHTML("Newly Added","Fresh restorations just added",fresh.map(function(m){return cardHTML("movie",m)}).join(""),"go('movies')");
+  var genres=[["Comedy","Laugh out loud"],["Horror","After dark"],["Action","Adrenaline"],["Adventure","Expeditions"],["Drama","Critically acclaimed"],["Sci-Fi","Other worlds"],["Animation","For all ages"],["Western","The frontier"],["Crime","Noir nights"],["Family","Everyone"]];
+  genres.forEach(function(g){
+    var items=MOVIES.filter(function(m){return hasGenre(m,g[0])});
+    if(items.length>=3)h+=rowHTML(g[0]+" Movies",g[1],items.map(function(m){return cardHTML("movie",m)}).join(""));
+  });
+  h+=rowHTML("Classic TV Shows","Timeless television",SHOWS.map(function(s){return cardHTML("show",s)}).join(""),"go('shows')");
+  cont.innerHTML=h;
+  renderLiveRail();
+}
+
+/* ================= VIEWS ================= */
+function go(v){
+  document.querySelectorAll(".view").forEach(function(x){x.classList.remove("on")});
+  document.getElementById("view-"+v).classList.add("on");
+  document.querySelectorAll("[data-nav]").forEach(function(b){b.classList.toggle("active",b.getAttribute("data-nav")===v)});
+  document.getElementById("searchResults").classList.remove("on");
+  document.getElementById("browseDD").classList.remove("open");
+  window.scrollTo(0,0);
+  if(v==="mylist")renderList();
+  if(v==="live")renderLiveGrid();
+}
+document.addEventListener("click",function(e){if(!e.target.closest("#browseDD"))document.getElementById("browseDD").classList.remove("open")});
+window.addEventListener("scroll",function(){document.getElementById("nav").classList.toggle("solid",window.scrollY>40)});
+
+/* movies view */
+var GENRES=["All","Comedy","Horror","Action","Adventure","Drama","Sci-Fi","Animation","Western","Crime","Family"];
+function renderMovieChips(){
+  document.getElementById("movieChips").innerHTML=GENRES.map(function(g,i){
+    return '<button class="'+(i===0?"on":"")+'" onclick="filterMovies(\''+g+'\',this)">'+g+'</button>';
+  }).join("");
+  document.getElementById("browseMenu").innerHTML=GENRES.slice(1).map(function(g){
+    return '<button onclick="go(\'movies\');filterMovies(\''+g+'\')">'+g+' Movies</button>';
+  }).join("");
+}
+function filterMovies(g,btn){
+  if(btn){var bs=document.querySelectorAll("#movieChips button");bs.forEach(function(b){b.classList.remove("on")});btn.classList.add("on")}
+  else{var bs2=document.querySelectorAll("#movieChips button");bs2.forEach(function(b){b.classList.toggle("on",b.textContent===g)})}
+  var items=g==="All"?MOVIES.slice(0,120):MOVIES.filter(function(m){return hasGenre(m,g)});
+  document.getElementById("movieGrid").innerHTML=items.length?items.map(function(m){return cardHTML("movie",m)}).join(""):'<div class="empty"><svg><use href="#i-film"/></svg><div>No titles in this category yet.</div></div>';
+}
+function renderShows(){
+  document.getElementById("showGrid").innerHTML=SHOWS.map(function(s){return cardHTML("show",s)}).join("");
+}
+
+/* ================= LIVE TV (Pluto) ================= */
+var CHANNELS=[],chState="idle";
+function plutoStream(ch){
+  var u=ch&&ch.stitched&&ch.stitched.urls&&ch.stitched.urls[0];
+  return u?u.url:null;
+}
+function renderLiveRail(){
+  var rail=document.getElementById("liveRail");if(!rail)return;
+  if(chState==="ok"&&CHANNELS.length){
+    var feat=CHANNELS.filter(function(c){return c.featured}).concat(CHANNELS.filter(function(c){return !c.featured})).slice(0,16);
+    rail.innerHTML=feat.map(function(c){
+      var logo=c.colorLogoPNG?c.colorLogoPNG.path:(c.logo?c.logo.path:"");
+      return cardHTML("channel",{_id:c._id,name:c.name,category:c.category},{thumb:logo,live:true});
+    }).join("");
+  }else if(chState==="fail"){
+    rail.innerHTML='<div style="color:var(--mut);padding:20px">Live TV is unavailable right now. <button class="row-link" onclick="loadChannels()">Try again</button></div>';
+  }else{
+    rail.innerHTML='<div style="color:var(--mut);padding:20px">Loading channels...</div>';
+  }
+}
+function liveFailHTML(){
+  return '<div class="fail-card"><svg><use href="#i-tv"/></svg><h3>Live TV is unavailable</h3><p>We couldn\u2019t reach the channel list. Check your connection and try again.</p><button class="btn btn-play" onclick="loadChannels()">Try again</button></div>';
+}
+async function loadChannels(){
+  if(chState==="loading")return;
+  chState="loading";renderLiveRail();
+  try{
+    var r=await fetch("zero-tv-proxy.php",{cache:"no-store"});
+    var d=await r.json();
+    CHANNELS=(Array.isArray(d)?d:[]).filter(function(c){return plutoStream(c)});
+    if(!CHANNELS.length)throw new Error("empty");
+  }catch(e){
+    try{
+      var r2=await fetch("https://api.pluto.tv/v2/channels");
+      var d2=await r2.json();
+      CHANNELS=(Array.isArray(d2)?d2:[]).filter(function(c){return plutoStream(c)});
+    }catch(e2){CHANNELS=[]}
+  }
+  chState=CHANNELS.length?"ok":"fail";
+  renderLiveRail();
+  if(chState==="ok")buildLiveChips();
+  else{
+    document.getElementById("liveChips").innerHTML="";
+    document.getElementById("liveGrid").innerHTML=liveFailHTML();
+  }
+}
+function liveCats(){
+  var s={};
+  CHANNELS.forEach(function(c){if(c.category)s[c.category]=1});
+  return Object.keys(s).sort();
+}
+function buildLiveChips(){
+  var cats=liveCats();
+  document.getElementById("liveChips").innerHTML='<button class="on" onclick="filterLive(\'All\',this)">All</button>'+
+    cats.map(function(c){return '<button onclick="filterLive(\''+esc(c)+'\',this)">'+esc(c)+'</button>'}).join("");
+  filterLive("All");
+}
+function filterLive(cat,btn){
+  if(btn){var bs=document.querySelectorAll("#liveChips button");bs.forEach(function(b){b.classList.remove("on")});btn.classList.add("on")}
+  var items=cat==="All"?CHANNELS:CHANNELS.filter(function(c){return c.category===cat});
+  document.getElementById("liveGrid").innerHTML=items.slice(0,120).map(function(c){
+    var logo=c.colorLogoPNG?c.colorLogoPNG.path:(c.logo?c.logo.path:"");
+    return cardHTML("channel",{_id:c._id,name:c.name,category:c.category},{thumb:logo,live:true});
+  }).join("");
+}
+function renderLiveGrid(){
+  var chips=document.getElementById("liveChips"),grid=document.getElementById("liveGrid");
+  if(chState==="ok"&&CHANNELS.length){
+    if(!chips.innerHTML)buildLiveChips();else filterLive("All");
+  }else if(chState==="fail"){
+    chips.innerHTML="";grid.innerHTML=liveFailHTML();
+  }else{
+    grid.innerHTML='<div class="fail-card"><p>Loading channels\u2026</p></div>';
+  }
+}
+function playChannel(id){
+  var c=CHANNELS.find(function(x){return x._id===id});if(!c)return;
+  var url=plutoStream(c);
+  var logo=c.colorLogoPNG?c.colorLogoPNG.path:(c.logo?c.logo.path:"");
+  openPlayer(url,c.name+" — Live","pluto:"+id,logo,true,null,"https://pluto.tv");
+}
+
+/* ================= ARCHIVE.ORG ================= */
+var metaCache={};
+async function getMeta(id){
+  if(metaCache[id])return metaCache[id];
+  var r=await fetch("https://archive.org/metadata/"+id);
+  var d=await r.json();metaCache[id]=d;return d;
+}
+function vidFiles(d){
+  var files=(d.files||[]).filter(function(f){return /\.(mp4|webm|ogv)$/i.test(f.name||"")&&!/orig/i.test(f.name||"")&&!/sample/i.test(f.name||"")});
+  var mp4=files.filter(function(f){return /\.mp4$/i.test(f.name)});
+  var pool=mp4.length?mp4:files;
+  pool.sort(function(a,b){return (a.size||0)-(b.size||0)});
+  return pool;
+}
+async function playMovie(id){
+  var m=MOVIES.find(function(x){return x.id===id});if(!m)return;
+  toast("Loading...");
+  try{
+    var d=await getMeta(id),pool=vidFiles(d);
+    if(!pool.length)throw new Error("no file");
+    var url="https://archive.org/download/"+id+"/"+encodeURIComponent(pool[0].name).replace(/%2F/g,"/");
+    // Find caption files (.srt, .vtt)
+    var caps=[];
+    if(d && d.files){
+      d.files.forEach(function(f){
+        var n=(f.name||"").toLowerCase();
+        if(n.endsWith(".srt")||n.endsWith(".vtt")){
+          caps.push("https://archive.org/download/"+id+"/"+encodeURIComponent(f.name));
+        }
+      });
+    }
+    openPlayer(url,m.t,"movie:"+id,AIMG(id),false,caps.length?caps[0]:null,"https://archive.org/details/"+id);
+  }catch(e){toast("Sorry, this title failed to load.")}
+}
+
+/* ================= PLAYER ================= */
+var player=document.getElementById("player"),hls=null,cwTimer=0,curCW=null,lastPlay=null;
+function showPlayerErr(msg){
+  document.getElementById("nextEp").style.display="none";
+  document.getElementById("playerErrMsg").textContent=msg||"The stream didn't load.";
+  document.getElementById("playerErr").style.display="flex";
+}
+function hidePlayerErr(){document.getElementById("playerErr").style.display="none"}
+function openPlayer(url,title,key,thumb,isLive,capUrl,itemUrl){
+  closeInfo();
+  lastPlay={url:url,title:title,key:key,thumb:thumb,isLive:isLive,capUrl:capUrl,itemUrl:itemUrl};
+  hidePlayerErr();
+  document.getElementById("nextEp").style.display="none";
+  document.getElementById("playerTitle").textContent=title;
+  document.getElementById("playerLive").style.display=isLive?"":"none";
+  var ext=document.getElementById("playerExt");
+  if(itemUrl){ext.href=itemUrl;ext.style.display=""}else{ext.style.display="none"}
+  document.getElementById("playerOv").classList.add("on");
+  document.body.style.overflow="hidden";
+  if(hls){hls.destroy();hls=null}
+  player.pause();player.removeAttribute("src");player.load();
+  var cw=store("zerotv_cw")||[];
+  var prev=cw.find(function(c){return c.key===key});
+  curCW={key:key,title:title,thumb:thumb||"",url:isLive?url:null,id:isLive?null:key.split(":")[1],kind:isLive?"channel":key.split(":")[0],pos:0,dur:0};
+  function startAt(t){
+    if(!isLive&&t>10){try{player.currentTime=t}catch(e){}}
+    player.play().catch(function(){});
+  }
+  var isM3U8=/\.m3u8($|\?)/i.test(url);
+  // Clear old tracks, add caption if available
+  var oldTracks=player.querySelectorAll("track");for(var ti=0;ti<oldTracks.length;ti++){oldTracks[ti].remove();}
+  if(capUrl){var tr=document.createElement("track");tr.kind="subtitles";tr.label="English";tr.srclang="en";tr.src=capUrl;player.appendChild(tr);}
+  if(!isM3U8){player.src=url;startAt(prev&&prev.pos?prev.pos:0)}
+  else if(window.Hls&&Hls.isSupported()){
+    hls=new Hls({maxBufferLength:30});
+    hls.loadSource(url);hls.attachMedia(player);
+    hls.on(Hls.Events.MANIFEST_PARSED,function(){startAt(prev&&prev.pos?prev.pos:0)});
+    hls.on(Hls.Events.ERROR,function(ev,data){if(data&&data.fatal){try{player.src=url;player.play().catch(function(){})}catch(e){}}});
+  }else if(player.canPlayType("application/vnd.apple.mpegurl")){
+    player.src=url;player.addEventListener("loadedmetadata",function h(){player.removeEventListener("loadedmetadata",h);startAt(prev&&prev.pos?prev.pos:0)});
+  }else{player.src=url;startAt(prev&&prev.pos?prev.pos:0)}
+}
+player.addEventListener("timeupdate",function(){
+  if(!curCW||!player.duration)return;
+  curCW.pos=player.currentTime;curCW.dur=isFinite(player.duration)?player.duration:0;
+  var now=Date.now();
+  if(now-cwTimer>8000){cwTimer=now;saveCW()}
+});
+player.addEventListener("error",function(){
+  if(curCW&&player.error&&player.error.code)showPlayerErr("This video couldn't play. The file may be missing or the connection dropped.");
+});
+player.addEventListener("ended",function(){
+  if(curCW&&curCW.nextEp)document.getElementById("nextEp").style.display="flex";
+});
+document.getElementById("playerRetry").onclick=function(){
+  hidePlayerErr();
+  if(lastPlay)openPlayer(lastPlay.url,lastPlay.title,lastPlay.key,lastPlay.thumb,lastPlay.isLive,lastPlay.capUrl,lastPlay.itemUrl);
+};
+function playNextEp(){
+  if(!curCW||!curCW.nextEp||!curCW.epPool)return;
+  var nx=curCW.nextEp,id=nx.id,i=nx.idx,pool=curCW.epPool,f=pool[i];
+  if(!f)return;
+  document.getElementById("nextEp").style.display="none";
+  var url="https://archive.org/download/"+id+"/"+encodeURIComponent(f.name).replace(/%2F/g,"/");
+  var s=SHOWS.find(function(x){return x.id===id});
+  openPlayer(url,(s?s.t:"")+" — "+cleanName(f.name),"show:"+id+":"+f.name,AIMG(id),false,null,"https://archive.org/details/"+id);
+  if(curCW){curCW.epPool=pool;curCW.nextEp=(i+1<pool.length)?{id:id,idx:i+1}:null}
+}
+function saveCW(){
+  if(!curCW||!curCW.dur)return;
+  var cw=store("zerotv_cw")||[];
+  cw=cw.filter(function(c){return c.key!==curCW.key});
+  if(curCW.pos>curCW.dur-20){store("zerotv_cw",cw);return}
+  cw.unshift({key:curCW.key,title:curCW.title,thumb:curCW.thumb,url:curCW.url,id:curCW.id,kind:curCW.kind,pos:Math.floor(curCW.pos),dur:Math.floor(curCW.dur)});
+  store("zerotv_cw",cw.slice(0,20));
+}
+async function resumeCW(key){
+  saveCW();
+  var cw=store("zerotv_cw")||[];
+  var c=cw.find(function(x){return x.key===key});if(!c)return;
+  if(c.kind==="channel"){
+    var ch=CHANNELS.find(function(x){return x._id===c.id});
+    if(ch&&c.url)openPlayer(c.url,c.title,key,c.thumb,true,null,"https://pluto.tv");
+    else if(ch)playChannel(c.id);
+  }else{
+    try{
+      var d=await getMeta(c.id),pool=vidFiles(d);
+      if(!pool.length)throw 0;
+      var url="https://archive.org/download/"+c.id+"/"+encodeURIComponent(pool[0].name).replace(/%2F/g,"/");
+      openPlayer(url,c.title,key,c.thumb,false,null,"https://archive.org/details/"+c.id);
+    }catch(e){toast("Couldn't resume this title.")}
+  }
+}
+function closePlayer(){
+  saveCW();
+  try{player.pause()}catch(e){}
+  if(hls){hls.destroy();hls=null}
+  player.removeAttribute("src");player.load();
+  document.getElementById("playerOv").classList.remove("on");
+  document.body.style.overflow="";
+  curCW=null;
+  buildHome();
+}
+document.getElementById("playerOv").addEventListener("click",function(e){if(e.target===this)closePlayer()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){closePlayer();closeInfo();document.getElementById("searchResults").classList.remove("on")}});
+
+/* ================= INFO MODAL ================= */
+var curInfo=null;
+function openInfo(kind,id){
+  var it=kind==="movie"?MOVIES.find(function(x){return x.id===id}):SHOWS.find(function(x){return x.id===id});
+  if(!it)return;
+  curInfo={kind:kind,it:it};
+  document.getElementById("infoImg").src=AIMG(id);
+  document.getElementById("infoImg").onerror=function(){this.style.display="none"};
+  document.getElementById("infoImg").style.display="";
+  document.getElementById("infoTitle").textContent=it.t;
+  document.getElementById("infoMeta").innerHTML=(it.r?'<span class="r">'+starSVG()+' '+it.r.toFixed(1)+'</span>':"")+'<span>'+it.y+'</span>'+
+    (it.d?'<span>'+esc(it.d)+'</span>':"<span>Series</span>")+
+    '<span>'+esc(it.g.join(" · "))+'</span><span class="badge free">Included Free</span>';
+  document.getElementById("infoDesc").textContent=it.desc;
+  document.getElementById("infoPlay").onclick=function(){if(kind==="movie")playMovie(id);else loadEps(id,true)};
+  updateListBtn();
+  document.getElementById("infoList").onclick=function(){toggleList(kind,id);updateListBtn()};
+  var epBox=document.getElementById("epList");
+  epBox.style.display="none";document.getElementById("epItems").innerHTML="";
+  document.getElementById("infoOv").classList.add("on");
+  document.body.style.overflow="hidden";
+  if(kind==="show")loadEps(id,false);
+}
+function closeInfo(){document.getElementById("infoOv").classList.remove("on");if(!document.getElementById("playerOv").classList.contains("on"))document.body.style.overflow="";curInfo=null}
+document.getElementById("infoOv").addEventListener("click",function(e){if(e.target===this)closeInfo()});
+async function loadEps(id,autoplay){
+  var box=document.getElementById("epList"),items=document.getElementById("epItems");
+  try{
+    var d=await getMeta(id),pool=vidFiles(d);
+    if(!pool.length)throw 0;
+    if(autoplay){
+      var f=pool[0],url="https://archive.org/download/"+id+"/"+encodeURIComponent(f.name).replace(/%2F/g,"/");
+      var s=SHOWS.find(function(x){return x.id===id});
+      openPlayer(url,(s?s.t:"")+" — "+cleanName(f.name),"show:"+id+":"+f.name,AIMG(id),false,null,"https://archive.org/details/"+id);
+      if(curCW){curCW.epPool=pool;curCW.nextEp=pool.length>1?{id:id,idx:1}:null}
+      return;
+    }
+    box.style.display="";
+    items.innerHTML=pool.slice(0,40).map(function(f,i){
+      return '<div class="ep" onclick="playEp(\''+jq(id)+'\','+i+')"><div class="n">'+(i+1)+'</div><div class="et">'+esc(cleanName(f.name))+'</div><div class="playmini"><svg><use href="#i-play"/></svg></div></div>';
+    }).join("");
+    box._pool=pool;
+  }catch(e){box.style.display="none"}
+}
+function playEp(id,i){
+  var pool=document.getElementById("epList")._pool;if(!pool||!pool[i])return;
+  var f=pool[i],url="https://archive.org/download/"+id+"/"+encodeURIComponent(f.name).replace(/%2F/g,"/");
+  var s=SHOWS.find(function(x){return x.id===id});
+  openPlayer(url,(s?s.t:"")+" — "+cleanName(f.name),"show:"+id+":"+f.name,AIMG(id),false,null,"https://archive.org/details/"+id);
+  if(curCW){curCW.epPool=pool;curCW.nextEp=(i+1<pool.length)?{id:id,idx:i+1}:null}
+}
+
+/* ================= MY LIST ================= */
+function getList(){return store("zerotv_list")||[]}
+function inList(kind,id){return getList().some(function(e){return e.kind===kind&&e.refId===id})}
+function toggleList(kind,id){
+  var list=getList();
+  var ix=list.findIndex(function(e){return e.kind===kind&&e.refId===id});
+  if(ix>=0){list.splice(ix,1);toast("Removed from My List")}
+  else{
+    var ref;
+    if(kind==="channel"){var c=CHANNELS.find(function(x){return x._id===id});if(!c)return;ref={_id:c._id,name:c.name,category:c.category,r:0,y:"",g:[]};ref._logo=c.colorLogoPNG?c.colorLogoPNG.path:""}
+    else ref=(kind==="movie"?MOVIES:SHOWS).find(function(x){return x.id===id});
+    list.unshift({kind:kind,refId:id,ref:ref});
+    toast("Added to My List");
+  }
+  store("zerotv_list",list);
+  if(document.getElementById("view-mylist").classList.contains("on"))renderList();
+}
+function updateListBtn(){
+  if(!curInfo)return;
+  var b=document.getElementById("infoList");
+  var has=inList(curInfo.kind,curInfo.it.id);
+  b.innerHTML=has?'<svg><use href="#i-check"/></svg> In My List':'<svg><use href="#i-plus"/></svg> My List';
+}
+function renderList(){
+  var list=getList();
+  document.getElementById("listGrid").innerHTML=list.length?list.map(function(e){
+    if(e.kind==="channel")return cardHTML("channel",{_id:e.ref._id,name:e.ref.name,category:e.ref.category},{thumb:e.ref._logo,live:true});
+    return cardHTML(e.kind,e.ref);
+  }).join(""):'<div class="empty"><svg><use href="#i-book"/></svg><div>Your list is empty.<br>Tap any title and tap + to save it here.</div></div>';
+}
+
+/* ================= SEARCH ================= */
+function onSearch(q){
+  q=q.trim();
+  var box=document.getElementById("searchResults");
+  if(q.length<2){box.classList.remove("on");return}
+  document.getElementById("searchQ").textContent='\u201C'+q+'\u201D';
+  var ql=q.toLowerCase(),out=[];
+  MOVIES.forEach(function(m){if((m.t+" "+m.g.join(" ")).toLowerCase().indexOf(ql)>=0)out.push(cardHTML("movie",m))});
+  SHOWS.forEach(function(s){if((s.t+" "+s.g.join(" ")).toLowerCase().indexOf(ql)>=0)out.push(cardHTML("show",s))});
+  CHANNELS.forEach(function(c){if(c.name.toLowerCase().indexOf(ql)>=0){
+    var logo=c.colorLogoPNG?c.colorLogoPNG.path:(c.logo?c.logo.path:"");
+    out.push(cardHTML("channel",{_id:c._id,name:c.name,category:c.category},{thumb:logo,live:true}));
+  }});
+  document.getElementById("searchGrid").innerHTML=out.length?out.slice(0,60).join(""):'<div class="empty">No results found.</div>';
+  box.classList.add("on");
+}
+
+/* ================= INIT ================= */
+loadMovieCatalog();
+loadShowCatalog();
+buildHero();
+buildHome();
+renderMovieChips();
+filterMovies("All");
+renderShows();
+loadChannels();
+</script>
+</body>
+</html>

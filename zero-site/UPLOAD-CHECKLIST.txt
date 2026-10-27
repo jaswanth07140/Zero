@@ -1,0 +1,48 @@
+Zero — manual upload checklist (prepared 2026-10-12, updated with AI upgrade)
+===============================================================================
+Why: the saved FTP login is rejected, so these files must be uploaded by hand.
+All of them go into the /htdocs folder. Nothing else needs to change.
+
+Files (all at the top level of this folder / this zip):
+1. index.html                  — homepage: faster images, battery-saving animations,
+                                 inert ad banner slot (hidden until you paste an ad code)
+2. zerocode.html               — Zero AI: 'Search Google' button, dead 'Take control'
+                                 code removed, keyboard focus ring, AND the big one —
+                                 AI answers now render real numbered/bulleted lists
+                                 and document-style headings like Alexa+
+3. zerotube.html               — fixed broken Share icon
+4. zero-computer.html          — fixed missing page icon
+5. .htaccess                   — faster repeat visits (1-year cache for icons/images)
+6. api-synth.php               — THE AI UPGRADE (backend): the final answer is now
+                                 written by the bigger 120b model with 4x more room
+                                 (was cut off at 500 tokens), sees 3x more of each
+                                 model's draft, and is instructed to write beautiful
+                                 structured documents — titles, sections, lists
+7. api-single.php              — each model's draft answer now completes fully
+                                 (1200 tokens) instead of rambling or cutting off
+8. zero-privacy.html           — NEW privacy policy page (Edge Add-ons requires this
+                                 URL live before you submit the extension)
+9. zero-computer-extension.zip — v1.0.1 extension; the download button on
+                                 zero-computer.html points at this file
+
+Steps (Chromebook, plain language):
+1. Go to webftp.phpwebhosting.com and log in to your hosting account.
+2. Open the /htdocs folder.
+3. Upload each of the 9 files above. If it asks 'overwrite existing file?', say Yes for all.
+4. After uploading, check these in your browser:
+   - https://zero.page.gd/zero-privacy.html  (should show the privacy page)
+   - https://zero.page.gd/zero-computer.html (tap the download button — the zip should download)
+   - https://zero.page.gd/zerocode.html      (ask the AI for something with steps,
+     e.g. 'make me a quiz on fractions' — the answer should come back with a
+     title, section headers, and numbered questions, and it should NOT cut off
+     mid-sentence)
+   - https://zero.page.gd/ (homepage looks the same; images in the apps menu load
+     a touch later on phones — that is the speed fix working)
+
+Still open (your call, no rush):
+- Emoji cleanup across the site — full sweep now, or pick specific pages?
+- 'Search Google' button label — keep it, or shorten to 'Google' on phones?
+- Ads: sign up free at PropellerAds or Adsterra, paste their code into the marked spot
+  in index.html (search for 'zero-ad-slot'), remove the word 'hidden', and re-upload index.html.
+- Edge Add-ons: once zero-privacy.html is live above, submit the extension zip at
+  partner.microsoft.com (free) — full steps are in EDGE-LISTING.md.

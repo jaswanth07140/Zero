@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zero Computer — Setup Guide</title>
+<link rel="icon" href="icon-192.png">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f8f9fa;color:#202124;line-height:1.6}
+.wrap{max-width:680px;margin:0 auto;padding:24px 20px 60px}
+.hero{text-align:center;padding:32px 0 8px}
+.hero .zero{width:64px;height:64px;border-radius:50%;background:#1a73e8;color:#fff;font-size:32px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.hero h1{font-size:28px;margin-bottom:8px}
+.hero p{color:#5f6368;font-size:16px}
+.card{background:#fff;border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card h2{font-size:18px;margin-bottom:12px}
+.step{display:flex;gap:14px;margin:14px 0}
+.step .n{flex:0 0 32px;height:32px;border-radius:50%;background:#1a73e8;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:15px}
+.step .t{font-size:15px}
+.step .t b{display:block;margin-bottom:2px}
+.step .t small{color:#5f6368}
+code{background:#f1f3f4;padding:2px 8px;border-radius:6px;font-size:13px}
+.btn{display:inline-block;background:#1a73e8;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:16px;margin:8px 0}
+.btn:hover{background:#1765cc}
+.warn{background:#fef7e0;border:1px solid #f9d976;border-radius:12px;padding:14px 16px;font-size:14px;margin:16px 0}
+.note{background:#e8f0fe;border-radius:12px;padding:14px 16px;font-size:14px;margin:16px 0}
+.faq{font-size:15px}
+.faq details{margin:10px 0;background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.faq summary{font-weight:600;cursor:pointer}
+.faq p{margin-top:8px;color:#5f6368;font-size:14px}
+.back{display:inline-block;margin-top:24px;color:#1a73e8;text-decoration:none;font-weight:600}
+
+/* ============ ZERO PREMIUM LAYER (2026-10-19) — additive, no layout overrides ============ */
+@keyframes zpIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body{animation:zpIn .35s ease}
+button{transition:transform .18s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+:focus-visible{outline:2px solid #5a5ae6;outline-offset:2px;border-radius:8px}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(120,120,140,.35);border-radius:8px;border:2px solid transparent;background-clip:content-box}
+input:focus,textarea:focus,select:focus{border-color:#5a5ae6;box-shadow:0 0 0 3px rgba(90,90,230,.15);outline:none}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="zero">0</div>
+    <h1>Zero Computer</h1>
+    <p>Type one task in Zero AI — the AI drives your Chrome browser by itself. You just watch.<br><small style="color:#5f6368">Just describe what you want (“go to Google and type YouTube”) — or start with <code>computer:</code>. Both work.</small></p>
+  </div>
+
+  <div class="warn">You need a <b>computer</b> with Chrome or Edge. Phones and tablets can't run browser extensions.</div>
+
+  <div class="card">
+    <h2>Set it up in 2 minutes</h2>
+    <div style="text-align:center"><a class="btn" href="zero-computer-extension.zip" download>Download Zero Computer</a></div>
+    <div class="step"><div class="n">1</div><div class="t"><b>Unzip the download</b><small>Windows: right-click → Extract All. Mac: double-click. Chromebook: open the Files app, double-click the zip, click Extract. You'll get a folder called <code>zero-computer-extension</code>.</small></div></div>
+    <div class="step"><div class="n">2</div><div class="t"><b>Load it in Chrome</b><small>Go to <code>chrome://extensions</code>, turn on <b>Developer mode</b> (top right), click <b>Load unpacked</b>, and select the <code>zero-computer-extension</code> folder.</small></div></div>
+    <div class="step"><div class="n">3</div><div class="t"><b>Copy your pairing key</b><small>Click the puzzle-piece icon in Chrome's toolbar, pin the "0" icon, then click it. Hit <b>Copy</b> next to your pairing key — this secret key is yours alone.</small></div></div>
+    <div class="step"><div class="n">4</div><div class="t"><b>Paste it in Zero AI</b><small>Open Zero AI, tap the <b>gear icon</b> (top right), paste the key, hit <b>Save</b>. Done — you never touch settings again.</small></div></div>
+    <div class="step"><div class="n">5</div><div class="t"><b>Give it a task</b><small>Type <code>computer: find me the cheapest NYC to London flight</code> — or just say it plainly, Zero detects computer tasks automatically. Watch it work. Keep Chrome open while it drives.</small></div></div>
+  </div>
+
+  <div class="card">
+    <h2>How it works</h2>
+    <div class="note"><b>Your key → Zero relay → your extension.</b> Zero AI posts your task to the relay at zero.page.gd; the extension picks it up instantly (with a 30-second poll as backup) and the AI plans up to 12 steps ahead, showing you a live log with screenshots. Commands expire after 2 hours and are never stored long-term.</div>
+    <div class="warn"><b>Pages the AI can't touch:</b> <code>chrome://</code>, <code>about:</code>, and extension pages are blocked by Chrome itself — the AI will tell you instead of failing silently.</div>
+  </div>
+
+  <div class="card">
+    <h2>What the AI can and can't do</h2>
+    <div class="note"><b>It can:</b> open pages, click buttons, fill in search boxes and forms, read results, take screenshots, and report back — all while you watch every step.</div>
+    <div class="warn" style="background:#fce8e6;border-color:#f5b7b1"><b>It never:</b> touches password fields, logs in as you, or buys/pays for anything. You handle logins and payments yourself.</div>
+  </div>
+
+  <div class="faq">
+    <h2 style="font-size:18px;margin:16px 0 8px;">Troubleshooting</h2>
+    <details><summary>My files say " (1)" like content (1).js</summary><p>Your browser added that because the files already existed. Right-click each one → Rename → delete the " (1)" so the names are exactly <code>manifest.json</code>, <code>background.js</code>, <code>content.js</code>, <code>popup.html</code>, <code>popup.js</code>. Then move them into the extension folder, replacing the old ones.</p></details>
+    <details><summary>It still shows the old version after refresh</summary><p>On <code>chrome://extensions</code>, click <b>Remove</b> under Zero Computer, then <b>Load unpacked</b> and select the folder again with the new files. (You'll get a fresh pairing key — copy the new one.)</p></details>
+    <details><summary>The AI says the computer timed out</summary><p>Make sure Chrome is open on your computer with the extension enabled (its toggle is blue on <code>chrome://extensions</code>). The computer must stay on while the AI works.</p></details>
+    <details><summary>Is my key safe?</summary><p>Yes. It's a random 32-character code that lives only on your computer and in your browser's settings. Nobody — not even Zero's makers — can see it or drive your browser without it.</p></details>
+    <details><summary>Does it work on my phone or iPad?</summary><p>No — phones and tablets can't run browser extensions, so the AI can't drive a mobile browser. Use the Zero website on your phone; set up Zero Computer on any desktop or laptop with Chrome or Edge.</p></details>
+    <details><summary>Do I have to type “computer:” every time?</summary><p>No. Zero now detects computer tasks automatically from plain descriptions like “go to Google and type YouTube”. The <code>computer:</code> prefix still works if you prefer it.</p></details>
+  </div>
+
+  <a class="back" href="zerocode.html">← Back to Zero AI</a>
+</div>
+</body>
+</html>
